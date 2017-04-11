@@ -4,3 +4,22 @@
 [![Build Status](https://travis-ci.org/invenia/Impute.jl.svg?branch=master)](https://travis-ci.org/invenia/Impute.jl)
 [![Build status](https://ci.appveyor.com/api/projects/status/github/invenia/Impute.jl?svg=true)](https://ci.appveyor.com/project/invenia/Impute-jl)
 [![codecov](https://codecov.io/gh/invenia/Impute.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/invenia/Impute.jl)
+
+A julia package for imputing missing data into Arrays.
+
+## Usage
+
+## Features
+
+### Methods
+
+* drop -
+* locf -
+* nocb -
+* interp -
+* fill -
+
+## TODO
+
+* Support `AbstractArray{T, 2}`, `DataFrames` and `DataTables`
+* More sophisticated imputation methods

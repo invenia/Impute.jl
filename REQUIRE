@@ -1,1 +1,6 @@
 julia 0.5
+NullableArrays 0.1.0
+DataTables 0.0.2
+DataArrays 0.3.12
+DataFrames 0.8.3
+RDatasets 0.2.0
