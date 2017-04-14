@@ -5,21 +5,32 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/github/invenia/Impute.jl?svg=true)](https://ci.appveyor.com/project/invenia/Impute-jl)
 [![codecov](https://codecov.io/gh/invenia/Impute.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/invenia/Impute.jl)
 
-A julia package for imputing missing data into Arrays.
+Impute.jl provides various data imputation methods for `Arrays`, `NullableArrays` and `DataArrays`(for vectors and matrices), as well as `DataFrames` and `DataTables`.
 
-## Usage
+## Installation
+```julia
+Pkg.clone("https://github.com/invenia/Impute.jl")
+```
 
 ## Features
 
-### Methods
+* Vectors and Matrices
+* NullableArrays and DataArrays
+* Chaining of methods
 
-* drop -
-* locf -
-* nocb -
-* interp -
-* fill -
+## Methods
+
+* drop - remove missing
+* locf - last observation carried forward
+* nocb - next observation carried backward
+* interp - linear interpolation of values in vector
+* fill - replace with a specific value or a function which returns a value given the existing vector with missing values dropped.
 
 ## TODO
 
-* Support `AbstractArray{T, 2}`, `DataFrames` and `DataTables`
+* Dropping rows in a matrix allocates extra memory (ie: `data[mask, :]` make a copy).
 * More sophisticated imputation methods
+    1. MICE
+    2. EM
+    3. kNN
+    4. Regression
