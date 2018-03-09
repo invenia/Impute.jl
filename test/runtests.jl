@@ -1,17 +1,13 @@
 using Impute
 using Base.Test
-
-using NullableArrays
-using DataArrays
-
-import DataFrames
-import DataTables
-
+using DataFrames
+using Missings
 using RDatasets
 
 @testset "Impute" begin
-    a = collect(1.0:1.0:20.0)
-    a[[2, 3, 7]] = NaN
+    a = collect(Union{Float64, Missing}, 1.0:1.0:20.0)
+    a[[2, 3, 7]] = missing
+    mask = map(!ismissing, a)
 
     @testset "Drop" begin
         result = impute(a, :drop; limit=0.2)
@@ -19,7 +15,6 @@ using RDatasets
         deleteat!(expected, [2, 3, 7])
 
         @test result == expected
-        @test result == drop(a)
     end
 
     @testset "Interpolate" begin
@@ -41,7 +36,7 @@ using RDatasets
         @testset "Mean" begin
             result = impute(a, :fill; limit=0.2)
             expected = copy(a)
-            expected[[2, 3, 7]] = mean(drop(a))
+            expected[[2, 3, 7]] = mean(a[mask])
 
             @test result == expected
         end
@@ -67,39 +62,16 @@ using RDatasets
         @test result == expected
     end
 
-    @testset "NullableArray" begin
-        b = NullableArray(a)
-        b[[2, 3, 7]] = Nullable()
-
-        result = impute(b, :drop; limit=0.2)
-
-        @test Array(result) == impute(a, :drop; limit=0.2)
-    end
-
-    @testset "DataArray" begin
-        b = DataArray(a)
-        b[[2, 3, 7]] = NA
-
-        result = impute(b, :interp; limit=0.2)
-
-        @test Array(result) == impute(a, :interp; limit=0.2)
-    end
-
     @testset "DataFrame" begin
-        data = dataset(DataFrames, "boot", "neuro")
+        data = dataset("boot", "neuro")
         df = impute(data, :interp; limit=1.0)
     end
 
-    @testset "DataTable" begin
-        data = dataset(DataTables, "boot", "neuro")
-        dt = impute(data, :drop; limit=1.0)
-    end
-
     @testset "Matrix" begin
-        data = hcat(dataset(DataTables, "boot", "neuro").columns...)
+        data = hcat(dataset("boot", "neuro").columns...)
 
         @testset "Drop" begin
-            result = drop(data)
+            result = Iterators.drop(data)
             @test size(result, 1) == 4
         end
 
@@ -114,7 +86,7 @@ using RDatasets
     end
 
     @testset "Chain" begin
-        data = hcat(dataset(DataTables, "boot", "neuro").columns...)
+        data = hcat(dataset("boot", "neuro").columns...)
         result = chain(
             data,
             Impute.Interpolate(),
@@ -128,11 +100,14 @@ using RDatasets
         @test !any(isnull, result)
     end
 
-    @testset "Custom missing functions" begin
-        data = dataset(DataTables, "boot", "neuro")
-        @test impute(data, isnull, :drop; limit=1.0) == drop(data)
-        result1 = chain(data, Impute.Interpolate(), Impute.Drop(); limit=1.0)
-        result2 = chain(data, isnull, Impute.Interpolate(), Impute.Drop(); limit=1.0)
+    @testset "Alternate missing functions" begin
+        data1 = dataset("boot", "neuro")                # Missing values with `missing`
+        data2 = impute(data1, :fill, NaN; limit=1.0)     # Missing values with `NaN`
+
+        @test impute(data1, :drop; limit=1.0) == dropmissing(data1)
+
+        result1 = chain(data1, Impute.Interpolate(), Impute.Drop(); limit=1.0)
+        result2 = chain(data2, isnan, Impute.Interpolate(), Impute.Drop(); limit=1.0)
         @test result1 == result2
     end
 end

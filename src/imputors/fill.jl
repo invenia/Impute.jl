@@ -32,7 +32,7 @@ function impute!{T<:Any}(imp::Fill, ctx::Context, data::AbstractArray{T, 1})
     end
 
     for i in 1:length(data)
-        if is_missing(ctx, data[i])
+        if ismissing(ctx, data[i])
             data[i] = fill_val
         end
     end

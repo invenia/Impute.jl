@@ -18,7 +18,7 @@ function impute!{T<:Any}(imp::Interpolate, ctx::Context, data::AbstractArray{T, 
     i = findfirst(ctx, data) + 1
 
     while i < length(data)
-        if is_missing(ctx, data[i])
+        if ismissing(ctx, data[i])
             prev_idx = i - 1
             next_idx = findnext(ctx, data, i + 1)
 

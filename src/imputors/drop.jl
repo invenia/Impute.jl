@@ -1,7 +1,7 @@
 """
     Drop <: Imputor
 
-Removes missing values from the `AbstractArray`, `DataFrame` or `DataTable` provided.
+Removes missing values from the `AbstractArray` or `DataFrame` provided.
 """
 type Drop <: Imputor end
 
@@ -19,7 +19,7 @@ Uses `filter!` to remove missing elements from the array.
 * `AbstractArray{T, 1}`: our data array with missing elements removed
 """
 function impute!{T<:Any}(imp::Drop, ctx::Context, data::AbstractArray{T, 1})
-    return filter!(x -> !is_missing(ctx, x), data)
+    return filter!(x -> !ismissing(ctx, x), data)
 end
 
 """
@@ -45,30 +45,30 @@ NOTES (or premature optimizations):
 """
 function impute!{T<:Any}(imp::Drop, ctx::Context, data::AbstractArray{T, 2})
     ctx.num = size(data, 1)
-    mask = map(i -> !is_missing(ctx, data[i, :]), 1:size(data, 1))
+    mask = map(i -> !ismissing(ctx, data[i, :]), 1:size(data, 1))
 
     return data[mask, :]
 end
 
 """
-    impute!(imp::Drop, ctx::Context, data::Table)
+    impute!(imp::Drop, ctx::Context, data::DataFrame)
 
-Finds the missing rows in the `DataFrame` or `DataTable` and deletes them.
+Finds the missing rows in the `DataFrame` and deletes them.
 
-NOTE: this isn't quite as fast as `dropnull` in `DataTable`s as we're using an arbitrary `missing`
-function rather than using the precomputed `dt.isnull` vector of bools.
+NOTE: this isn't quite as fast as `dropnull` in `DataFrames`s as we're using an arbitrary
+`missing` function rather than using the precomputed `dt.isnull` vector of bools.
 
 # Arguments
 * `imp::Drop`: this `Imputor` method
 * `ctx::Context`: contextual information for missing data
-* `data::Table`: the data to impute
+* `data::DataFrame`: the data to impute
 
 # Returns
-* `Table`: our data with the missing rows removed.
+* `DataFrame`: our data with the missing rows removed.
 """
-function impute!(imp::Drop, ctx::Context, data::Table)
+function impute!(imp::Drop, ctx::Context, data::DataFrame)
     ctx.num = size(data, 1)
     m = typeof(data).name.module
-    m.deleterows!(data, find(map(r -> is_missing(ctx, r), m.eachrow(data))))
+    m.deleterows!(data, find(map(r -> ismissing(ctx, r), m.eachrow(data))))
     return data
 end

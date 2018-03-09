@@ -16,15 +16,15 @@ type Context
     missing::Function
 end
 
-Context(limit::Float64, missing::Function) = Context(0, 0, limit, missing)
+Context(limit::Float64, missing::Function=ismissing) = Context(0, 0, limit, missing)
 
 Base.copy(x::Context) = Context(x.num, x.count, x.limit, x.missing)
 
 """
-    is_missing(ctx::Context, x) -> Bool
+    ismissing(ctx::Context, x) -> Bool
 
 Uses `ctx.missing` to determine if x is missing. If x is a data row or an abstract array
-then `is_missing` will return true if `ctx.missing` returns true for any element.
+then `ismissing` will return true if `ctx.missing` returns true for any element.
 The ctx.count is increased whenever whenever we return true and if `ctx.count / ctx.num`
 exceeds our `ctx.limit` we throw an `ImputeError`
 
@@ -32,8 +32,8 @@ exceeds our `ctx.limit` we throw an `ImputeError`
 * `ctx::Context`: the contextual information about missing information.
 * `x`: the value to check (may be an single values, abstract array or row)
 """
-function is_missing(ctx::Context, x)
-    missing = if isa(x, Union{DataFrameRow, DataTableRow})
+function ismissing(ctx::Context, x)
+    missing = if isa(x, DataFrameRow)
         any(entry -> ctx.missing(entry[2]), x)
     elseif isa(x, AbstractArray)
         any(ctx.missing, x)
@@ -62,14 +62,14 @@ end
 Returns the first not missing index in `data`.
 
 # Arguments
-* `ctx::Context`: the context to pass into `is_missing`
+* `ctx::Context`: the context to pass into `ismissing`
 * `data::AbstractArray{T, 1}`: the data array to search
 
 # Returns
 * `Int`: the first index in `data` that isn't missing
 """
 function Base.findfirst{T<:Any}(ctx::Context, data::AbstractArray{T, 1})
-    return findfirst(x -> !is_missing(ctx, x), data)
+    return findfirst(x -> !ismissing(ctx, x), data)
 end
 
 """
@@ -78,14 +78,14 @@ end
 Returns the last not missing index in `data`.
 
 # Arguments
-* `ctx::Context`: the context to pass into `is_missing`
+* `ctx::Context`: the context to pass into `ismissing`
 * `data::AbstractArray{T, 1}`: the data array to search
 
 # Returns
 * `Int`: the last index in `data` that isn't missing
 """
 function Base.findlast{T<:Any}(ctx::Context, data::AbstractArray{T, 1})
-    return findlast(x -> !is_missing(ctx, x), data)
+    return findlast(x -> !ismissing(ctx, x), data)
 end
 
 """
@@ -94,12 +94,12 @@ end
 Returns the next not missing index in `data`.
 
 # Arguments
-* `ctx::Context`: the context to pass into `is_missing`
+* `ctx::Context`: the context to pass into `ismissing`
 * `data::AbstractArray{T, 1}`: the data array to search
 
 # Returns
 * `Int`: the next index in `data` that isn't missing
 """
 function Base.findnext{T<:Any}(ctx::Context, data::AbstractArray{T, 1}, idx::Int)
-    return findnext(x -> !is_missing(ctx, x), data, idx)
+    return findnext(x -> !ismissing(ctx, x), data, idx)
 end

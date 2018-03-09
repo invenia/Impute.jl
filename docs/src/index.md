@@ -5,7 +5,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/github/invenia/Impute.jl?svg=true)](https://ci.appveyor.com/project/invenia/Impute-jl)
 [![codecov](https://codecov.io/gh/invenia/Impute.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/invenia/Impute.jl)
 
-Impute.jl provides various data imputation methods for `Arrays`, `NullableArrays` and `DataArrays`(for vectors and matrices), as well as `DataFrames` and `DataTables`.
+Impute.jl provides various data imputation methods for `Arrays` and `DataFrames` with various types of missing values.
 
 ## Installation
 ```julia
@@ -14,8 +14,7 @@ Pkg.clone("https://github.com/invenia/Impute.jl")
 
 ## Features
 
-* Vectors and Matrices
-* NullableArrays and DataArrays
+* Operating over Vectors, Matrices and DataFrames
 * Chaining of methods
 
 ## Methods
@@ -177,61 +176,7 @@ julia> impute(a, :nocb; limit=0.2)
  20.0
 ```
 
-These operations also work on `NullableArray`s.
-```julia
-julia> using NullableArrays
-
-julia> b = NullableArray(a)
-20-element NullableArrays.NullableArray{Float64,1}:
- 1.0
- NaN
- NaN
- 4.0
- 5.0
- 6.0
- NaN
- 8.0
- 9.0
- 10.0
- 11.0
- 12.0
- 13.0
- 14.0
- 15.0
- 16.0
- 17.0
- 18.0
- 19.0
- 20.0
-
-julia> b[[2, 3, 7]] = Nullable()
-Nullable{Union{}}()
-
-julia> impute(a, :interp; limit=0.2)
-20-element Array{Float64,1}:
-  1.0
-  2.0
-  3.0
-  4.0
-  5.0
-  6.0
-  7.0
-  8.0
-  9.0
- 10.0
- 11.0
- 12.0
- 13.0
- 14.0
- 15.0
- 16.0
- 17.0
- 18.0
- 19.0
- 20.0
-```
-
-We can also perform these operations on `DataFrame`s and `DataTable`s.
+We can also perform these operations on `DataFrame`s.
 
 ```julia
 julia> using DataFrames

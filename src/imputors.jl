@@ -1,23 +1,20 @@
 """
     Imputor
 
-An imputor stores information about imputing values in `AbstractArray`s, `DataFrame`s and
-`DataTable`s. New imputation methods are expected to sutype `Imputor` and, at minimum,
+An imputor stores information about imputing values in `AbstractArray`s and `DataFrame`s.
+New imputation methods are expected to sutype `Imputor` and, at minimum,
 implement the `impute!{T<:Any}(imp::<MyImputor>, ctx::Context, data::AbstractArray{T, 1})`
 method.
 """
 
-abstract Imputor
+abstract type Imputor end
 
 """
     impute!(imp::Imputor, data::Dataset, limit::Float64=0.1)
 
 Creates a `Context` using information about `data`. These include
 
-1. missing data function:
-* `isnull`: if `NullableArray` or `DataTable`
-* `isna`: if `DataArray` or `DataFrame`
-* `isnan`: for anything else.
+1. missing data function which defaults to `missing`
 
 2. number of elements: `*(size(data)...)`
 
@@ -30,15 +27,7 @@ Creates a `Context` using information about `data`. These include
 * `Dataset`: the input `data` with values imputed.
 """
 function impute!(imp::Imputor, data::Dataset, limit::Float64=0.1)
-    f = if isa(data, Union{NullableArray, DataTable})
-        isnull
-    elseif isa(data, Union{DataArray, DataFrame})
-        isna
-    else
-        isnan
-    end
-
-    ctx = Context(*(size(data)...), 0, limit, f)
+    ctx = Context(*(size(data)...), 0, limit, ismissing)
     return impute!(imp, ctx, data)
 end
 
@@ -64,23 +53,24 @@ function impute!{T<:Any}(imp::Imputor, ctx::Context, data::AbstractArray{T, 2})
 end
 
 """
-    impute!{T<:Any}(imp::Imputor, ctx::Context, data::Table)
+    impute!{T<:Any}(imp::Imputor, ctx::Context, data::DataFrame)
 
-Imputes the data in a DataFrame or DataTable by imputing the values 1 column at a time;
+Imputes the data in a DataFrame by imputing the values 1 column at a time;
 if this is not the desired behaviour custom imputor methods should overload this method.
 
 # Arguments
 * `imp::Imputor`: the Imputor method to use
 * `ctx::Context`: the contextual information for missing data
-* `data::Table`: the data to impute
+* `data::DataFrame`: the data to impute
 
 # Returns
-* `Table`: the input `data` with values imputed
+* `DataFrame`: the input `data` with values imputed
 """
-function impute!(imp::Imputor, ctx::Context, data::Table)
-    for col in names(data)
-        impute!(imp, ctx, data[col])
+function impute!(imp::Imputor, ctx::Context, data::DataFrame)
+    colwise(data) do c
+        impute!(imp, ctx, c)
     end
+
     return data
 end
 

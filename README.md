@@ -5,7 +5,7 @@
 [![Build status](https://ci.appveyor.com/api/projects/status/github/invenia/Impute.jl?svg=true)](https://ci.appveyor.com/project/invenia/Impute-jl)
 [![codecov](https://codecov.io/gh/invenia/Impute.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/invenia/Impute.jl)
 
-Impute.jl provides various data imputation methods for `Arrays`, `NullableArrays` and `DataArrays`(for vectors and matrices), as well as `DataFrames` and `DataTables`.
+Impute.jl provides various data imputation methods for `Arrays` and `DataFrames` with various types of missing values.
 
 ## Installation
 ```julia
@@ -13,8 +13,7 @@ Pkg.clone("https://github.com/invenia/Impute.jl")
 ```
 
 ## Features
-* Vectors and Matrices
-* NullableArrays and DataArrays
+* Operate over Vectors, Matrices or DataFrames
 * Chaining of methods
 
 ## Methods

@@ -1,17 +1,16 @@
 module Impute
 
-import NullableArrays: NullableArray
-import DataTables: DataTable, DataTableRow
+using Missings
+using DataFrames
 
-import DataArrays: DataArray, isna
-import DataFrames: DataFrame, DataFrameRow
-
+import Missings: ismissing
+import DataFrames: DataFrameRow
 import RDatasets: dataset
+import Base.Iterators
 
 export impute, impute!, chain, chain!, drop!, interp, interp!, ImputeError
 
-typealias Table Union{DataFrame, DataTable}
-typealias Dataset Union{AbstractArray, Table}
+const Dataset = Union{AbstractArray, DataFrame}
 
 """
     ImputeError{T} <: Exception
@@ -27,8 +26,6 @@ end
 
 Base.showerror(io::IO, err::ImputeError) = println(io, "ImputeError: $(err.msg)")
 
-
-include("utils.jl")
 include("context.jl")
 include("imputors.jl")
 
@@ -131,7 +128,7 @@ drop!(data::Dataset; limit=1.0) = impute!(data, :drop; limit=limit)
 
 Utility method for `impute(data, :drop; limit=limit)`
 """
-Base.drop(data::Dataset; limit=1.0) = impute(data, :drop; limit=limit)
+Iterators.drop(data::Dataset; limit=1.0) = impute(data, :drop; limit=limit)
 
 """
     interp!(data::Dataset; limit=1.0)

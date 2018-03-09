@@ -18,7 +18,7 @@ that all missing values will be imputed.
 function impute!{T<:Any}(imp::LOCF, ctx::Context, data::AbstractArray{T, 1})
     start_idx = findfirst(ctx, data) + 1
     for i in start_idx:length(data)
-        if is_missing(ctx, data[i])
+        if ismissing(ctx, data[i])
             data[i] = data[i-1]
         end
     end

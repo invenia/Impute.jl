@@ -57,13 +57,5 @@ Infers the missing data function from the `data` and passes that to
 * `Dataset`: our imputed data
 """
 function impute!(imp::Chain, data::Dataset; limit::Float64=0.1)
-    f = if isa(data, Union{NullableArray, DataTable})
-        isnull
-    elseif isa(data, Union{DataArray, DataFrame})
-        isna
-    else
-        isnan
-    end
-
-    impute!(imp, f, data; limit=limit)
+    impute!(imp, ismissing, data; limit=limit)
 end
