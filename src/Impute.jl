@@ -5,7 +5,6 @@ using DataFrames
 
 import Missings: ismissing
 import DataFrames: DataFrameRow
-import RDatasets: dataset
 import Base.Iterators
 
 export impute, impute!, chain, chain!, drop!, interp, interp!, ImputeError
