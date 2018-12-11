@@ -32,7 +32,7 @@ function impute!(imp::Imputor, data::Dataset, limit::Float64=0.1)
 end
 
 """
-    impute!{T<:Any}(imp::Imputor, ctx::Context, data::AbstractArray{T, 2})
+    impute!(imp::Imputor, ctx::Context, data::AbstractMatrix)
 
 Imputes the data in a matrix by imputing the values 1 column at a time;
 if this is not the desired behaviour custom imputor methods should overload this method.
@@ -40,12 +40,12 @@ if this is not the desired behaviour custom imputor methods should overload this
 # Arguments
 * `imp::Imputor`: the Imputor method to use
 * `ctx::Context`: the contextual information for missing data
-* `data::AbstractArray{T, 2}`: the data to impute
+* `data::AbstractMatrix`: the data to impute
 
 # Returns
-* `AbstractArray{T, 2}`: the input `data` with values imputed
+* `AbstractMatrix`: the input `data` with values imputed
 """
-function impute!{T<:Any}(imp::Imputor, ctx::Context, data::AbstractArray{T, 2})
+function impute!(imp::Imputor, ctx::Context, data::AbstractMatrix)
     for i in 1:size(data, 2)
         impute!(imp, ctx, view(data, :, i))
     end
@@ -53,7 +53,7 @@ function impute!{T<:Any}(imp::Imputor, ctx::Context, data::AbstractArray{T, 2})
 end
 
 """
-    impute!{T<:Any}(imp::Imputor, ctx::Context, data::DataFrame)
+    impute!(imp::Imputor, ctx::Context, data::DataFrame)
 
 Imputes the data in a DataFrame by imputing the values 1 column at a time;
 if this is not the desired behaviour custom imputor methods should overload this method.
@@ -74,8 +74,7 @@ function impute!(imp::Imputor, ctx::Context, data::DataFrame)
     return data
 end
 
-imputors_path = joinpath(dirname(@__FILE__), "imputors")
 
 for file in ("drop.jl", "locf.jl", "nocb.jl", "interp.jl", "fill.jl", "chain.jl")
-    include(joinpath(imputors_path, file))
+    include(joinpath("imputors", file))
 end

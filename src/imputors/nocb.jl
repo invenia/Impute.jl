@@ -3,10 +3,10 @@
 
 Fills in missing data using the Next Observation Carried Backward (NOCB) approach.
 """
-type NOCB <: Imputor end
+struct NOCB <: Imputor end
 
 """
-    impute!{T<:Any}(imp::NOCB, ctx::Context, data::AbstractArray{T, 1})
+    impute!(imp::NOCB, ctx::Context, data::AbstractVector)
 
 Iterates backwards through the `data` and fills missing data with the next
 existing observation.
@@ -20,7 +20,7 @@ that all missing values will be imputed.
 
 ```
 """
-function impute!{T<:Any}(imp::NOCB, ctx::Context, data::AbstractArray{T, 1})
+function impute!(imp::NOCB, ctx::Context, data::AbstractVector)
     end_idx = findlast(ctx, data) - 1
     for i in end_idx:-1:1
         if ismissing(ctx, data[i])

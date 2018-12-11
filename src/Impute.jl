@@ -1,13 +1,13 @@
 module Impute
 
-using Missings
 using DataFrames
+using Missings
+using Statistics
 
-import Missings: ismissing
 import DataFrames: DataFrameRow
 import Base.Iterators
 
-export impute, impute!, chain, chain!, drop!, interp, interp!, ImputeError
+export impute, impute!, chain, chain!, drop, drop!, interp, interp!, ImputeError
 
 const Dataset = Union{AbstractArray, DataFrame}
 
@@ -19,7 +19,7 @@ Is thrown by `impute` methods when the limit of imputable values has been exceed
 # Fields
 * msg::T - the message to print.
 """
-immutable ImputeError{T} <: Exception
+struct ImputeError{T} <: Exception
     msg::T
 end
 
