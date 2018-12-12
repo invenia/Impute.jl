@@ -68,6 +68,6 @@ NOTE: this isn't quite as fast as `dropnull` in `DataFrames`s as we're using an 
 function impute!(imp::Drop, ctx::Context, data::DataFrame)
     ctx.num = size(data, 1)
     m = typeof(data).name.module
-    m.deleterows!(data, findall(map(r -> ismissing(ctx, r), m.eachrow(data))))
+    m.deleterows!(data, findall(r -> ismissing(ctx, r), m.eachrow(data)))
     return data
 end
