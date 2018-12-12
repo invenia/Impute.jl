@@ -14,7 +14,7 @@ WARNING: Missing values at the head or tail of the array cannot be interpolated 
 are no existing values on both sides. As a result, this method does not guarantee
 that all missing values will be imputed.
 """
-function impute!(imp::Interpolate, ctx::Context, data::AbstractVector{<:Union{T,Missing}}) where T
+function impute!(imp::Interpolate, ctx::Context, data::AbstractVector{<:Union{T, Missing}}) where T
     i = findfirst(ctx, data) + 1
 
     while i < length(data)
@@ -26,7 +26,7 @@ function impute!(imp::Interpolate, ctx::Context, data::AbstractVector{<:Union{T,
                 gap_sz = (next_idx - prev_idx) - 1
 
                 diff = data[next_idx] - data[prev_idx]
-                incr = diff / Missings.T(T)(gap_sz + 1)
+                incr = diff / T(gap_sz + 1)
                 start_val = data[prev_idx]
                 stop_val = data[next_idx]
 

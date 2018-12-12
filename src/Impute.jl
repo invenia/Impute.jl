@@ -1,7 +1,6 @@
 module Impute
 
 using DataFrames
-using Missings
 using Statistics
 
 import DataFrames: DataFrameRow
