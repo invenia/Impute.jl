@@ -4,7 +4,8 @@ os:
   - linux
   - osx
 julia:
-  - release
+  - 0.7
+  - 1.0
   - nightly
 notifications:
   email: false
@@ -17,8 +18,18 @@ matrix:
 #  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
 #  - julia -e 'Pkg.clone(pwd()); Pkg.build("Impute"); Pkg.test("Impute"; coverage=true)'
 after_success:
-  # push coverage results to CodeCov
-  - julia -e 'cd(Pkg.dir("Impute")); Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
-  # build documentation
-  - julia -e 'Pkg.add("Documenter")'
-  - julia -e 'cd(Pkg.dir("Impute")); include(joinpath("docs", "make.jl"))'
+  - |
+      julia -e '
+        VERSION >= v"0.7.0-DEV.3656" && using Pkg
+        VERSION >= v"0.7.0-DEV.5183" || cd(Pkg.dir("Impute"))
+        Pkg.add("Coverage")
+        using Coverage
+        Codecov.submit(Codecov.process_folder())
+      '
+  - |
+      julia -e '
+        VERSION >= v"0.7.0-DEV.3656" && using Pkg
+        VERSION >= v"0.7.0-DEV.5183" || cd(Pkg.dir("Impute"))
+        Pkg.add("Documenter")
+        include(joinpath("docs", "make.jl"))
+      '

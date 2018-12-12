@@ -1,12 +1,12 @@
 using Impute
-using Base.Test
+using Test
 using DataFrames
-using Missings
 using RDatasets
+using Statistics
 
 @testset "Impute" begin
-    a = collect(Union{Float64, Missing}, 1.0:1.0:20.0)
-    a[[2, 3, 7]] = missing
+    a = Vector{Union{Float64, Missing}}(1.0:1.0:20.0)
+    a[[2, 3, 7]] .= missing
     mask = map(!ismissing, a)
 
     @testset "Drop" begin
@@ -28,7 +28,7 @@ using RDatasets
             fill_val = -1.0
             result = impute(a, :fill, fill_val; limit=0.2)
             expected = copy(a)
-            expected[[2, 3, 7]] = fill_val
+            expected[[2, 3, 7]] .= fill_val
 
             @test result == expected
         end
@@ -36,7 +36,7 @@ using RDatasets
         @testset "Mean" begin
             result = impute(a, :fill; limit=0.2)
             expected = copy(a)
-            expected[[2, 3, 7]] = mean(a[mask])
+            expected[[2, 3, 7]] .= mean(a[mask])
 
             @test result == expected
         end
@@ -68,7 +68,7 @@ using RDatasets
     end
 
     @testset "Matrix" begin
-        data = hcat(dataset("boot", "neuro").columns...)
+        data = Matrix(dataset("boot", "neuro"))
 
         @testset "Drop" begin
             result = Iterators.drop(data)
@@ -86,7 +86,7 @@ using RDatasets
     end
 
     @testset "Chain" begin
-        data = hcat(dataset("boot", "neuro").columns...)
+        data = Matrix(dataset("boot", "neuro"))
         result = chain(
             data,
             Impute.Interpolate(),
@@ -97,7 +97,7 @@ using RDatasets
 
         @test size(result) == size(data)
         # Confirm that we don't have any more missing values
-        @test !any(isnull, result)
+        @test !any(ismissing, result)
     end
 
     @testset "Alternate missing functions" begin

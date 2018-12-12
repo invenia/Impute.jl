@@ -6,8 +6,8 @@ Runs multiple `Imputor`s on the same data in the order they're provided.
 # Fields
 * `imputors::Array{Imputor}`
 """
-type Chain <: Imputor
-    imputors::Array{Imputor}
+struct Chain <: Imputor
+    imputors::Vector{Imputor}
 end
 
 """

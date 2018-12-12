@@ -1,7 +1,7 @@
-type LOCF <: Imputor end
+struct LOCF <: Imputor end
 
 """
-    impute!{T<:Any}(imp::LOCF, ctx::Context, data::AbstractArray{T, 1})
+    impute!(imp::LOCF, ctx::Context, data::AbstractVector)
 
 Iterates forwards through the `data` and fills missing data with the last
 existing observation.
@@ -15,7 +15,7 @@ that all missing values will be imputed.
 
 ```
 """
-function impute!{T<:Any}(imp::LOCF, ctx::Context, data::AbstractArray{T, 1})
+function impute!(imp::LOCF, ctx::Context, data::AbstractVector)
     start_idx = findfirst(ctx, data) + 1
     for i in start_idx:length(data)
         if ismissing(ctx, data[i])
