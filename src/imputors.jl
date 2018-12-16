@@ -177,5 +177,6 @@ end
 
 
 for file in ("drop.jl", "locf.jl", "nocb.jl", "interp.jl", "fill.jl", "chain.jl", "srs.jl")
+for file in ("drop.jl", "locf.jl", "nocb.jl", "interp.jl", "fill.jl", "chain.jl", "srs.jl", "svd.jl")
     include(joinpath("imputors", file))
 end

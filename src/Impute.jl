@@ -6,7 +6,10 @@ using Statistics
 using StatsBase
 using Tables: Tables, materializer, istable
 
-import Base.Iterators: drop
+using Base.Iterators
+using Base.Iterators: drop
+using LinearAlgebra
+using LinearAlgebra: Diagonal
 
 
 """
@@ -63,6 +66,7 @@ const global imputation_methods = (
     locf = LOCF,
     nocb = NOCB,
     srs = SRS,
+    svd = SVD,
 )
 
 include("deprecated.jl")
@@ -314,5 +318,19 @@ julia> Impute.srs(df; rng=MersenneTwister(1234), context=Context(; limit=1.0))
 │ 5   │ 5.0      │ 5.5      │
 ```
 """ srs
+
+"""
+    svd!(data::AbstractMatrix; limit=1.0)
+
+Utility method for `impute!(data, :svd; limit=limit)`
+"""
+svd!(data::AbstractMatrix; limit=1.0) = impute!(data, :svd; limit=limit)
+
+"""
+    svd(data::AbstractMatrix; limit=1.0)
+
+Utility method for `impute(data, :svd; limit=limit)`
+"""
+svd(data::AbstractMatrix; limit=1.0) = impute(data, :svd; limit=limit)
 
 end  # module

@@ -522,5 +522,14 @@ using Impute:
 
     @testset "$T" for T in (DropObs, DropVars, Interpolate, Fill, LOCF, NOCB)
         test_all(ImputorTester(T))
+
+    @testset "SVD" begin
+        data = Matrix(dataset("Ecdat", "Electricity"))
+        for i in 1:50
+            idx = rand(1:length(data))
+            data[idx] = missing
+        end
+
+        result = Impute.svd(data)
     end
 end
