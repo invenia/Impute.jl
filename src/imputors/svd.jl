@@ -24,7 +24,7 @@ end
 """
 function impute!(imp::SVD, ctx::Context, data::AbstractMatrix{<:Union{T, Missing}}) where T<:Real
     n, p = size(data)
-    k = imp.rank === nothing ? 1 : min(imp.rank, p)
+    k = imp.rank === nothing ? 0 : min(imp.rank, p-1)
     S = zeros(T, p)
     X = zeros(T, n, p)
 
@@ -46,7 +46,7 @@ function impute!(imp::SVD, ctx::Context, data::AbstractMatrix{<:Union{T, Missing
 
     for i in 1:imp.maxiter
         if imp.rank === nothing
-            k = min(k + 1, p)
+            k = min(k + 1, p - 1)
         end
 
         # Compute the SVD and produce a low-rank approximation of the data
