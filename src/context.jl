@@ -34,7 +34,7 @@ exceeds our `ctx.limit` we throw an `ImputeError`
 """
 function Base.ismissing(ctx::Context, x)
     missing = if isa(x, DataFrameRow)
-        any(entry -> ctx.missing(entry[2]), x)
+        any(entry -> ctx.missing(entry[2]), pairs(x))
     elseif isa(x, AbstractArray)
         any(ctx.missing, x)
     else
