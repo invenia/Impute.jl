@@ -11,10 +11,13 @@ struct SVD <: Imputor
     maxiter::Int
     limits::Union{Tuple{Float64, Float64}, Nothing}
     verbose::Bool
+    context::AbstractContext
 end
 
-function SVD(; init=Fill(), rank=nothing, tol=1e-10, maxiter=10000, limits=nothing, verbose=true)
-    SVD(init, rank, tol, maxiter, limits, verbose)
+function SVD(;
+    init=Fill(), rank=nothing, tol=1e-10, maxiter=100, limits=nothing, verbose=true, context=Context()
+)
+    SVD(init, rank, tol, maxiter, limits, verbose, context)
 end
 
 """
@@ -22,14 +25,15 @@ end
 
 
 """
-function impute!(imp::SVD, ctx::Context, data::AbstractMatrix{<:Union{T, Missing}}) where T<:Real
+function impute!(data::AbstractMatrix{<:Union{T, Missing}}, imp::SVD) where T<:Real
     n, p = size(data)
     k = imp.rank === nothing ? 0 : min(imp.rank, p-1)
-    S = zeros(T, p)
+    S = zeros(T, min(n, p))
     X = zeros(T, n, p)
 
+    ctx = imp.context
     # Get our before and after views of our missing and non-missing data
-    mmask = ismissing.(Ref(ctx), data)
+    mmask = ismissing.(data)
     omask = .!mmask
 
     mdata = data[mmask]
@@ -38,19 +42,21 @@ function impute!(imp::SVD, ctx::Context, data::AbstractMatrix{<:Union{T, Missing
     oX = X[omask]
 
     # Fill in the original data
-    impute!(imp.init, ctx, data)
+    impute!(data, imp.init)
 
     C = sum((mdata - mX) .^ 2) / sum(mdata .^ 2)
     err = mean(abs.(odata - oX))
-    @info("Before: Diff=$(sum(mdata - mX)), MAE=$err, convergence=$C, normsq=$(sum(mdata .^2)), $(mX[1])")
+    @info("Before: Diff=$(sum(mdata - mX)), MAE=$err, convergence=$C, normsq=$(sum(mdata .^ 2)), $(mX[1])")
 
     for i in 1:imp.maxiter
         if imp.rank === nothing
-            k = min(k + 1, p - 1)
+            k = min(k + 1, p - 1, n - 1)
         end
 
         # Compute the SVD and produce a low-rank approximation of the data
         F = LinearAlgebra.svd(data)
+        # println(join([size(S), size(F.S), size(F.U), size(F.Vt)], ", "))
+
         S[1:k] .= F.S[1:k]
         X = F.U * Diagonal(S) * F.Vt
 
@@ -63,12 +69,13 @@ function impute!(imp::SVD, ctx::Context, data::AbstractMatrix{<:Union{T, Missing
         odata = data[omask]
         oX = X[omask]
 
+        # println(join([size(mdata), size(mX)], ", "))
         C = sum((mdata - mX) .^ 2) / sum(mdata .^ 2)
 
         # Print the error between reconstruction and observed inputs
         if imp.verbose
             err = mean(abs.(odata - oX))
-            @info("Iteration $i: Diff=$(sum(mdata - mX)), MAE=$err, convergence=$C, normsq=$(sum(mdata .^2)), $(mX[1])")
+            @info("Iteration $i: Diff=$(sum(mdata - mX)), MAE=$err, MSS=$(sum(mdata .^2)), convergence=$C")
         end
 
         # Update missing values

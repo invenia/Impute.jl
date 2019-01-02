@@ -7,10 +7,10 @@ using StatsBase
 using Tables: Tables, materializer, istable
 
 using Base.Iterators
-using Base.Iterators: drop
 using LinearAlgebra
 using LinearAlgebra: Diagonal
 
+import Base.Iterators: drop
 
 """
     ImputeError{T} <: Exception
