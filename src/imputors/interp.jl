@@ -27,16 +27,14 @@ function impute!(imp::Interpolate, ctx::Context, data::AbstractVector{<:Union{T,
 
                 diff = data[next_idx] - data[prev_idx]
                 incr = diff / T(gap_sz + 1)
-                start_val = data[prev_idx]
-                stop_val = data[next_idx]
+                val = data[prev_idx] + incr
 
-                values = Real(start_val):Real(incr):Real(stop_val)
+                # Iteratively fill in the values
+                for j in i:(next_idx - 1)
+                    data[j] = val
+                    val += incr
+                end
 
-                idx_range = prev_idx:(prev_idx + length(values) - 1)
-                # println(collect(idx_range))
-                # println(values)
-
-                data[idx_range] = values
                 i = next_idx
             else
                 break

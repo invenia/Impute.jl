@@ -21,6 +21,18 @@ using Statistics
         result = impute(a, :interp; limit=0.2)
         @test result == collect(1.0:1.0:20)
         @test result == interp(a)
+
+        # Test interpolation between identical points
+        b = ones(Union{Float64, Missing}, 20)
+        b[[2, 3, 7]] .= missing
+        @test interp(b) == ones(Union{Float64, Missing}, 20)
+
+        # Test interpolation at endpoints
+        b = ones(Union{Float64, Missing}, 20)
+        b[[1, 3, 20]] .= missing
+        result = interp(b)
+        @test ismissing(result[1])
+        @test ismissing(result[20])
     end
 
     @testset "Fill" begin
