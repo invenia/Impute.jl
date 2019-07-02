@@ -1,4 +1,5 @@
 using Impute
+using Tables
 using Test
 using DataFrames
 using RDatasets
@@ -98,18 +99,36 @@ using Statistics
     end
 
     @testset "Chain" begin
-        data = Matrix(dataset("boot", "neuro"))
-        result = chain(
-            data,
-            Impute.Interpolate(),
-            Impute.LOCF(),
-            Impute.NOCB();
-            limit=1.0
-        )
+        orig = dataset("boot", "neuro")
 
-        @test size(result) == size(data)
-        # Confirm that we don't have any more missing values
-        @test !any(ismissing, result)
+        @testset "DataFrame" begin
+            result = chain(
+                orig,
+                Impute.Interpolate(),
+                Impute.LOCF(),
+                Impute.NOCB();
+                limit=1.0
+            )
+
+            @test size(result) == size(orig)
+            # Confirm that we don't have any more missing values
+            @test !any(ismissing, Matrix(result))
+        end
+
+        @testset "Matrix" begin
+            data = Matrix(orig)
+            result = chain(
+                data,
+                Impute.Interpolate(),
+                Impute.LOCF(),
+                Impute.NOCB();
+                limit=1.0
+            )
+
+            @test size(result) == size(data)
+            # Confirm that we don't have any more missing values
+            @test !any(ismissing, result)
+        end
     end
 
     @testset "Alternate missing functions" begin

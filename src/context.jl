@@ -23,7 +23,7 @@ Base.copy(x::Context) = Context(x.num, x.count, x.limit, x.missing)
 """
     ismissing(ctx::Context, x) -> Bool
 
-Uses `ctx.missing` to determine if x is missing. If x is a data row or an abstract array
+Uses `ctx.missing` to determine if x is missing. If x is a named tuple or an abstract array
 then `ismissing` will return true if `ctx.missing` returns true for any element.
 The ctx.count is increased whenever whenever we return true and if `ctx.count / ctx.num`
 exceeds our `ctx.limit` we throw an `ImputeError`
@@ -33,7 +33,7 @@ exceeds our `ctx.limit` we throw an `ImputeError`
 * `x`: the value to check (may be an single values, abstract array or row)
 """
 function Base.ismissing(ctx::Context, x)
-    missing = if isa(x, DataFrameRow)
+    missing = if isa(x, NamedTuple)
         any(entry -> ctx.missing(entry[2]), pairs(x))
     elseif isa(x, AbstractArray)
         any(ctx.missing, x)

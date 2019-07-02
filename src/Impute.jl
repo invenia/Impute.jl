@@ -1,14 +1,22 @@
 module Impute
 
-using DataFrames
+using IterTools
 using Statistics
+using Tables: Tables, materializer, columntable, rowtable, istable
 
-import DataFrames: DataFrameRow
 import Base.Iterators
 
 export impute, impute!, chain, chain!, drop, drop!, interp, interp!, ImputeError
 
-const Dataset = Union{AbstractArray, DataFrame}
+function __init__()
+    for sym in [:chain, :chain!, :drop, :drop!, :interp, :interp!]
+        Base.depwarn(
+            "`$sym` will no longer be exported in future releases. " *
+            "Please qualify your calls with `Impute.$sym(...).` or explicitly import it.",
+            sym
+        )
+    end
+end
 
 """
     ImputeError{T} <: Exception
@@ -36,39 +44,39 @@ const global imputation_methods = Dict{Symbol, Type}(
 )
 
 """
-    impute!(data::Dataset, method::Symbol=:interp, args...; limit::Float64=0.1)
+    impute!(data, method::Symbol=:interp, args...; limit::Float64=0.1)
 
 Looks up the `Imputor` type for the `method`, creates it and calls
-`impute!(imputor::Imputor, data::Dataset, limit::Float64)` with it.
+`impute!(imputor::Imputor, data, limit::Float64)` with it.
 
 # Arguments
-* `data::Dataset`: the datset containing missing elements we should impute.
+* `data`: the datset containing missing elements we should impute.
 * `method::Symbol`: the imputation method to use
     (options: [`:drop`, `:fill`, `:interp`, `:locf`, `:nocb`])
 * `args::Any...`: any arguments you should pass to the `Imputor` constructor.
 * `limit::Float64`: missing data ratio limit/threshold (default: 0.1)
 """
-function impute!(data::Dataset, method::Symbol, args...; limit::Float64=0.1)
+function impute!(data, method::Symbol, args...; limit::Float64=0.1)
     imputor_type = imputation_methods[method]
     imputor = length(args) > 0 ? imputor_type(args...) : imputor_type()
     return impute!(imputor, data, limit)
 end
 
 """
-    impute!(data::Dataset, missing::Function, method::Symbol=:interp, args...; limit::Float64=0.1)
+    impute!(data, missing::Function, method::Symbol=:interp, args...; limit::Float64=0.1)
 
 Creates the appropriate `Imputor` type and `Context` (using `missing` function) in order to call
-`impute!(imputor::Imputor, ctx::Context, data::Dataset)` with them.
+`impute!(imputor::Imputor, ctx::Context, data)` with them.
 
 # Arguments
-* `data::Dataset`: the datset containing missing elements we should impute.
+* `data`: the datset containing missing elements we should impute.
 * `missing::Function`: the missing data function to use
 * `method::Symbol`: the imputation method to use
     (options: [`:drop`, `:fill`, `:interp`, `:locf`, `:nocb`])
 * `args::Any...`: any arguments you should pass to the `Imputor` constructor.
 * `limit::Float64`: missing data ratio limit/threshold (default: 0.1)
 """
-function impute!(data::Dataset, missing::Function, method::Symbol, args...; limit::Float64=0.1)
+function impute!(data, missing::Function, method::Symbol, args...; limit::Float64=0.1)
     imputor_type = imputation_methods[method]
     imputor = length(args) > 0 ? imputor_type(args...) : imputor_type()
     ctx = Context(*(size(data)...), 0, limit, missing)
@@ -76,70 +84,70 @@ function impute!(data::Dataset, missing::Function, method::Symbol, args...; limi
 end
 
 """
-    impute(data::Dataset, args...; kwargs...)
+    impute(data, args...; kwargs...)
 
 Copies the `data` before calling `impute!(new_data, args...; kwargs...)`
 """
-function impute(data::Dataset, args...; kwargs...)
+function impute(data, args...; kwargs...)
     return impute!(deepcopy(data), args...; kwargs...)
 end
 
 """
-    chain!(data::Dataset, missing::Function, imputors::Imputor...; kwargs...)
+    chain!(data, missing::Function, imputors::Imputor...; kwargs...)
 
 Creates a `Chain` with `imputors` and calls `impute!(imputor, missing, data; kwargs...)`
 """
-function chain!(data::Dataset, missing::Function, imputors::Imputor...; kwargs...)
+function chain!(data, missing::Function, imputors::Imputor...; kwargs...)
     imputor = Chain(imputors...)
     return impute!(imputor, missing, data; kwargs...)
 end
 
 """
-    chain!(data::Dataset, imputors::Imputor...; kwargs...)
+    chain!(data, imputors::Imputor...; kwargs...)
 
 Creates a `Chain` with `imputors` and calls `impute!(imputor, data; kwargs...)`
 """
-function chain!(data::Dataset, imputors::Imputor...; kwargs...)
+function chain!(data, imputors::Imputor...; kwargs...)
     imputor = Chain(imputors...)
     return impute!(imputor, data; kwargs...)
 end
 
 """
-    chain(data::Dataset, args...; kwargs...)
+    chain(data, args...; kwargs...)
 
 Copies the `data` before calling `chain!(data, args...; kwargs...)`
 """
-function chain(data::Dataset, args...; kwargs...)
+function chain(data, args...; kwargs...)
     result = deepcopy(data)
     return chain!(data, args...; kwargs...)
 end
 
 """
-    drop!(data::Dataset; limit=1.0)
+    drop!(data; limit=1.0)
 
 Utility method for `impute!(data, :drop; limit=limit)`
 """
-drop!(data::Dataset; limit=1.0) = impute!(data, :drop; limit=limit)
+drop!(data; limit=1.0) = impute!(data, :drop; limit=limit)
 
 """
-    drop(data::Dataset; limit=1.0)
+    drop(data; limit=1.0)
 
 Utility method for `impute(data, :drop; limit=limit)`
 """
-Iterators.drop(data::Dataset; limit=1.0) = impute(data, :drop; limit=limit)
+Iterators.drop(data; limit=1.0) = impute(data, :drop; limit=limit)
 
 """
-    interp!(data::Dataset; limit=1.0)
+    interp!(data; limit=1.0)
 
 Utility method for `impute!(data, :interp; limit=limit)`
 """
-interp!(data::Dataset; limit=1.0) = impute!(data, :interp; limit=limit)
+interp!(data; limit=1.0) = impute!(data, :interp; limit=limit)
 
 """
-    interp(data::Dataset; limit=1.0)
+    interp(data; limit=1.0)
 
 Utility method for `impute(data, :interp; limit=limit)`
 """
-interp(data::Dataset; limit=1.0) = impute(data, :interp; limit=limit)
+interp(data; limit=1.0) = impute(data, :interp; limit=limit)
 
 end  # module

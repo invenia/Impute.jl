@@ -1,7 +1,7 @@
 """
     Imputor
 
-An imputor stores information about imputing values in `AbstractArray`s and `DataFrame`s.
+An imputor stores information about imputing values in `AbstractArray`s and `Tables.table`s.
 New imputation methods are expected to sutype `Imputor` and, at minimum,
 implement the `impute!{T<:Any}(imp::<MyImputor>, ctx::Context, data::AbstractArray{T, 1})`
 method.
@@ -10,7 +10,7 @@ method.
 abstract type Imputor end
 
 """
-    impute!(imp::Imputor, data::Dataset, limit::Float64=0.1)
+    impute!(imp::Imputor, data, limit::Float64=0.1)
 
 Creates a `Context` using information about `data`. These include
 
@@ -20,13 +20,13 @@ Creates a `Context` using information about `data`. These include
 
 # Arguments
 * `imp::Imputor`: the Imputor method to use
-* `data::Dataset`: the data to impute
+* `data`: the data to impute
 * `limit::Float64: missing data ratio limit/threshold (default: 0.1)`
 
 # Return
-* `Dataset`: the input `data` with values imputed.
+* the input `data` with values imputed.
 """
-function impute!(imp::Imputor, data::Dataset, limit::Float64=0.1)
+function impute!(imp::Imputor, data, limit::Float64=0.1)
     ctx = Context(*(size(data)...), 0, limit, ismissing)
     return impute!(imp, ctx, data)
 end
@@ -53,25 +53,28 @@ function impute!(imp::Imputor, ctx::Context, data::AbstractMatrix)
 end
 
 """
-    impute!(imp::Imputor, ctx::Context, data::DataFrame)
+    impute!(imp::Imputor, ctx::Context, table)
 
-Imputes the data in a DataFrame by imputing the values 1 column at a time;
+Imputes the data in a table by imputing the values 1 column at a time;
 if this is not the desired behaviour custom imputor methods should overload this method.
 
 # Arguments
 * `imp::Imputor`: the Imputor method to use
 * `ctx::Context`: the contextual information for missing data
-* `data::DataFrame`: the data to impute
+* `table`: the data to impute
 
 # Returns
-* `DataFrame`: the input `data` with values imputed
+* the input `data` with values imputed
 """
-function impute!(imp::Imputor, ctx::Context, data::DataFrame)
-    colwise(data) do c
-        impute!(imp, ctx, c)
+function impute!(imp::Imputor, ctx::Context, table)
+    @assert istable(table)
+    result = columntable(table)
+
+    for cname in propertynames(result)
+        impute!(imp, ctx, getproperty(table, cname))
     end
 
-    return data
+    return materializer(table)(result)
 end
 
 

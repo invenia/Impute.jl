@@ -1,7 +1,7 @@
 """
     Drop <: Imputor
 
-Removes missing values from the `AbstractArray` or `DataFrame` provided.
+Removes missing values from the `AbstractArray` or `Tables.table` provided.
 """
 struct Drop <: Imputor end
 
@@ -50,24 +50,26 @@ function impute!(imp::Drop, ctx::Context, data::AbstractMatrix)
 end
 
 """
-    impute!(imp::Drop, ctx::Context, data::DataFrame)
+    impute!(imp::Drop, ctx::Context, table)
 
-Finds the missing rows in the `DataFrame` and deletes them.
-
-NOTE: this isn't quite as fast as `dropnull` in `DataFrames`s as we're using an arbitrary
-`missing` function rather than using the precomputed `dt.isnull` vector of bools.
+Finds the missing rows in the table and deletes them.
 
 # Arguments
 * `imp::Drop`: this `Imputor` method
 * `ctx::Context`: contextual information for missing data
-* `data::DataFrame`: the data to impute
+* `table`: a type that implements the Tables API.
 
 # Returns
-* `DataFrame`: our data with the missing rows removed.
+* our data with the missing rows removed.
 """
-function impute!(imp::Drop, ctx::Context, data::DataFrame)
-    ctx.num = size(data, 1)
-    m = typeof(data).name.module
-    m.deleterows!(data, findall(r -> ismissing(ctx, r), m.eachrow(data)))
-    return data
+function impute!(imp::Drop, ctx::Context, table)
+    @assert istable(table)
+    rows = rowtable(table)
+    ctx.num = length(rows)
+
+    filter!(rows) do r
+        !any(x -> ismissing(ctx, x), propertyvalues(r))
+    end
+
+    return materializer(table)(rows)
 end
