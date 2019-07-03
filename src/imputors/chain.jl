@@ -32,10 +32,12 @@ Creates a `Context` and runs the `Imputor`s on the supplied data.
 * our imputed data
 """
 function impute!(imp::Chain, missing::Function, data; limit::Float64=0.1)
-    ctx = Context(*(size(data)...), 0, limit, missing)
+    context = Context(; limit=limit, is_missing=missing)
 
     for imputor in imp.imputors
-        data = impute!(imputor, copy(ctx), data)
+        data = context() do c
+            impute!(imputor, c, data)
+        end
     end
 
     return data

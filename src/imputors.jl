@@ -27,8 +27,9 @@ Creates a `Context` using information about `data`. These include
 * the input `data` with values imputed.
 """
 function impute!(imp::Imputor, data, limit::Float64=0.1)
-    ctx = Context(*(size(data)...), 0, limit, ismissing)
-    return impute!(imp, ctx, data)
+    Context(; limit=limit)() do ctx
+        return impute!(imp, ctx, data)
+    end
 end
 
 """
@@ -68,13 +69,15 @@ if this is not the desired behaviour custom imputor methods should overload this
 """
 function impute!(imp::Imputor, ctx::Context, table)
     @assert istable(table)
-    result = columntable(table)
+    # Extract a columns iterate that we should be able to use to mutate the data.
+    # NOTE: Mutation is not guaranteed for all table types, but it avoid copying the data
+    columntable = Tables.columns(table)
 
-    for cname in propertynames(result)
-        impute!(imp, ctx, getproperty(table, cname))
+    for cname in propertynames(columntable)
+        impute!(imp, ctx, getproperty(columntable, cname))
     end
 
-    return materializer(table)(result)
+    return table
 end
 
 

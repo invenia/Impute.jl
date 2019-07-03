@@ -115,6 +115,21 @@ using Statistics
             @test !any(ismissing, Matrix(result))
         end
 
+        @testset "Column Table" begin
+            data = Tables.columntable(orig)
+            result = chain(
+                data,
+                Impute.Interpolate(),
+                Impute.LOCF(),
+                Impute.NOCB();
+                limit=1.0
+            ) |> Tables.matrix
+
+            @test size(result) == size(orig)
+            # Confirm that we don't have any more missing values
+            @test !any(ismissing, result)
+        end
+
         @testset "Matrix" begin
             data = Matrix(orig)
             result = chain(

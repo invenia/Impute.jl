@@ -44,8 +44,10 @@ NOTES (or premature optimizations):
 * `AbstractMatrix`: a new matrix with missing rows removed
 """
 function impute!(imp::Drop, ctx::Context, data::AbstractMatrix)
-    ctx.num = size(data, 1)
-    mask = map(i -> !ismissing(ctx, data[i, :]), 1:size(data, 1))
+    mask = ctx() do c
+        map(i -> !ismissing(ctx, data[i, :]), 1:size(data, 1))
+    end
+
     return data[mask, :]
 end
 
@@ -64,12 +66,14 @@ Finds the missing rows in the table and deletes them.
 """
 function impute!(imp::Drop, ctx::Context, table)
     @assert istable(table)
-    rows = rowtable(table)
-    ctx.num = length(rows)
+    rows = Tables.rows(table)
 
-    filter!(rows) do r
+    result = Iterators.filter(rows) do r
         !any(x -> ismissing(ctx, x), propertyvalues(r))
     end
 
-    return materializer(table)(rows)
+    # Unfortunately, we'll need to construct a new table
+    # since Tables.rows is just an iterator
+    table = materializer(table)(result)
+    return table
 end

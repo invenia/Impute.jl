@@ -2,7 +2,8 @@ module Impute
 
 using IterTools
 using Statistics
-using Tables: Tables, materializer, columntable, rowtable, istable
+using StatsBase
+using Tables: Tables, materializer, istable
 
 import Base.Iterators
 
@@ -79,8 +80,9 @@ Creates the appropriate `Imputor` type and `Context` (using `missing` function) 
 function impute!(data, missing::Function, method::Symbol, args...; limit::Float64=0.1)
     imputor_type = imputation_methods[method]
     imputor = length(args) > 0 ? imputor_type(args...) : imputor_type()
-    ctx = Context(*(size(data)...), 0, limit, missing)
-    return impute!(imputor, ctx, data)
+    return Context(; limit=limit, is_missing=missing)() do ctx
+        impute!(imputor, ctx, data)
+    end
 end
 
 """
