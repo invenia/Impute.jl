@@ -129,9 +129,11 @@ function missing_update!(ctx::Context, miss)
 end
 
 function complete(ctx::Context)
-    if (ctx.count / ctx.num) > ctx.limit
+    missing_ratio = ctx.count / ctx.num
+
+    if missing_ratio > ctx.limit
         throw(ImputeError(
-            "More than $(ctx.limit * 100)% of values were missing ()."
+            "More than $(ctx.limit * 100)% of values were missing ($missing_ratio)."
         ))
     end
 end
@@ -141,6 +143,8 @@ end
     WeightedContext
 
 Records information about the missing data relative to a set of weights.
+This context type can be useful if some missing observation are more important than others
+(e.g., more recent observations in time series datasets)
 
 # Fields
 * `num::Int`: number of observations
@@ -180,7 +184,7 @@ function (ctx::WeightedContext)(f::Function)
 end
 
 function Base.copy(x::WeightedContext)
-    WeightedContext(x.num, x.s, x.limit, x.is_missing, x.on_complete, wv)
+    WeightedContext(x.num, x.s, x.limit, x.is_missing, x.on_complete, x.wv)
 end
 
 function missing_update!(ctx::WeightedContext, miss)
@@ -192,9 +196,11 @@ function missing_update!(ctx::WeightedContext, miss)
 end
 
 function complete(ctx::WeightedContext)
-    if (ctx.s / sum(ctx.wv)) > ctx.limit
+    missing_ratio = ctx.s / sum(ctx.wv)
+
+    if missing_ratio > ctx.limit
         throw(ImputeError(
-            "More than $(ctx.limit * 100)% of weighted values were missing ()."
+            "More than $(ctx.limit * 100)% of weighted values were missing ($missing_ratio)."
         ))
     end
 end

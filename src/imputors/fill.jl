@@ -19,23 +19,25 @@ By default `Fill()` will use the mean of the existing values as the fill value.
 Fill() = Fill(mean)
 
 """
-    impute!(imp::Fill, ctx::Context, data::AbstractVector)
+    impute!(imp::Fill, context::AbstractContext, data::AbstractVector)
 
 Computes the fill value if `imp.value` is a `Function` (i.e., `imp.value(drop(copy(data)))`)
 and replaces all missing values in the `data` with that value.
 """
-function impute!(imp::Fill, ctx::Context, data::AbstractVector)
-    fill_val = if isa(imp.value, Function)
-        imp.value(Iterators.drop(copy(data)))
-    else
-        imp.value
-    end
-
-    for i in 1:length(data)
-        if ismissing(ctx, data[i])
-            data[i] = fill_val
+function impute!(imp::Fill, context::AbstractContext, data::AbstractVector)
+    context() do c
+        fill_val = if isa(imp.value, Function)
+            imp.value(Iterators.drop(copy(data)))
+        else
+            imp.value
         end
-    end
 
-    return data
+        for i in 1:length(data)
+            if ismissing(c, data[i])
+                data[i] = fill_val
+            end
+        end
+
+        return data
+    end
 end

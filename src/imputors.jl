@@ -9,6 +9,16 @@ method.
 
 abstract type Imputor end
 
+
+"""
+    impute(imp::Imputor, data, limit=0.1)
+    impute(imp::Imputor, ctx, data)
+
+Copies the `data` before calling the corresponding `impute!(imp, ...)` call.
+"""
+impute(imp::Imputor, data) = impute!(imp, deepcopy(data))
+impute(imp::Imputor, ctx::AbstractContext, data) = impute!(imp, ctx, deepcopy(data))
+
 """
     impute!(imp::Imputor, data, limit::Float64=0.1)
 
@@ -33,20 +43,20 @@ function impute!(imp::Imputor, data, limit::Float64=0.1)
 end
 
 """
-    impute!(imp::Imputor, ctx::Context, data::AbstractMatrix)
+    impute!(imp::Imputor, ctx::AbstractContext, data::AbstractMatrix)
 
 Imputes the data in a matrix by imputing the values 1 column at a time;
 if this is not the desired behaviour custom imputor methods should overload this method.
 
 # Arguments
 * `imp::Imputor`: the Imputor method to use
-* `ctx::Context`: the contextual information for missing data
+* `ctx::AbstractContext`: the contextual information for missing data
 * `data::AbstractMatrix`: the data to impute
 
 # Returns
 * `AbstractMatrix`: the input `data` with values imputed
 """
-function impute!(imp::Imputor, ctx::Context, data::AbstractMatrix)
+function impute!(imp::Imputor, ctx::AbstractContext, data::AbstractMatrix)
     for i in 1:size(data, 2)
         impute!(imp, ctx, view(data, :, i))
     end
@@ -54,20 +64,20 @@ function impute!(imp::Imputor, ctx::Context, data::AbstractMatrix)
 end
 
 """
-    impute!(imp::Imputor, ctx::Context, table)
+    impute!(imp::Imputor, ctx::AbstractContext, table)
 
 Imputes the data in a table by imputing the values 1 column at a time;
 if this is not the desired behaviour custom imputor methods should overload this method.
 
 # Arguments
 * `imp::Imputor`: the Imputor method to use
-* `ctx::Context`: the contextual information for missing data
+* `ctx::AbstractContext`: the contextual information for missing data
 * `table`: the data to impute
 
 # Returns
 * the input `data` with values imputed
 """
-function impute!(imp::Imputor, ctx::Context, table)
+function impute!(imp::Imputor, ctx::AbstractContext, table)
     @assert istable(table)
     # Extract a columns iterate that we should be able to use to mutate the data.
     # NOTE: Mutation is not guaranteed for all table types, but it avoid copying the data

@@ -4,6 +4,9 @@ using Test
 using DataFrames
 using RDatasets
 using Statistics
+using StatsBase
+
+import Impute: Drop, Context, WeightedContext
 
 @testset "Impute" begin
     a = Vector{Union{Float64, Missing}}(1.0:1.0:20.0)
@@ -155,5 +158,29 @@ using Statistics
         result1 = chain(data1, Impute.Interpolate(), Impute.Drop(); limit=1.0)
         result2 = chain(data2, isnan, Impute.Interpolate(), Impute.Drop(); limit=1.0)
         @test result1 == result2
+    end
+
+    @testset "Contexts" begin
+        @testset "Base" begin
+            @test_throws ImputeError impute(a, :drop; limit=0.1)
+            @test_throws ImputeError impute(Drop(), Context(; limit=0.1), a)
+        end
+
+        @testset "Weighted" begin
+            # If we use an exponentially weighted context then we won't pass the limit
+            # because missing earlier observations is less important than later ones.
+            @show a
+            ctx = WeightedContext(eweights(20, 0.3); limit=0.1)
+            @test isa(ctx, WeightedContext)
+            result = impute(Drop(), ctx, a)
+            expected = copy(a)
+            deleteat!(expected, [2, 3, 7])
+            @test result == expected
+
+            # If we reverse the weights such that earlier observations are more important
+            # then our previous limit of 0.2 won't be enough to succeed.
+            ctx = WeightedContext(reverse!(eweights(20, 0.3)); limit=0.2)
+            @test_throws ImputeError impute(Drop(), ctx, a)
+        end
     end
 end

@@ -35,9 +35,7 @@ function impute!(imp::Chain, missing::Function, data; limit::Float64=0.1)
     context = Context(; limit=limit, is_missing=missing)
 
     for imputor in imp.imputors
-        data = context() do c
-            impute!(imputor, c, data)
-        end
+        data = impute!(imputor, context, data)
     end
 
     return data
