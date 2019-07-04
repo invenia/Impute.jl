@@ -10,13 +10,14 @@ import Base.Iterators
 export impute, impute!, chain, chain!, drop, drop!, interp, interp!, ImputeError
 
 function __init__()
-    for sym in [:chain, :chain!, :drop, :drop!, :interp, :interp!]
-        Base.depwarn(
-            "`$sym` will no longer be exported in future releases. " *
-            "Please qualify your calls with `Impute.$sym(...).` or explicitly import it.",
-            sym
-        )
-    end
+    sym = join(["chain", "chain!", "drop", "drop!", "interp", "interp!"], ", ", " and ")
+
+    @warn(
+        """
+        The following symbols will not be exported in future releases: $sym.
+        Please qualify your calls with `Impute.<method>(...)` or explicitly import the symbol.
+        """
+    )
 end
 
 """
