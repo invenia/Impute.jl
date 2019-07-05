@@ -11,11 +11,9 @@ StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 
 [compat]
+DataFrames = "0.17, 0.18"
 IterTools = "1.2"
 Tables = "0.2"
-
-[compat]
-DataFrames = "0.17, 0.18"
 julia = "1"
 
 [extras]
