@@ -25,6 +25,13 @@ function __init__()
         If you depend on a specific threshold please pass in an appropriate `AbstractContext`.
         """
     )
+
+    @warn(
+        """
+        All matrix imputation methods will be switching to the JuliaStats column-major convention
+        (e.g., each column corresponds to an observation, and each row corresponds to a variable).
+        """
+    )
 end
 
 """
