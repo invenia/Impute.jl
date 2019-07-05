@@ -169,7 +169,6 @@ import Impute: Drop, Context, WeightedContext
         @testset "Weighted" begin
             # If we use an exponentially weighted context then we won't pass the limit
             # because missing earlier observations is less important than later ones.
-            @show a
             ctx = WeightedContext(eweights(20, 0.3); limit=0.1)
             @test isa(ctx, WeightedContext)
             result = impute(Drop(), ctx, a)

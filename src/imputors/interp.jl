@@ -3,10 +3,15 @@
 
 Performs linear interpolation between the nearest values in an vector.
 """
-struct Interpolate <: Imputor end
+struct Interpolate <: Imputor
+    context::AbstractContext
+end
+
+"""Interpolate(; context=Context()) -> Interpolate"""
+Interpolate(; context=Context()) = Interpolate(context)
 
 """
-    impute!(imp::Interpolate, context::AbstractContext, data::AbstractVector)
+    impute!(imp::Interpolate, data::AbstractVector)
 
 Uses linear interpolation between existing elements of a vector to fill in missing data.
 
@@ -14,10 +19,8 @@ WARNING: Missing values at the head or tail of the array cannot be interpolated 
 are no existing values on both sides. As a result, this method does not guarantee
 that all missing values will be imputed.
 """
-function impute!(
-    imp::Interpolate, context::AbstractContext, data::AbstractVector{<:Union{T, Missing}}
-) where T
-    context() do c
+function impute!(imp::Interpolate, data::AbstractVector{<:Union{T, Missing}}) where T
+    imp.context() do c
         i = findfirst(c, data) + 1
 
         while i < length(data)

@@ -1,7 +1,12 @@
-struct LOCF <: Imputor end
+struct LOCF <: Imputor
+    context::AbstractContext
+end
+
+"""LOCF(; context=Context()) -> LOCF"""
+LOCF(; context=Context()) = LOCF(context)
 
 """
-    impute!(imp::LOCF, context::AbstractContext, data::AbstractVector)
+    impute!(imp::LOCF, data::AbstractVector)
 
 Iterates forwards through the `data` and fills missing data with the last
 existing observation.
@@ -15,8 +20,8 @@ that all missing values will be imputed.
 
 ```
 """
-function impute!(imp::LOCF, context::AbstractContext, data::AbstractVector)
-    context() do c
+function impute!(imp::LOCF, data::AbstractVector)
+    imp.context() do c
         start_idx = findfirst(c, data) + 1
         for i in start_idx:length(data)
             if ismissing(c, data[i])
