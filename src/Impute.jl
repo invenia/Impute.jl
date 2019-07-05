@@ -69,10 +69,10 @@ let
 
         # NOTE: The
         @eval begin
-            $f(data; kwargs...) = impute($typename(; context=Context(Dict(kwargs...))), data)
-            $f!(data; kwargs...) = impute!($typename(; context=Context(Dict(kwargs...))), data)
-            $f(; kwargs...) = data -> impute($typename(; context=Context(Dict(kwargs...))), data)
-            $f!(; kwargs...) = data -> impute!($typename(; context=Context(Dict(kwargs...))), data)
+            $f(data; kwargs...) = impute($typename(; _extract_context_kwargs(kwargs...)...), data)
+            $f!(data; kwargs...) = impute!($typename(; _extract_context_kwargs(kwargs...)...), data)
+            $f(; kwargs...) = data -> impute($typename(; _extract_context_kwargs(kwargs...)...), data)
+            $f!(; kwargs...) = data -> impute!($typename(; _extract_context_kwargs(kwargs...)...), data)
         end
     end
 end

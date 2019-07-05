@@ -108,22 +108,6 @@ function Context(;
     Context(0, 0, limit, is_missing, on_complete)
 end
 
-# The constructor only exists for legacy reasons
-# We should drop this when we're ready to stop accepting limit in
-# arbitrary impute functions.
-function Context(d::Dict)
-    if haskey(d, :context)
-        return d[:context]
-    else haskey(d, :limit)
-        return Context(;
-            # We using a different default limit value here for legacy reason.
-            limit=get(d, :limit, 1.0),
-            is_missing=get(d, :is_missing, ismissing),
-            on_complete=get(d, :on_complete, complete),
-        )
-    end
-end
-
 function (ctx::Context)(f::Function)
     _ctx = copy(ctx)
     _ctx.num = 0

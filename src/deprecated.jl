@@ -156,3 +156,26 @@ end
 # Misc Deprecations #
 #####################
 Base.@deprecate Fill(val; kwargs...) Fill(; value=val, kwargs...)
+
+# This function is just used to support legacy behaviour and should be removed in a
+# future release when we dropping accepting the limit kwarg to impute functions.
+function _extract_context_kwargs(kwargs...)
+    d = Dict(kwargs...)
+    limit = 1.0
+
+    if haskey(d, :limit)
+        warn(
+            "Passing `limit` directly to impute functions is deprecated. " *
+            "Please pass a `context` in the future."
+        )
+
+        limit = d[:limit]
+        delete!(d, :limit)
+    end
+
+    if !haskey(d, :context)
+        d[:context] = Context(; limit=limit)
+    end
+
+    return d
+end
