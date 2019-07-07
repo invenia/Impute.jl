@@ -67,9 +67,9 @@ function impute!(data, missing::Function, method::Symbol, args...; limit::Float6
     )
     imputor_type = imputation_methods[method]
     imputor = if length(args) > 0
-        imputor_type(args...; context=Context(; limit=limit))
+        imputor_type(args...; context=Context(; is_missing=missing, limit=limit))
     else
-        imputor_type(; context=Context(; limit=limit))
+        imputor_type(; context=Context(; is_missing=missing, limit=limit))
     end
 
     return impute!(imputor, data)
@@ -160,11 +160,11 @@ Base.@deprecate Fill(val; kwargs...) Fill(; value=val, kwargs...)
 # This function is just used to support legacy behaviour and should be removed in a
 # future release when we dropping accepting the limit kwarg to impute functions.
 function _extract_context_kwargs(kwargs...)
-    d = Dict(kwargs...)
+    d = Dict{Symbol, Any}(kwargs...)
     limit = 1.0
 
     if haskey(d, :limit)
-        warn(
+        @warn(
             "Passing `limit` directly to impute functions is deprecated. " *
             "Please pass a `context` in the future."
         )

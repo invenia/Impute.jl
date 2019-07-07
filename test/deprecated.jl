@@ -9,12 +9,22 @@
         deleteat!(expected, [2, 3, 7])
 
         @test result == expected
+
+        # Mutating method
+        a2 = copy(a)
+        Impute.drop!(a2; limit=0.2)
+        @test a2 == expected
     end
 
     @testset "Interpolate" begin
         result = impute(a, :interp; limit=0.2)
         @test result == collect(1.0:1.0:20)
         @test result == interp(a)
+
+        # Test in-place method
+        a2 = copy(a)
+        Impute.interp!(a2; limit=0.2)
+        @test a2 == result
 
         # Test interpolation between identical points
         b = ones(Union{Float64, Missing}, 20)
@@ -45,6 +55,10 @@
             expected[[2, 3, 7]] .= mean(a[mask])
 
             @test result == expected
+
+            a2 = copy(a)
+            Impute.fill!(a2; limit=0.2)
+            @test a2 == result
         end
     end
 
@@ -56,6 +70,9 @@
         expected[7] = 6.0
 
         @test result == expected
+        a2 = copy(a)
+        impute!(a2, :locf; limit=0.2)
+        @test a2 == result
     end
 
     @testset "NOCB" begin
@@ -66,6 +83,9 @@
         expected[7] = 8.0
 
         @test result == expected
+        a2 = copy(a)
+        Impute.nocb!(a2; limit=0.2)
+        @test a2 == result
     end
 
     @testset "DataFrame" begin
@@ -148,5 +168,7 @@
         result1 = chain(data1, Impute.Interpolate(), Impute.Drop(); limit=1.0)
         result2 = chain(data2, isnan, Impute.Interpolate(), Impute.Drop(); limit=1.0)
         @test result1 == result2
+
+        @test Impute.drop(data1; limit=1.0) == impute(data2, isnan, :drop; limit=1.0)
     end
 end

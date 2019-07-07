@@ -21,12 +21,21 @@ import Impute: Drop, Interpolate, Fill, LOCF, NOCB, Context, WeightedContext, Im
 
         @test result == expected
         @test result == Impute.drop(a; context=ctx)
+
+        a2 = copy(a)
+        Impute.drop!(a2; context=ctx)
+        @test a2 == expected
     end
 
     @testset "Interpolate" begin
         result = impute(Interpolate(; context=ctx), a)
         @test result == collect(1.0:1.0:20)
         @test result == interp(a; context=ctx)
+
+        # Test in-place method
+        a2 = copy(a)
+        Impute.interp!(a2; context=ctx)
+        @test a2 == result
 
         # Test interpolation between identical points
         b = ones(Union{Float64, Missing}, 20)
@@ -59,6 +68,10 @@ import Impute: Drop, Interpolate, Fill, LOCF, NOCB, Context, WeightedContext, Im
 
             @test result == expected
             @test result == Impute.fill(a; value=mean, context=ctx)
+
+            a2 = copy(a)
+            Impute.fill!(a2; context=ctx)
+            @test a2 == result
         end
     end
 
@@ -71,6 +84,10 @@ import Impute: Drop, Interpolate, Fill, LOCF, NOCB, Context, WeightedContext, Im
 
         @test result == expected
         @test result == Impute.locf(a; context=ctx)
+
+        a2 = copy(a)
+        Impute.locf!(a2; context=ctx)
+        @test a2 == result
     end
 
     @testset "NOCB" begin
@@ -82,6 +99,10 @@ import Impute: Drop, Interpolate, Fill, LOCF, NOCB, Context, WeightedContext, Im
 
         @test result == expected
         @test result == Impute.nocb(a; context=ctx)
+
+        a2 = copy(a)
+        Impute.nocb!(a2; context=ctx)
+        @test a2 == result
     end
 
     @testset "DataFrame" begin
@@ -104,6 +125,10 @@ import Impute: Drop, Interpolate, Fill, LOCF, NOCB, Context, WeightedContext, Im
             result = impute(Fill(; value=0.0, context=ctx), data)
             @test size(result) == size(data)
             @test result == Impute.fill(data; value=0.0, context=ctx)
+
+            data2 = copy(data)
+            Impute.fill!(data2; value=0.0, context=ctx)
+            @test data2 == result
         end
     end
 
@@ -118,18 +143,31 @@ import Impute: Drop, Interpolate, Fill, LOCF, NOCB, Context, WeightedContext, Im
         ctx = Context(; limit=1.0)
 
         @testset "DataFrame" begin
-            result = Impute.interp(orig; context=ctx) |> Impute.locf() |> Impute.nocb()
+            result = Impute.interp(orig; context=ctx) |> Impute.locf!() |> Impute.nocb!()
 
             @test size(result) == size(orig)
             # Confirm that we don't have any more missing values
             @test !any(ismissing, Matrix(result))
+
+
+            # We can also use the Chain type with explicit Imputor types
+            result2 = impute(
+                Impute.Chain(
+                    Impute.Interpolate(; context=ctx),
+                    Impute.LOCF(),
+                    Impute.NOCB()
+                ),
+                orig,
+            )
+
+            @test result == result2
         end
 
         @testset "Column Table" begin
             result = Tables.columntable(orig) |>
-                Impute.interp(; context=ctx) |>
-                Impute.locf() |>
-                Impute.nocb() |>
+                Impute.interp!(; context=ctx) |>
+                Impute.locf!() |>
+                Impute.nocb!() |>
                 Tables.matrix
 
             @test size(result) == size(orig)
@@ -139,7 +177,7 @@ import Impute: Drop, Interpolate, Fill, LOCF, NOCB, Context, WeightedContext, Im
 
         @testset "Matrix" begin
             data = Matrix(orig)
-            result = Impute.interp(data; context=ctx) |> Impute.locf() |> Impute.nocb()
+            result = Impute.interp(data; context=ctx) |> Impute.locf!() |> Impute.nocb!()
 
             @test size(result) == size(data)
             # Confirm that we don't have any more missing values
@@ -155,8 +193,8 @@ import Impute: Drop, Interpolate, Fill, LOCF, NOCB, Context, WeightedContext, Im
 
         @test Impute.drop(data1; context=ctx1) == dropmissing(data1)
 
-        result1 = Impute.interp(data1; context=ctx1) |> Impute.drop()
-        result2 = Impute.interp(data2; context=ctx2) |> Impute.drop(; context=ctx2)
+        result1 = Impute.interp(data1; context=ctx1) |> Impute.drop!()
+        result2 = Impute.interp(data2; context=ctx2) |> Impute.drop!(; context=ctx2)
 
         @test result1 == result2
     end
