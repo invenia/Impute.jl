@@ -6,7 +6,17 @@ using RDatasets
 using Statistics
 using StatsBase
 
-import Impute: Drop, Interpolate, Fill, LOCF, NOCB, Context, WeightedContext, ImputeError
+import Impute:
+    Drop,
+    DropObs,
+    DropVars,
+    Interpolate,
+    Fill,
+    LOCF,
+    NOCB,
+    Context,
+    WeightedContext,
+    ImputeError
 
 @testset "Impute" begin
     a = Vector{Union{Float64, Missing}}(1.0:1.0:20.0)
@@ -15,16 +25,53 @@ import Impute: Drop, Interpolate, Fill, LOCF, NOCB, Context, WeightedContext, Im
     ctx = Context(; limit=0.2)
 
     @testset "Drop" begin
-        result = impute(Drop(; context=ctx), a)
-        expected = copy(a)
-        deleteat!(expected, [2, 3, 7])
+        @testset "DropObs" begin
+            result = impute(DropObs(; context=ctx), a)
+            expected = copy(a)
+            deleteat!(expected, [2, 3, 7])
 
-        @test result == expected
-        @test result == Impute.drop(a; context=ctx)
+            @test result == expected
+            @test result == Impute.dropobs(a; context=ctx)
 
-        a2 = copy(a)
-        Impute.drop!(a2; context=ctx)
-        @test a2 == expected
+            a2 = copy(a)
+            Impute.dropobs!(a2; context=ctx)
+            @test a2 == expected
+        end
+        @testset "DropVars" begin
+            @testset "Matrix" begin
+                m = reshape(a, 5, 4)
+
+                result = impute(DropVars(; context=ctx), m)
+                expected = copy(m)[:, 2:4]
+
+                @test isequal(result, expected)
+                @test isequal(result, Impute.dropvars(m; context=ctx))
+
+                Impute.dropvars!(m; context=ctx)
+                # The mutating test is broken because we need to making a copy of
+                # the original matrix
+                @test_broken isequal(m, expected)
+            end
+            @testset "DataFrame" begin
+                df = DataFrame(
+                    :sin => Vector{Union{Float64, Missing}}(sin.(1.0:1.0:20.0)),
+                    :cos => Vector{Union{Float64, Missing}}(sin.(1.0:1.0:20.0)),
+                )
+                df.sin[[2, 3, 7, 12, 19]] .= missing
+                df.cos[[4, 9]] .= missing
+
+                result = impute(DropVars(; context=ctx), df)
+                expected = df[[:cos]]
+
+                @test isequal(result, expected)
+                @test isequal(result, Impute.dropvars(df; context=ctx))
+
+                Impute.dropvars!(df; context=ctx)
+                # The mutating test is broken because we need to making a copy of
+                # the original table
+                @test_broken isequal(df, expected)
+            end
+        end
     end
 
     @testset "Interpolate" begin
@@ -116,9 +163,9 @@ import Impute: Drop, Interpolate, Fill, LOCF, NOCB, Context, WeightedContext, Im
         data = Matrix(dataset("boot", "neuro"))
 
         @testset "Drop" begin
-            result = impute(Drop(; context=ctx), data)
+            result = impute(DropObs(; context=ctx), data)
             @test size(result, 1) == 4
-            @test result == Impute.drop(data; context=ctx)
+            @test result == Impute.dropobs(data; context=ctx)
         end
 
         @testset "Fill" begin
@@ -134,8 +181,8 @@ import Impute: Drop, Interpolate, Fill, LOCF, NOCB, Context, WeightedContext, Im
 
     @testset "Not enough data" begin
         ctx = Context(; limit=0.1)
-        @test_throws ImputeError impute(Drop(; context=ctx), a)
-        @test_throws ImputeError Impute.drop(a; context=ctx)
+        @test_throws ImputeError impute(DropObs(; context=ctx), a)
+        @test_throws ImputeError Impute.dropobs(a; context=ctx)
     end
 
     @testset "Chain" begin
@@ -191,10 +238,10 @@ import Impute: Drop, Interpolate, Fill, LOCF, NOCB, Context, WeightedContext, Im
         data1 = dataset("boot", "neuro")                    # Missing values with `missing`
         data2 = Impute.fill(data1; value=NaN, context=ctx1)  # Missing values with `NaN`
 
-        @test Impute.drop(data1; context=ctx1) == dropmissing(data1)
+        @test Impute.dropobs(data1; context=ctx1) == dropmissing(data1)
 
-        result1 = Impute.interp(data1; context=ctx1) |> Impute.drop!()
-        result2 = Impute.interp(data2; context=ctx2) |> Impute.drop!(; context=ctx2)
+        result1 = Impute.interp(data1; context=ctx1) |> Impute.dropobs!()
+        result2 = Impute.interp(data2; context=ctx2) |> Impute.dropobs!(; context=ctx2)
 
         @test result1 == result2
     end
@@ -202,8 +249,8 @@ import Impute: Drop, Interpolate, Fill, LOCF, NOCB, Context, WeightedContext, Im
     @testset "Contexts" begin
         @testset "Base" begin
             ctx = Context(; limit=0.1)
-            @test_throws ImputeError Impute.drop(a; context=ctx)
-            @test_throws ImputeError impute(Drop(; context=ctx), a)
+            @test_throws ImputeError Impute.dropobs(a; context=ctx)
+            @test_throws ImputeError impute(DropObs(; context=ctx), a)
         end
 
         @testset "Weighted" begin
@@ -211,7 +258,7 @@ import Impute: Drop, Interpolate, Fill, LOCF, NOCB, Context, WeightedContext, Im
             # because missing earlier observations is less important than later ones.
             ctx = WeightedContext(eweights(20, 0.3); limit=0.1)
             @test isa(ctx, WeightedContext)
-            result = impute(Drop(), ctx, a)
+            result = impute(DropObs(), ctx, a)
             expected = copy(a)
             deleteat!(expected, [2, 3, 7])
             @test result == expected
@@ -219,7 +266,7 @@ import Impute: Drop, Interpolate, Fill, LOCF, NOCB, Context, WeightedContext, Im
             # If we reverse the weights such that earlier observations are more important
             # then our previous limit of 0.2 won't be enough to succeed.
             ctx = WeightedContext(reverse!(eweights(20, 0.3)); limit=0.2)
-            @test_throws ImputeError impute(Drop(), ctx, a)
+            @test_throws ImputeError impute(DropObs(), ctx, a)
         end
     end
 

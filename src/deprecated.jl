@@ -156,6 +156,7 @@ end
 # Misc Deprecations #
 #####################
 Base.@deprecate Fill(val; kwargs...) Fill(; value=val, kwargs...)
+Base.@deprecate_binding Drop DropObs false
 
 # This function is just used to support legacy behaviour and should be removed in a
 # future release when we dropping accepting the limit kwarg to impute functions.

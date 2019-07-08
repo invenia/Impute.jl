@@ -52,7 +52,9 @@ include("context.jl")
 include("imputors.jl")
 
 const global imputation_methods = Dict{Symbol, Type}(
-    :drop => Drop,
+    :drop => DropObs,
+    :dropobs => DropObs,
+    :dropvars => DropVars,
     :interp => Interpolate,
     :fill => Fill,
     :locf => LOCF,
