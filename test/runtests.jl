@@ -154,8 +154,40 @@ import Impute:
 
     @testset "DataFrame" begin
         ctx = Context(; limit=1.0)
-        data = dataset("boot", "neuro")
-        df = impute(Interpolate(; context=ctx), data)
+        @testset "Single DataFrame" begin
+            data = dataset("boot", "neuro")
+            df = impute(Interpolate(; context=ctx), data)
+            @test isequal(df, Impute.interp(data; context=ctx))
+        end
+        @testset "GroupedDataFrame" begin
+            hod = repeat(1:24, 12 * 10)
+            obj = repeat(1:12, 24 * 10)
+            n = length(hod)
+
+            df = DataFrame(
+                :hod => hod,
+                :obj => obj,
+                :val => Vector{Union{Float64, Missing}}(
+                    [sin(x) * cos(y) for (x, y) in zip(hod, obj)]
+                ),
+            )
+
+            df.val[rand(1:n, 20)] .= missing
+            gdf1 = groupby(deepcopy(df), [:hod, :obj])
+            gdf2 = groupby(df, [:hod, :obj])
+
+            f1 = x -> Impute.interp(x; context=ctx) |> Impute.locf!() |> Impute.nocb!()
+            f2 = x -> Impute.interp!(x; context=ctx) |> Impute.locf!() |> Impute.nocb!()
+
+            result = vcat(f1.(gdf1)...)
+            @test df != result
+            @test size(result) == (24 * 12 * 10, 3)
+            @test !any(ismissing, Tables.matrix(result))
+
+            # Test that we can also mutate the dataframe directly
+            f2.(gdf2)
+            @test result == sort(df, (:hod, :obj))
+        end
     end
 
     @testset "Matrix" begin
