@@ -7,11 +7,12 @@ See also:
 - [LOCF](@ref): Last Observation Carried Forward
 """
 struct NOCB <: Imputor
+    vardim::Int
     context::AbstractContext
 end
 
 """NOCB(; context=Context()) -> NOCB"""
-NOCB(; context=Context()) = NOCB(context)
+NOCB(; vardim=2, context=Context()) = NOCB(vardim, context)
 
 """
     impute!(imp::NOCB, data::AbstractVector)

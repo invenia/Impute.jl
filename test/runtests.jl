@@ -46,6 +46,7 @@ import Impute:
 
                 @test isequal(result, expected)
                 @test isequal(result, Impute.dropvars(m; context=ctx))
+                @test isequal(result', Impute.dropvars(m'; vardim=1, context=ctx))
 
                 Impute.dropvars!(m; context=ctx)
                 # The mutating test is broken because we need to making a copy of
@@ -192,12 +193,16 @@ import Impute:
 
     @testset "Matrix" begin
         ctx = Context(; limit=1.0)
+        expected = Matrix(Impute.dropobs(dataset("boot", "neuro"); context=ctx))
         data = Matrix(dataset("boot", "neuro"))
 
         @testset "Drop" begin
             result = impute(DropObs(; context=ctx), data)
             @test size(result, 1) == 4
             @test result == Impute.dropobs(data; context=ctx)
+
+            @test result == expected
+            @test Impute.dropobs(data'; vardim=1, context=ctx) == expected'
         end
 
         @testset "Fill" begin

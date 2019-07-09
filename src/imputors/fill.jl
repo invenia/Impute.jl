@@ -11,11 +11,12 @@ Fills in the missing data with a specific value.
 """
 struct Fill{T} <: Imputor
     value::T
+    vardim::Int
     context::AbstractContext
 end
 
 """Fill(; value=mean, context=Context()) -> Fill"""
-Fill(; value=mean, context=Context()) = Fill(value, context)
+Fill(; value=mean, vardim=2, context=Context()) = Fill(value, vardim, context)
 
 """
     impute!(imp::Fill, data::AbstractVector)

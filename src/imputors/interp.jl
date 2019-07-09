@@ -4,11 +4,12 @@
 Performs linear interpolation between the nearest values in an vector.
 """
 struct Interpolate <: Imputor
+    vardim::Int
     context::AbstractContext
 end
 
 """Interpolate(; context=Context()) -> Interpolate"""
-Interpolate(; context=Context()) = Interpolate(context)
+Interpolate(; vardim=2, context=Context()) = Interpolate(vardim, context)
 
 """
     impute!(imp::Interpolate, data::AbstractVector)

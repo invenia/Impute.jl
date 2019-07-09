@@ -9,6 +9,27 @@ method.
 
 abstract type Imputor end
 
+# A couple utility methods to avoid messing up var and obs dimensions
+obsdim(imp::Imputor) = imp.vardim == 1 ? 2 : 1
+vardim(imp::Imputor) = imp.vardim
+
+function obswise(imp::Imputor, data::AbstractMatrix)
+    (imp.vardim == 1 ? view(data, :, i) : view(data, i, :) for i in axes(data, obsdim(imp)))
+end
+
+function varwise(imp::Imputor, data::AbstractMatrix)
+    (imp.vardim == 1 ? view(data, i, :) : view(data, :, i) for i in axes(data, vardim(imp)))
+end
+
+function filterobs(f::Function, imp::Imputor, data::AbstractMatrix)
+    mask = [f(x) for x in obswise(imp, data)]
+    return imp.vardim == 1 ? data[:, mask] : data[mask, :]
+end
+
+function filtervars(f::Function, imp::Imputor, data::AbstractMatrix)
+    mask = [f(x) for x in varwise(imp, data)]
+    return imp.vardim == 1 ? data[mask, :] : data[:, mask]
+end
 
 """
     impute(imp::Imputor, data)
@@ -34,8 +55,8 @@ if this is not the desired behaviour custom imputor methods should overload this
 * `AbstractMatrix`: the input `data` with values imputed
 """
 function impute!(imp::Imputor, data::AbstractMatrix)
-    for i in axes(data, 2)
-        impute!(imp, view(data, :, i))
+    for var in varwise(imp, data)
+        impute!(imp, var)
     end
     return data
 end

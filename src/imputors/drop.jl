@@ -8,10 +8,11 @@ Removes missing values from the `AbstractArray` or `Tables.table` provided.
   summary information
 """
 struct DropObs <: Imputor
+    vardim::Int
     context::AbstractContext
 end
 
-DropObs(; context=Context()) = DropObs(context)
+DropObs(; vardim=2, context=Context()) = DropObs(vardim, context)
 
 """
     impute!(imp::DropObs, data::AbstractVector)
@@ -53,10 +54,9 @@ NOTES (or premature optimizations):
 """
 function impute!(imp::DropObs, data::AbstractMatrix)
     imp.context() do c
-        mask = map(axes(data, 1)) do i
-            !ismissing(c, view(data, i, :))
+        return filterobs(imp, data) do obs
+            !ismissing(c, obs)
         end
-        return data[mask, :]
     end
 end
 
@@ -99,10 +99,11 @@ Removes missing values from the `AbstractArray` or `Tables.table` provided.
   summary information
 """
 struct DropVars <: Imputor
+    vardim::Int
     context::AbstractContext
 end
 
-DropVars(; context=Context()) = DropVars(context)
+DropVars(; vardim=2, context=Context()) = DropVars(vardim, context)
 
 """
     impute!(imp::DropVars, data::AbstractMatrix)
@@ -119,11 +120,11 @@ requires copying the matrix.
 * `AbstractMatrix`: a new matrix with missing columns removed
 """
 function impute!(imp::DropVars, data::AbstractMatrix)
-    mask = map(axes(data, 2)) do i
+    return filtervars(imp, data) do var
         try
             imp.context() do c
-                for j in axes(data, 1)
-                    ismissing(c, data[j, i])
+                for x in var
+                    ismissing(c, x)
                 end
             end
             return true
@@ -135,9 +136,6 @@ function impute!(imp::DropVars, data::AbstractMatrix)
             end
         end
     end
-
-    data = data[:, mask]
-    return data
 end
 
 """

@@ -8,11 +8,12 @@ See also:
 - [NOCB](@ref): Next Observation Carried Backward
 """
 struct LOCF <: Imputor
+    vardim::Int
     context::AbstractContext
 end
 
 """LOCF(; context=Context()) -> LOCF"""
-LOCF(; context=Context()) = LOCF(context)
+LOCF(; vardim=2, context=Context()) = LOCF(vardim, context)
 
 """
     impute!(imp::LOCF, data::AbstractVector)

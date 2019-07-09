@@ -30,6 +30,8 @@ function __init__()
         """
         All matrix imputation methods will be switching to the column-major convention
         (e.g., each column corresponds to an observation, and each row corresponds to a variable).
+        To maintain the existing behaviour please pass `vardim=2` to the `Imputor` constructors
+        or impute functions (e.g., `fill`, `interp`, `locf`).
         """
     )
 end
