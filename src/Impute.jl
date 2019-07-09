@@ -28,7 +28,7 @@ function __init__()
 
     @warn(
         """
-        All matrix imputation methods will be switching to the JuliaStats column-major convention
+        All matrix imputation methods will be switching to the column-major convention
         (e.g., each column corresponds to an observation, and each row corresponds to a variable).
         """
     )
@@ -51,31 +51,27 @@ Base.showerror(io::IO, err::ImputeError) = println(io, "ImputeError: $(err.msg)"
 include("context.jl")
 include("imputors.jl")
 
-const global imputation_methods = Dict{Symbol, Type}(
-    :drop => DropObs,
-    :dropobs => DropObs,
-    :dropvars => DropVars,
-    :interp => Interpolate,
-    :fill => Fill,
-    :locf => LOCF,
-    :nocb => NOCB,
+const global imputation_methods = (
+    drop = DropObs,
+    dropobs = DropObs,
+    dropvars = DropVars,
+    interp = Interpolate,
+    fill = Fill,
+    locf = LOCF,
+    nocb = NOCB,
 )
 
 include("deprecated.jl")
 
-let
-    for (k, v) in imputation_methods
-        local typename = nameof(v)
-        local f = k
-        local f! = Symbol(k, :!)
+for (f, v) in pairs(imputation_methods)
+    typename = nameof(v)
+    f! = Symbol(f, :!)
 
-        # NOTE: The
-        @eval begin
-            $f(data; kwargs...) = impute($typename(; _extract_context_kwargs(kwargs...)...), data)
-            $f!(data; kwargs...) = impute!($typename(; _extract_context_kwargs(kwargs...)...), data)
-            $f(; kwargs...) = data -> impute($typename(; _extract_context_kwargs(kwargs...)...), data)
-            $f!(; kwargs...) = data -> impute!($typename(; _extract_context_kwargs(kwargs...)...), data)
-        end
+    @eval begin
+        $f(data; kwargs...) = impute($typename(; _extract_context_kwargs(kwargs...)...), data)
+        $f!(data; kwargs...) = impute!($typename(; _extract_context_kwargs(kwargs...)...), data)
+        $f(; kwargs...) = data -> impute($typename(; _extract_context_kwargs(kwargs...)...), data)
+        $f!(; kwargs...) = data -> impute!($typename(; _extract_context_kwargs(kwargs...)...), data)
     end
 end
 

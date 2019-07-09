@@ -10,6 +10,7 @@ Base.@deprecate(
     impute!(imp::Imputor, context::AbstractContext, data; kwargs...),
     impute!(typeof(imp)(; context=context), data; kwargs...)
 )
+
 #####################################################################
 # Deprecate all impute calls where the first argument is an Imputor #
 #####################################################################
@@ -88,6 +89,7 @@ function impute(data, args...; kwargs...)
         """,
         :impute
     )
+    # Call `deepcopy` because we can trust that it's available for all types.
     return impute!(deepcopy(data), args...; kwargs...)
 end
 
@@ -148,8 +150,8 @@ function chain(data, args...; kwargs...)
         """,
         :chain
     )
-    result = deepcopy(data)
-    return chain!(data, args...; kwargs...)
+    # Call `deepcopy` because we can trust that it's available for all types.
+    return chain!(deepcopy(data), args...; kwargs...)
 end
 
 #####################

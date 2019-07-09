@@ -5,6 +5,10 @@ An imputation context records summary information about missing data for an impu
 """
 abstract type AbstractContext end
 
+# We implement a version of copy for all contexts which reconstructs the context from the
+# raw fields.
+Base.copy(ctx::T) where {T <: AbstractContext} = T(fieldvalues(ctx)...)
+
 """
     ismissing(ctx::AbstractContext, x) -> Bool
 
@@ -18,23 +22,23 @@ exceeds our `ctx.limit` we throw an `ImputeError`
 * `x`: the value to check (may be an single values, abstract array or row)
 """
 function Base.ismissing(ctx::AbstractContext, x)
-    missing = if isa(x, NamedTuple)
-        any(entry -> ctx.is_missing(entry[2]), pairs(x))
+    was_missing = if isa(x, NamedTuple)
+        any(ctx.is_missing, Tuple(x))
     elseif isa(x, AbstractArray)
         any(ctx.is_missing, x)
     else
         ctx.is_missing(x)
     end
 
-    missing_update!(ctx, missing)
+    missing_update!(ctx, was_missing)
 
-    return missing
+    return was_missing
 end
 
 """
     findfirst(ctx::AbstractContext, data::AbstractVector) -> Int
 
-Returns the first not missing index in `data`.
+Returns the first non-missing index in `data`.
 
 # Arguments
 * `ctx::AbstractContext`: the context to pass into `ismissing`
@@ -50,7 +54,7 @@ end
 """
     findlast(ctx::AbstractContext, data::AbstractVector) -> Int
 
-Returns the last not missing index in `data`.
+Returns the last non-missing index in `data`.
 
 # Arguments
 * `ctx::AbstractContext`: the context to pass into `ismissing`
@@ -66,7 +70,7 @@ end
 """
     findnext(ctx::AbstractContext, data::AbstractVector) -> Int
 
-Returns the next not missing index in `data`.
+Returns the next non-missing index in `data`.
 
 # Arguments
 * `ctx::AbstractContext`: the context to pass into `ismissing`
@@ -88,7 +92,7 @@ weighted.
 # Fields
 * `n::Int`: number of observations
 * `count::Int`: number of missing values found
-* `limit::Float64`: allowable limit for missing values to impute
+* `limit::Float64`: allowable portion of total values allowed to be imputed (should be between 0.0 and 1.0).
 * `is_missing::Function`: returns a Bool if the value counts as missing
 * `on_complete::Function`: a function to run when imputation is complete
 """
@@ -105,30 +109,26 @@ function Context(;
     is_missing::Function=ismissing,
     on_complete::Function=complete
 )
-    Context(0, 0, limit, is_missing, on_complete)
+    return Context(0, 0, limit, is_missing, on_complete)
 end
 
-function (ctx::Context)(f::Function)
+function Base.empty(ctx::Context)
     _ctx = copy(ctx)
     _ctx.num = 0
     _ctx.count = 0
 
-    result = f(_ctx)
-    ctx.on_complete(_ctx)
-    return result
+    return _ctx
 end
 
-Base.copy(x::Context) = Context(x.num, x.count, x.limit, x.is_missing, x.on_complete)
-
-function missing_update!(ctx::Context, miss)
+function missing_update!(ctx::Context, was_missing)
     ctx.num += 1
 
-    if miss
+    if was_missing
         ctx.count += 1
     end
 end
 
-function complete(ctx::Context)
+function complete(ctx::Context, data)
     missing_ratio = ctx.count / ctx.num
 
     if missing_ratio > ctx.limit
@@ -136,6 +136,8 @@ function complete(ctx::Context)
             "More than $(ctx.limit * 100)% of values were missing ($missing_ratio)."
         ))
     end
+
+    return data
 end
 
 
@@ -149,11 +151,11 @@ This context type can be useful if some missing observation are more important t
 # Fields
 * `num::Int`: number of observations
 * `s::Float64`: sum of missing values weights
-* `limit::Float64`: allowable limit for missing values to impute
+* `limit::Float64`: allowable portion of total values allowed to be imputed (should be between 0.0 and 1.0).
 * `is_missing::Function`: returns a Bool if the value counts as missing
-* `on_complete::Function`: a function to run when imputation is complete
+* `on_complete::Function`: allowable portion of total values allowed to be imputed (should be between 0.0 and 1.0).
 * `wv::AbstractWeights`: a set of statistical weights to use when evaluating the importance
-  of each observation
+  of each observation. Will be accumulated during imputation.
 """
 mutable struct WeightedContext <: AbstractContext
     num::Int
@@ -170,37 +172,42 @@ function WeightedContext(
     is_missing::Function=ismissing,
     on_complete::Function=complete
 )
-    WeightedContext(0, 0.0, limit, is_missing, on_complete, wv)
+    return WeightedContext(0, 0.0, limit, is_missing, on_complete, wv)
 end
 
-function (ctx::WeightedContext)(f::Function)
+function Base.empty(ctx::WeightedContext)
     _ctx = copy(ctx)
     _ctx.num = 0
     _ctx.s = 0.0
 
-    result = f(_ctx)
-    ctx.on_complete(_ctx)
-    return result
+    return _ctx
 end
 
-function Base.copy(x::WeightedContext)
-    WeightedContext(x.num, x.s, x.limit, x.is_missing, x.on_complete, x.wv)
-end
-
-function missing_update!(ctx::WeightedContext, miss)
+function missing_update!(ctx::WeightedContext, was_missing)
     ctx.num += 1
 
-    if miss
+    if was_missing
         ctx.s += ctx.wv[ctx.num]
     end
 end
 
-function complete(ctx::WeightedContext)
+function complete(ctx::WeightedContext, data)
     missing_ratio = ctx.s / sum(ctx.wv)
 
     if missing_ratio > ctx.limit
         throw(ImputeError(
             "More than $(ctx.limit * 100)% of weighted values were missing ($missing_ratio)."
         ))
+    end
+
+    return data
+end
+
+for T in [Context, WeightedContext]
+    @eval begin
+        function (ctx::$T)(f::Function)
+            _ctx = empty(ctx)
+            return ctx.on_complete(_ctx, f(_ctx))
+        end
     end
 end

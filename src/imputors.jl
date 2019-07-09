@@ -13,10 +13,11 @@ abstract type Imputor end
 """
     impute(imp::Imputor, data)
 
-Copies the `data` before calling the corresponding `impute!(imp, ...)` call.
+Returns a new copy of the `data` with the missing data imputed by the imputor `imp`.
 """
 function impute(imp::Imputor, data)
-    impute!(imp, deepcopy(data))
+    # Call `deepcopy` because we can trust that it's available for all types.
+    return impute!(imp, deepcopy(data))
 end
 
 """
@@ -33,7 +34,7 @@ if this is not the desired behaviour custom imputor methods should overload this
 * `AbstractMatrix`: the input `data` with values imputed
 """
 function impute!(imp::Imputor, data::AbstractMatrix)
-    for i in 1:size(data, 2)
+    for i in axes(data, 2)
         impute!(imp, view(data, :, i))
     end
     return data

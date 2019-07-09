@@ -11,7 +11,6 @@ struct DropObs <: Imputor
     context::AbstractContext
 end
 
-"""DropObs(; context=Context()) -> DropObs"""
 DropObs(; context=Context()) = DropObs(context)
 
 """
@@ -54,7 +53,9 @@ NOTES (or premature optimizations):
 """
 function impute!(imp::DropObs, data::AbstractMatrix)
     imp.context() do c
-        mask = map(i -> !ismissing(c, data[i, :]), 1:size(data, 1))
+        mask = map(axes(data, 1)) do i
+            !ismissing(c, view(data, i, :))
+        end
         return data[mask, :]
     end
 end
@@ -101,7 +102,6 @@ struct DropVars <: Imputor
     context::AbstractContext
 end
 
-"""DropVars(; context=Context()) -> DropVars"""
 DropVars(; context=Context()) = DropVars(context)
 
 """
@@ -119,10 +119,10 @@ requires copying the matrix.
 * `AbstractMatrix`: a new matrix with missing columns removed
 """
 function impute!(imp::DropVars, data::AbstractMatrix)
-    mask = map(1:size(data, 2)) do i
+    mask = map(axes(data, 2)) do i
         try
             imp.context() do c
-                for j in 1:size(data, 1)
+                for j in axes(data, 1)
                     ismissing(c, data[j, i])
                 end
             end

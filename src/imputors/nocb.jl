@@ -2,6 +2,9 @@
     NOCB <: Imputor
 
 Fills in missing data using the Next Observation Carried Backward (NOCB) approach.
+
+See also:
+- [LOCF](@ref): Last Observation Carried Forward
 """
 struct NOCB <: Imputor
     context::AbstractContext
@@ -28,7 +31,7 @@ that all missing values will be imputed.
 function impute!(imp::NOCB, data::AbstractVector)
     imp.context() do c
         end_idx = findlast(c, data) - 1
-        for i in end_idx:-1:1
+        for i in end_idx:-1:firstindex(data)
             if ismissing(c, data[i])
                 data[i] = data[i+1]
             end

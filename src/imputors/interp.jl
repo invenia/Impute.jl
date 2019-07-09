@@ -23,7 +23,7 @@ function impute!(imp::Interpolate, data::AbstractVector{<:Union{T, Missing}}) wh
     imp.context() do c
         i = findfirst(c, data) + 1
 
-        while i < length(data)
+        while i < lastindex(data)
             if ismissing(c, data[i])
                 prev_idx = i - 1
                 next_idx = findnext(c, data, i + 1)
