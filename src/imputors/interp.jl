@@ -1,25 +1,41 @@
-"""
-    Interpolate <: Imputor
-
-Performs linear interpolation between the nearest values in an vector.
-"""
 struct Interpolate <: Imputor
     vardim::Int
     context::AbstractContext
 end
 
-"""Interpolate(; context=Context()) -> Interpolate"""
-Interpolate(; vardim=2, context=Context()) = Interpolate(vardim, context)
-
 """
-    impute!(imp::Interpolate, data::AbstractVector)
+    Interpolate(; vardim=2, context=Context())
 
-Uses linear interpolation between existing elements of a vector to fill in missing data.
+Performs linear interpolation between the nearest values in an vector.
+The current implementation is univariate, so each variable in a table or matrix will
+be handled independently.
 
 WARNING: Missing values at the head or tail of the array cannot be interpolated if there
 are no existing values on both sides. As a result, this method does not guarantee
 that all missing values will be imputed.
+
+# Keyword Arguments
+* `vardim=2::Int`: Specify the dimension for variables in matrix input data
+* `context::AbstractContext`: A context which keeps track of missing data
+  summary information
+
+# Example
+```jldoctest
+julia> using Impute: Interpolate, Context, impute
+
+julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
+2×5 Array{Union{Missing, Float64},2}:
+ 1.0  2.0   missing  missing  5.0
+ 1.1  2.2  3.3       missing  5.5
+
+julia> impute(Interpolate(; vardim=1, context=Context(; limit=1.0)), M)
+2×5 Array{Union{Missing, Float64},2}:
+ 1.0  2.0  3.0  4.0  5.0
+ 1.1  2.2  3.3  4.4  5.5
+```
 """
+Interpolate(; vardim=2, context=Context()) = Interpolate(vardim, context)
+
 function impute!(imp::Interpolate, data::AbstractVector{<:Union{T, Missing}}) where T
     imp.context() do c
         i = findfirst(c, data) + 1

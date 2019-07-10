@@ -83,19 +83,6 @@ function Base.findnext(ctx::AbstractContext, data::AbstractVector, idx::Int)
     return findnext(x -> !ismissing(ctx, x), data, idx)
 end
 
-"""
-    Context
-
-Records base information about the missing data and assume all observations are equally
-weighted.
-
-# Fields
-* `n::Int`: number of observations
-* `count::Int`: number of missing values found
-* `limit::Float64`: allowable portion of total values allowed to be imputed (should be between 0.0 and 1.0).
-* `is_missing::Function`: returns a Bool if the value counts as missing
-* `on_complete::Function`: a function to run when imputation is complete
-"""
 mutable struct Context <: AbstractContext
     num::Int
     count::Int
@@ -104,6 +91,19 @@ mutable struct Context <: AbstractContext
     on_complete::Function
 end
 
+"""
+    Context
+
+Records base information about the missing data and assume all observations are equally
+weighted.
+
+# Keyword Arguments
+* `n::Int`: number of observations
+* `count::Int`: number of missing values found
+* `limit::Float64`: allowable portion of total values allowed to be imputed (should be between 0.0 and 1.0).
+* `is_missing::Function`: returns a Bool if the value counts as missing
+* `on_complete::Function`: a function to run when imputation is complete
+"""
 function Context(;
     limit::Float64=0.1,
     is_missing::Function=ismissing,
@@ -141,22 +141,6 @@ function complete(ctx::Context, data)
 end
 
 
-"""
-    WeightedContext
-
-Records information about the missing data relative to a set of weights.
-This context type can be useful if some missing observation are more important than others
-(e.g., more recent observations in time series datasets)
-
-# Fields
-* `num::Int`: number of observations
-* `s::Float64`: sum of missing values weights
-* `limit::Float64`: allowable portion of total values allowed to be imputed (should be between 0.0 and 1.0).
-* `is_missing::Function`: returns a Bool if the value counts as missing
-* `on_complete::Function`: allowable portion of total values allowed to be imputed (should be between 0.0 and 1.0).
-* `wv::AbstractWeights`: a set of statistical weights to use when evaluating the importance
-  of each observation. Will be accumulated during imputation.
-"""
 mutable struct WeightedContext <: AbstractContext
     num::Int
     s::Float64
@@ -166,6 +150,24 @@ mutable struct WeightedContext <: AbstractContext
     wv::AbstractWeights
 end
 
+"""
+    WeightedContext(wv; limit=1.0, is_missing=ismissing, on_complete=complete)
+
+Records information about the missing data relative to a set of weights.
+This context type can be useful if some missing observation are more important than others
+(e.g., more recent observations in time series datasets)
+
+# Arguments
+* `wv::AbstractWeights`: a set of statistical weights to use when evaluating the importance
+  of each observation. Will be accumulated during imputation.
+
+# Keyword Arguments
+* `num::Int`: number of observations
+* `s::Float64`: sum of missing values weights
+* `limit::Float64`: allowable portion of total values allowed to be imputed (should be between 0.0 and 1.0).
+* `is_missing::Function`: returns a Bool if the value counts as missing
+* `on_complete::Function`: allowable portion of total values allowed to be imputed (should be between 0.0 and 1.0).
+"""
 function WeightedContext(
     wv::AbstractWeights;
     limit::Float64=1.0,

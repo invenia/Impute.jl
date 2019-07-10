@@ -1,0 +1,9 @@
+[deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+Impute = "f7bf1975-0170-51b9-8c5f-a992d46b9575"
+RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
+
+[compat]
+DataFrames = ">= 0.16"
+Documenter = "~0.22"

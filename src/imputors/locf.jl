@@ -1,30 +1,44 @@
-"""
-    LOCF <: Imputor
-
-Last observation carried forward. Fill in missing values with the most recent
-nonmissing value.
-
-See also:
-- [NOCB](@ref): Next Observation Carried Backward
-"""
 struct LOCF <: Imputor
     vardim::Int
     context::AbstractContext
 end
 
-"""LOCF(; context=Context()) -> LOCF"""
-LOCF(; vardim=2, context=Context()) = LOCF(vardim, context)
-
 """
-    impute!(imp::LOCF, data::AbstractVector)
+    LOCF(; vardim=2, context=Context())
 
-Iterates forwards through the `data` and fills missing data with the last
-existing observation.
+Last observation carried forward (LOCF) iterates forwards through the `data` and fills
+missing data with the last existing observation. The current implementation is univariate,
+so each variable in a table or matrix will be handled independently.
+
+See also:
+- [NOCB](@ref): Next Observation Carried Backward
 
 WARNING: missing elements at the head of the array may not be imputed if there is no
 existing observation to carry forward. As a result, this method does not guarantee
 that all missing values will be imputed.
+
+# Keyword Arguments
+* `vardim=2::Int`: Specify the dimension for variables in matrix input data
+* `context::AbstractContext`: A context which keeps track of missing data
+  summary information
+
+# Example
+```jldoctest
+julia> using Impute: LOCF, Context, impute
+
+julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
+2×5 Array{Union{Missing, Float64},2}:
+ 1.0  2.0   missing  missing  5.0
+ 1.1  2.2  3.3       missing  5.5
+
+julia> impute(LOCF(; vardim=1, context=Context(; limit=1.0)), M)
+2×5 Array{Union{Missing, Float64},2}:
+ 1.0  2.0  2.0  2.0  5.0
+ 1.1  2.2  3.3  3.3  5.5
+```
 """
+LOCF(; vardim=2, context=Context()) = LOCF(vardim, context)
+
 function impute!(imp::LOCF, data::AbstractVector)
     imp.context() do c
         start_idx = findfirst(c, data) + 1

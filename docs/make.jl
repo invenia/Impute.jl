@@ -1,4 +1,4 @@
-using Documenter, Impute, RDatasets
+using Documenter, Impute
 
 makedocs(
     modules=[Impute],

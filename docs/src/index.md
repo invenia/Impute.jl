@@ -1,4 +1,14 @@
 # Impute
+
+```@meta
+DocTestSetup = quote
+    @eval Main begin
+        using DataFrames
+        using Impute: Impute, DropObs, DropVars, Fill, Interpolate, NOCB, LOCF, Context, impute
+    end
+end
+```
+
 [![stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://invenia.github.io/Impute.jl/stable/)
 [![latest](https://img.shields.io/badge/docs-latest-blue.svg)](https://invenia.github.io/Impute.jl/latest/)
 [![Build Status](https://travis-ci.org/invenia/Impute.jl.svg?branch=master)](https://travis-ci.org/invenia/Impute.jl)

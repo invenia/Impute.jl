@@ -1,57 +1,41 @@
-"""
-    DropObs <: Imputor
-
-Removes missing values from the `AbstractArray` or `Tables.table` provided.
-
-# Fields
-* `context::AbstractContext`: A context which keeps track of missing data
-  summary information
-"""
 struct DropObs <: Imputor
     vardim::Int
     context::AbstractContext
 end
 
+"""
+    DropObs(; vardim=2, context=Context)
+
+Removes missing observations from the `AbstractArray` or `Tables.table` provided.
+
+# Keyword Arguments
+* `vardim=2::Int`: Specify the dimension for variables in matrix input data
+* `context::AbstractContext=Context()`: A context which keeps track of missing data
+  summary information
+
+# Example
+```jldoctest
+julia> using Impute: DropObs, Context, impute
+
+julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
+2×5 Array{Union{Missing, Float64},2}:
+ 1.0  2.0   missing  missing  5.0
+ 1.1  2.2  3.3       missing  5.5
+
+julia> impute(DropObs(; vardim=1, context=Context(; limit=1.0)), M)
+2×3 Array{Union{Missing, Float64},2}:
+ 1.0  2.0  5.0
+ 1.1  2.2  5.5
+```
+"""
 DropObs(; vardim=2, context=Context()) = DropObs(vardim, context)
 
-"""
-    impute!(imp::DropObs, data::AbstractVector)
-
-Uses `filter!` to remove missing elements from the array.
-
-# Arguments
-* `imp::DropObs`: this `Imputor` method
-* `data::AbstractVector`: the data to impute
-
-# Returns
-* `AbstractVector`: our data array with missing elements removed
-"""
 function impute!(imp::DropObs, data::AbstractVector)
     imp.context() do c
         filter!(x -> !ismissing(c, x), data)
     end
 end
 
-"""
-    impute!(imp::DropObs, data::AbstractMatrix)
-
-Finds the missing rows in the matrix and uses a mask (Vector{Bool}) to return the
-`data` with those rows removed. Unfortunately, the mask approach requires copying the matrix.
-
-NOTES (or premature optimizations):
-* We use `view`, but this will change the type of the `data` by returning a `SubArray`
-* We might be able to do something clever by:
-    1. reshaping the data to a vector
-    2. running `deleteat!` for the appropriate indices and
-    3. reshaping the data back to the desired shape.
-
-# Arguments
-* `imp::DropObs`: this `Imputor` method
-* `data::AbstractMatrix`: the data to impute
-
-# Returns
-* `AbstractMatrix`: a new matrix with missing rows removed
-"""
 function impute!(imp::DropObs, data::AbstractMatrix)
     imp.context() do c
         return filterobs(imp, data) do obs
@@ -60,18 +44,10 @@ function impute!(imp::DropObs, data::AbstractMatrix)
     end
 end
 
-"""
-    impute!(imp::DropObs, table)
+# Deleting elements from subarrays doesn't work so we need to collect that data into
+# a separate array.
+impute!(imp::DropObs, data::SubArray) = impute!(imp::DropObs, collect(data))
 
-Finds the missing rows in the table and deletes them.
-
-# Arguments
-* `imp::DropObs`: this `Imputor` method
-* `table`: a type that implements the Tables API.
-
-# Returns
-* our data with the missing rows removed.
-"""
 function impute!(imp::DropObs, table)
     imp.context() do c
         @assert istable(table)
@@ -88,37 +64,39 @@ function impute!(imp::DropObs, table)
 end
 
 
-"""
-    DropVars <: Imputor
-
-
-Removes missing values from the `AbstractArray` or `Tables.table` provided.
-
-# Fields
-* `context::AbstractContext`: A context which keeps track of missing data
-  summary information
-"""
 struct DropVars <: Imputor
     vardim::Int
     context::AbstractContext
 end
 
+"""
+    DropVars(; vardim=2, context=Context())
+
+
+Finds variables with too many missing values in a `AbstractMatrix` or `Tables.table` and
+removes them from the input data.
+
+# Keyword Arguments
+* `vardim=2::Int`: Specify the dimension for variables in matrix input data
+* `context::AbstractContext`: A context which keeps track of missing data
+  summary information
+
+# Examples
+```jldoctest
+julia> using Impute: DropVars, Context, impute
+
+julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
+2×5 Array{Union{Missing, Float64},2}:
+ 1.0  2.0   missing  missing  5.0
+ 1.1  2.2  3.3       missing  5.5
+
+julia> impute(DropVars(; vardim=1, context=Context(; limit=0.2)), M)
+1×5 Array{Union{Missing, Float64},2}:
+ 1.1  2.2  3.3  missing  5.5
+```
+"""
 DropVars(; vardim=2, context=Context()) = DropVars(vardim, context)
 
-"""
-    impute!(imp::DropVars, data::AbstractMatrix)
-
-Finds columns in the matrix with too many missing values and uses a mask (Vector{Bool}) to
-return the `data` with those columns removed. Unfortunately, the mask approach
-requires copying the matrix.
-
-# Arguments
-* `imp::DropVars`: this `Imputor` method
-* `data::AbstractMatrix`: the data to impute
-
-# Returns
-* `AbstractMatrix`: a new matrix with missing columns removed
-"""
 function impute!(imp::DropVars, data::AbstractMatrix)
     return filtervars(imp, data) do var
         try
@@ -138,18 +116,6 @@ function impute!(imp::DropVars, data::AbstractMatrix)
     end
 end
 
-"""
-    impute!(imp::DropVars, table)
-
-Find remove columns in the table with too many missing elements.
-
-# Arguments
-* `imp::DropVars`: this `Imputor` method
-* `table`: a type that implements the Tables API.
-
-# Returns
-* our data with the missing columns removed.
-"""
 function impute!(imp::DropVars, table)
     @assert istable(table)
     cols = Tables.columns(table)
