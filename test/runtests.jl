@@ -66,7 +66,7 @@ import Impute:
                 df.cos[[4, 9]] .= missing
 
                 result = impute(df, DropVars(; context=ctx))
-                expected = df[[:cos]]
+                expected = select(df, :cos)
 
                 @test isequal(result, expected)
                 @test isequal(result, Impute.dropvars(df; context=ctx))
