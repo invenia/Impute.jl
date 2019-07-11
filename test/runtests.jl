@@ -237,7 +237,6 @@ import Impute:
             # Confirm that we don't have any more missing values
             @test !any(ismissing, Matrix(result))
 
-
             # We can also use the Chain type with explicit Imputor types
             result2 = impute(
                 orig,
