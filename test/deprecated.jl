@@ -1,5 +1,5 @@
 @testset "deprecated" begin
-    a = Vector{Union{Float64, Missing}}(1.0:1.0:20.0)
+    a = allowmissing(1.0:1.0:20.0)
     a[[2, 3, 7]] .= missing
     mask = map(!ismissing, a)
 

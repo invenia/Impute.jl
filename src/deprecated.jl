@@ -31,7 +31,7 @@ function impute!(data, method::Symbol, args...; limit::Float64=0.1)
     Base.depwarn(
         """
         impute!(data, method) is deprecated.
-        Please use Impute.method!(data) or impute!(imputor, data).
+        Please use Impute.method!(data) or impute!(imputor::Imputor, data).
         """,
         :impute!
     )
@@ -62,7 +62,7 @@ Creates the appropriate `Imputor` type and `Context` (using `missing` function) 
 function impute!(data, missing::Function, method::Symbol, args...; limit::Float64=0.1)
     Base.depwarn(
         """
-        impute!(data, missing, method) is deprecated. Please use impute!(imputor, data).
+        impute!(data, missing, method) is deprecated. Please use impute!(imputor::Imputor, data).
         """,
         :impute!
     )
@@ -167,12 +167,11 @@ function _extract_context_kwargs(kwargs...)
     limit = 1.0
 
     if haskey(d, :limit)
+        limit = d[:limit]
         @warn(
             "Passing `limit` directly to impute functions is deprecated. " *
-            "Please pass a `context` in the future."
+            "Please pass `context=Context(; limit=$limit)` in the future."
         )
-
-        limit = d[:limit]
         delete!(d, :limit)
     end
 

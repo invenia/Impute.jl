@@ -124,7 +124,7 @@ function impute!(imp::DropVars, table)
         try
             imp.context() do c
                 col = getproperty(cols, cname)
-                for i in 1:length(col)
+                for i in eachindex(col)
                     ismissing(c, col[i])
                 end
             end

@@ -2,6 +2,17 @@
     AbstractContext
 
 An imputation context records summary information about missing data for an imputation algorithm.
+All `AbstractContext`s are callable with a function, which allows us to write code like:
+
+```julia
+context() do c
+    # My imputation code using a clean context
+end
+```
+
+This do-block will pass a fresh context to your code and apply the `on_complete` function on
+the resulting data and context state. By default, `on_complete` will throw an
+[ImputeError](@ref) if we have too many missing values.
 """
 abstract type AbstractContext end
 
@@ -12,7 +23,7 @@ Base.copy(ctx::T) where {T <: AbstractContext} = T(fieldvalues(ctx)...)
 """
     ismissing(ctx::AbstractContext, x) -> Bool
 
-Uses `ctx.is_missing` to determine if x is missing. If x is a named tuple or an abstract array
+Uses `ctx.is_missing` to determine if x is missing. If x is a `NamedTuple` or an `AbstractArray`
 then `ismissing` will return true if `ctx.is_missing` returns true for any element.
 The ctx.count is increased whenever whenever we return true and if `ctx.count / ctx.num`
 exceeds our `ctx.limit` we throw an `ImputeError`
@@ -100,7 +111,7 @@ weighted.
 # Keyword Arguments
 * `n::Int`: number of observations
 * `count::Int`: number of missing values found
-* `limit::Float64`: allowable portion of total values allowed to be imputed (should be between 0.0 and 1.0).
+* `limit::Float64`: portion of total values allowed to be imputed (should be between 0.0 and 1.0).
 * `is_missing::Function`: returns a Bool if the value counts as missing
 * `on_complete::Function`: a function to run when imputation is complete
 """
@@ -163,10 +174,10 @@ This context type can be useful if some missing observation are more important t
 
 # Keyword Arguments
 * `num::Int`: number of observations
-* `s::Float64`: sum of missing values weights
-* `limit::Float64`: allowable portion of total values allowed to be imputed (should be between 0.0 and 1.0).
+* `s::Float64`: sum of the weights of missing values
+* `limit::Float64`: portion of total values allowed to be imputed (should be between 0.0 and 1.0).
 * `is_missing::Function`: returns a Bool if the value counts as missing
-* `on_complete::Function`: allowable portion of total values allowed to be imputed (should be between 0.0 and 1.0).
+* `on_complete::Function`: a function to run when imputation is complete
 """
 function WeightedContext(
     wv::AbstractWeights;
@@ -205,7 +216,11 @@ function complete(ctx::WeightedContext, data)
     return data
 end
 
-for T in [Context, WeightedContext]
+#=
+Define our callable methods for each context. Once we drop 1.0 we should be able to just
+define this on the `AbstractContext`.
+=#
+for T in (Context, WeightedContext)
     @eval begin
         function (ctx::$T)(f::Function)
             _ctx = empty(ctx)

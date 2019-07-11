@@ -19,7 +19,7 @@ import Impute:
     ImputeError
 
 @testset "Impute" begin
-    a = Vector{Union{Float64, Missing}}(1.0:1.0:20.0)
+    a = allowmissing(1.0:1.0:20.0)
     a[[2, 3, 7]] .= missing
     mask = map(!ismissing, a)
     ctx = Context(; limit=0.2)
@@ -38,6 +38,10 @@ import Impute:
             @test a2 == expected
         end
         @testset "DropVars" begin
+            @testset "Vector" begin
+                @test_throws MethodError Impute.dropvars(a)
+            end
+
             @testset "Matrix" begin
                 m = reshape(a, 5, 4)
 
@@ -55,8 +59,8 @@ import Impute:
             end
             @testset "DataFrame" begin
                 df = DataFrame(
-                    :sin => Vector{Union{Float64, Missing}}(sin.(1.0:1.0:20.0)),
-                    :cos => Vector{Union{Float64, Missing}}(sin.(1.0:1.0:20.0)),
+                    :sin => allowmissing(sin.(1.0:1.0:20.0)),
+                    :cos => allowmissing(sin.(1.0:1.0:20.0)),
                 )
                 df.sin[[2, 3, 7, 12, 19]] .= missing
                 df.cos[[4, 9]] .= missing
@@ -168,7 +172,7 @@ import Impute:
             df = DataFrame(
                 :hod => hod,
                 :obj => obj,
-                :val => Vector{Union{Float64, Missing}}(
+                :val => allowmissing(
                     [sin(x) * cos(y) for (x, y) in zip(hod, obj)]
                 ),
             )
@@ -304,6 +308,32 @@ import Impute:
             # then our previous limit of 0.2 won't be enough to succeed.
             ctx = WeightedContext(reverse!(eweights(20, 0.3)); limit=0.2)
             @test_throws ImputeError impute(DropObs(), ctx, a)
+        end
+    end
+
+    @testset "Utils" begin
+        drop_dim1 = DropObs(; vardim=1)
+        drop_dim2 = DropObs(; vardim=2)
+        M = [1.0 2.0 3.0 4.0 5.0; 1.1 2.2 3.3 4.4 5.5]
+
+        @testset "obswise" begin
+            @test map(sum, Impute.obswise(drop_dim1, M)) == [2.1, 4.2, 6.3, 8.4, 10.5]
+            @test map(sum, Impute.obswise(drop_dim2, M)) == [15, 16.5]
+        end
+
+        @testset "varwise" begin
+            @test map(sum, Impute.varwise(drop_dim1, M)) == [15, 16.5]
+            @test map(sum, Impute.varwise(drop_dim2, M)) == [2.1, 4.2, 6.3, 8.4, 10.5]
+        end
+
+        @testset "filterobs" begin
+            @test Impute.filterobs(x -> sum(x) > 5.0, drop_dim1, M) == M[:, 3:5]
+            @test Impute.filterobs(x -> sum(x) > 15.0, drop_dim2, M) == M[[false, true], :]
+        end
+
+        @testset "filtervars" begin
+            @test Impute.filtervars(x -> sum(x) > 15.0, drop_dim1, M) == M[[false, true], :]
+            @test Impute.filtervars(x -> sum(x) > 5.0, drop_dim2, M) == M[:, 3:5]
         end
     end
 

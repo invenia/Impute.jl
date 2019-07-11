@@ -3,8 +3,7 @@
 
 An imputor stores information about imputing values in `AbstractArray`s and `Tables.table`s.
 New imputation methods are expected to sutype `Imputor` and, at minimum,
-implement the `impute!{T<:Any}(imp::<MyImputor>, ctx::Context, data::AbstractArray{T, 1})`
-method.
+implement the `impute!(imp::<MyImputor>, data::AbstractVector)` method.
 """
 abstract type Imputor end
 
@@ -39,6 +38,10 @@ function impute(imp::Imputor, data)
     # Call `deepcopy` because we can trust that it's available for all types.
     return impute!(imp, deepcopy(data))
 end
+
+
+# This is a necessary fallback because the tables method doesn't have a type declaration
+impute!(imp::Imputor, data::AbstractVector) = MethodError(impute!, (imp, data))
 
 """
     impute!(imp::Imputor, data::AbstractMatrix)
