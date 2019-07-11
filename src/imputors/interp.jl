@@ -28,7 +28,7 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(Interpolate(; vardim=1, context=Context(; limit=1.0)), M)
+julia> impute(M, Interpolate(; vardim=1, context=Context(; limit=1.0)))
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0  3.0  4.0  5.0
  1.1  2.2  3.3  4.4  5.5
@@ -36,7 +36,7 @@ julia> impute(Interpolate(; vardim=1, context=Context(; limit=1.0)), M)
 """
 Interpolate(; vardim=2, context=Context()) = Interpolate(vardim, context)
 
-function impute!(imp::Interpolate, data::AbstractVector{<:Union{T, Missing}}) where T
+function impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) where T
     imp.context() do c
         i = findfirst(c, data) + 1
 

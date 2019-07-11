@@ -3,13 +3,16 @@
 ###############################################################################
 Base.@deprecate(
     impute(imp::Imputor, context::AbstractContext, data; kwargs...),
-    impute(typeof(imp)(; context=context), data; kwargs...)
+    impute(data, typeof(imp)(; context=context, kwargs...))
 )
 
 Base.@deprecate(
     impute!(imp::Imputor, context::AbstractContext, data; kwargs...),
-    impute!(typeof(imp)(; context=context), data; kwargs...)
+    impute!(data, typeof(imp)(; context=context, kwargs...))
 )
+
+Base.@deprecate impute(imp::Imputor, data) impute(data, imp)
+Base.@deprecate impute!(imp::Imputor, data) impute!(data, imp)
 
 #####################################################################
 # Deprecate all impute calls where the first argument is an Imputor #
@@ -18,7 +21,7 @@ Base.@deprecate(
     impute!(data, method::Symbol=:interp, args...; limit::Float64=0.1)
 
 Looks up the `Imputor` type for the `method`, creates it and calls
-`impute!(imputor::Imputor, data, limit::Float64)` with it.
+`impute!(data, imputor::Imputor)` with it.
 
 # Arguments
 * `data`: the datset containing missing elements we should impute.
@@ -31,7 +34,7 @@ function impute!(data, method::Symbol, args...; limit::Float64=0.1)
     Base.depwarn(
         """
         impute!(data, method) is deprecated.
-        Please use Impute.method!(data) or impute!(imputor::Imputor, data).
+        Please use Impute.method!(data) or impute!(data, imputor::Imputor).
         """,
         :impute!
     )
@@ -42,14 +45,14 @@ function impute!(data, method::Symbol, args...; limit::Float64=0.1)
         imputor_type(; context=Context(; limit=limit))
     end
 
-    return impute!(imputor, data)
+    return impute!(data, imputor)
 end
 
 """
     impute!(data, missing::Function, method::Symbol=:interp, args...; limit::Float64=0.1)
 
 Creates the appropriate `Imputor` type and `Context` (using `missing` function) in order to call
-`impute!(imputor::Imputor, ctx::Context, data)` with them.
+`impute!(data, imputor::Imputor)` with them.
 
 # Arguments
 * `data`: the datset containing missing elements we should impute.
@@ -62,7 +65,7 @@ Creates the appropriate `Imputor` type and `Context` (using `missing` function) 
 function impute!(data, missing::Function, method::Symbol, args...; limit::Float64=0.1)
     Base.depwarn(
         """
-        impute!(data, missing, method) is deprecated. Please use impute!(imputor::Imputor, data).
+        impute!(data, missing, method) is deprecated. Please use impute!(data, imputor::Imputor).
         """,
         :impute!
     )
@@ -73,7 +76,7 @@ function impute!(data, missing::Function, method::Symbol, args...; limit::Float6
         imputor_type(; context=Context(; is_missing=missing, limit=limit))
     end
 
-    return impute!(imputor, data)
+    return impute!(data, imputor)
 end
 
 """
@@ -85,7 +88,7 @@ function impute(data, args...; kwargs...)
     Base.depwarn(
         """
         impute(data, args...; kwargs...) is deprecated.
-        Please use Impute.method(data) or impute(imputor, data).
+        Please use Impute.method(data) or impute(data, imputor::Imputor).
         """,
         :impute
     )
@@ -115,7 +118,7 @@ end
 """
     chain!(data, imputors::Imputor...; kwargs...)
 
-Creates a `Chain` with `imputors` and calls `impute!(imputor, data; kwargs...)`
+Creates a `Chain` with `imputors` and calls `impute!(data, imputor)`
 """
 function chain!(data, imputors::Imputor...; kwargs...)
     Base.depwarn(
@@ -131,7 +134,7 @@ function chain!(data, imputors::Imputor...; kwargs...)
         imp = typeof(imputor)(
             (isa(x, AbstractContext) ? ctx : x for x in fieldvalues(imputor))...
         )
-        data = impute!(imp, data)
+        data = impute!(data, imp)
     end
 
     return data

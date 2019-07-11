@@ -30,28 +30,28 @@ function filtervars(f::Function, imp::Imputor, data::AbstractMatrix)
 end
 
 """
-    impute(imp::Imputor, data)
+    impute(data, imp::Imputor)
 
 Returns a new copy of the `data` with the missing data imputed by the imputor `imp`.
 """
-function impute(imp::Imputor, data)
+function impute(data, imp::Imputor)
     # Call `deepcopy` because we can trust that it's available for all types.
-    return impute!(imp, deepcopy(data))
+    return impute!(deepcopy(data), imp)
 end
 
 
 # This is a necessary fallback because the tables method doesn't have a type declaration
-impute!(imp::Imputor, data::AbstractVector) = MethodError(impute!, (imp, data))
+impute!(data::AbstractVector, imp::Imputor) = MethodError(impute!, (data, imp))
 
 """
-    impute!(imp::Imputor, data::AbstractMatrix)
+    impute!(data::AbstractMatrix, imp::Imputor)
 
 Imputes the data in a matrix by imputing the values 1 variable at a time;
 if this is not the desired behaviour custom imputor methods should overload this method.
 
 # Arguments
-* `imp::Imputor`: the Imputor method to use
 * `data::AbstractMatrix`: the data to impute
+* `imp::Imputor`: the Imputor method to use
 
 # Returns
 * `AbstractMatrix`: the input `data` with values imputed
@@ -65,21 +65,21 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(Interpolate(; vardim=1, context=Context(; limit=1.0)), M)
+julia> impute(M, Interpolate(; vardim=1, context=Context(; limit=1.0)))
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0  3.0  4.0  5.0
  1.1  2.2  3.3  4.4  5.5
 ```
 """
-function impute!(imp::Imputor, data::AbstractMatrix)
+function impute!(data::AbstractMatrix, imp::Imputor)
     for var in varwise(imp, data)
-        impute!(imp, var)
+        impute!(var, imp)
     end
     return data
 end
 
 """
-    impute!(imp::Imputor, table)
+    impute!(table, imp::Imputor)
 
 Imputes the data in a table by imputing the values 1 column at a time;
 if this is not the desired behaviour custom imputor methods should overload this method.
@@ -105,7 +105,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia> impute(Interpolate(; vardim=1, context=Context(; limit=1.0)), df)
+julia> impute(df, Interpolate(; vardim=1, context=Context(; limit=1.0)))
 5×2 DataFrame
 │ Row │ a        │ b        │
 │     │ Float64⍰ │ Float64⍰ │
@@ -116,14 +116,14 @@ julia> impute(Interpolate(; vardim=1, context=Context(; limit=1.0)), df)
 │ 4   │ 4.0      │ 4.4      │
 │ 5   │ 5.0      │ 5.5      │
 """
-function impute!(imp::Imputor, table)
+function impute!(table, imp::Imputor)
     @assert istable(table)
     # Extract a columns iterate that we should be able to use to mutate the data.
     # NOTE: Mutation is not guaranteed for all table types, but it avoid copying the data
     columntable = Tables.columns(table)
 
     for cname in propertynames(columntable)
-        impute!(imp, getproperty(columntable, cname))
+        impute!(getproperty(columntable, cname), imp)
     end
 
     return table

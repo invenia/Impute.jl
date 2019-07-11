@@ -27,7 +27,7 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(Fill(; vardim=1, context=Context(; limit=1.0)), M)
+julia> impute(M, Fill(; vardim=1, context=Context(; limit=1.0)))
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0  2.66667  2.66667  5.0
  1.1  2.2  3.3      3.025    5.5
@@ -35,7 +35,7 @@ julia> impute(Fill(; vardim=1, context=Context(; limit=1.0)), M)
 """
 Fill(; value=mean, vardim=2, context=Context()) = Fill(value, vardim, context)
 
-function impute!(imp::Fill, data::AbstractVector)
+function impute!(data::AbstractVector, imp::Fill)
     imp.context() do c
         fill_val = if isa(imp.value, Function)
             # Call `deepcopy` because we can trust that it's available for all types.

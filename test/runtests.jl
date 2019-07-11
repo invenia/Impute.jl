@@ -26,7 +26,7 @@ import Impute:
 
     @testset "Drop" begin
         @testset "DropObs" begin
-            result = impute(DropObs(; context=ctx), a)
+            result = impute(a, DropObs(; context=ctx))
             expected = copy(a)
             deleteat!(expected, [2, 3, 7])
 
@@ -45,7 +45,7 @@ import Impute:
             @testset "Matrix" begin
                 m = reshape(a, 5, 4)
 
-                result = impute(DropVars(; context=ctx), m)
+                result = impute(m, DropVars(; context=ctx))
                 expected = copy(m)[:, 2:4]
 
                 @test isequal(result, expected)
@@ -65,7 +65,7 @@ import Impute:
                 df.sin[[2, 3, 7, 12, 19]] .= missing
                 df.cos[[4, 9]] .= missing
 
-                result = impute(DropVars(; context=ctx), df)
+                result = impute(df, DropVars(; context=ctx))
                 expected = df[[:cos]]
 
                 @test isequal(result, expected)
@@ -80,7 +80,7 @@ import Impute:
     end
 
     @testset "Interpolate" begin
-        result = impute(Interpolate(; context=ctx), a)
+        result = impute(a, Interpolate(; context=ctx))
         @test result == collect(1.0:1.0:20)
         @test result == interp(a; context=ctx)
 
@@ -105,7 +105,7 @@ import Impute:
     @testset "Fill" begin
         @testset "Value" begin
             fill_val = -1.0
-            result = impute(Fill(; value=fill_val, context=ctx), a)
+            result = impute(a, Fill(; value=fill_val, context=ctx))
             expected = copy(a)
             expected[[2, 3, 7]] .= fill_val
 
@@ -114,7 +114,7 @@ import Impute:
         end
 
         @testset "Mean" begin
-            result = impute(Fill(; value=mean, context=ctx), a)
+            result = impute(a, Fill(; value=mean, context=ctx))
             expected = copy(a)
             expected[[2, 3, 7]] .= mean(a[mask])
 
@@ -128,7 +128,7 @@ import Impute:
     end
 
     @testset "LOCF" begin
-        result = impute(LOCF(; context=ctx), a)
+        result = impute(a, LOCF(; context=ctx))
         expected = copy(a)
         expected[2] = 1.0
         expected[3] = 1.0
@@ -143,7 +143,7 @@ import Impute:
     end
 
     @testset "NOCB" begin
-        result = impute(NOCB(; context=ctx), a)
+        result = impute(a, NOCB(; context=ctx))
         expected = copy(a)
         expected[2] = 4.0
         expected[3] = 4.0
@@ -161,7 +161,7 @@ import Impute:
         ctx = Context(; limit=1.0)
         @testset "Single DataFrame" begin
             data = dataset("boot", "neuro")
-            df = impute(Interpolate(; context=ctx), data)
+            df = impute(data, Interpolate(; context=ctx))
             @test isequal(df, Impute.interp(data; context=ctx))
         end
         @testset "GroupedDataFrame" begin
@@ -201,7 +201,7 @@ import Impute:
         data = Matrix(dataset("boot", "neuro"))
 
         @testset "Drop" begin
-            result = impute(DropObs(; context=ctx), data)
+            result = impute(data, DropObs(; context=ctx))
             @test size(result, 1) == 4
             @test result == Impute.dropobs(data; context=ctx)
 
@@ -210,7 +210,7 @@ import Impute:
         end
 
         @testset "Fill" begin
-            result = impute(Fill(; value=0.0, context=ctx), data)
+            result = impute(data, Fill(; value=0.0, context=ctx))
             @test size(result) == size(data)
             @test result == Impute.fill(data; value=0.0, context=ctx)
 
@@ -222,7 +222,7 @@ import Impute:
 
     @testset "Not enough data" begin
         ctx = Context(; limit=0.1)
-        @test_throws ImputeError impute(DropObs(; context=ctx), a)
+        @test_throws ImputeError impute(a, DropObs(; context=ctx))
         @test_throws ImputeError Impute.dropobs(a; context=ctx)
     end
 
@@ -240,12 +240,12 @@ import Impute:
 
             # We can also use the Chain type with explicit Imputor types
             result2 = impute(
+                orig,
                 Impute.Chain(
                     Impute.Interpolate(; context=ctx),
                     Impute.LOCF(),
                     Impute.NOCB()
                 ),
-                orig,
             )
 
             @test result == result2
@@ -291,7 +291,7 @@ import Impute:
         @testset "Base" begin
             ctx = Context(; limit=0.1)
             @test_throws ImputeError Impute.dropobs(a; context=ctx)
-            @test_throws ImputeError impute(DropObs(; context=ctx), a)
+            @test_throws ImputeError impute(a, DropObs(; context=ctx))
         end
 
         @testset "Weighted" begin
@@ -299,7 +299,7 @@ import Impute:
             # because missing earlier observations is less important than later ones.
             ctx = WeightedContext(eweights(20, 0.3); limit=0.1)
             @test isa(ctx, WeightedContext)
-            result = impute(DropObs(), ctx, a)
+            result = impute(a, DropObs(; context=ctx))
             expected = copy(a)
             deleteat!(expected, [2, 3, 7])
             @test result == expected
@@ -307,7 +307,7 @@ import Impute:
             # If we reverse the weights such that earlier observations are more important
             # then our previous limit of 0.2 won't be enough to succeed.
             ctx = WeightedContext(reverse!(eweights(20, 0.3)); limit=0.2)
-            @test_throws ImputeError impute(DropObs(), ctx, a)
+            @test_throws ImputeError impute(a, DropObs(; context=ctx))
         end
     end
 

@@ -31,7 +31,7 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(LOCF(; vardim=1, context=Context(; limit=1.0)), M)
+julia> impute(M, LOCF(; vardim=1, context=Context(; limit=1.0)))
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0  2.0  2.0  5.0
  1.1  2.2  3.3  3.3  5.5
@@ -39,7 +39,7 @@ julia> impute(LOCF(; vardim=1, context=Context(; limit=1.0)), M)
 """
 LOCF(; vardim=2, context=Context()) = LOCF(vardim, context)
 
-function impute!(imp::LOCF, data::AbstractVector)
+function impute!(data::AbstractVector, imp::LOCF)
     imp.context() do c
         start_idx = findfirst(c, data) + 1
         for i in start_idx:lastindex(data)

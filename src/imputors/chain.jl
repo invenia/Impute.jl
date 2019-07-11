@@ -18,7 +18,7 @@ Creates a Chain using the `Imputor`s provided (ordering matters).
 Chain(imputors::Imputor...) = Chain(collect(imputors))
 
 """
-    impute!(imp::Chain, data)
+    impute!(data, imp::Chain)
 
 Runs the `Imputor`s on the supplied data.
 
@@ -29,9 +29,9 @@ Runs the `Imputor`s on the supplied data.
 # Returns
 * our imputed data
 """
-function impute!(imp::Chain, data)
+function impute!(data, imp::Chain)
     for imputor in imp.imputors
-        data = impute!(imputor, data)
+        data = impute!(data, imputor)
     end
 
     return data

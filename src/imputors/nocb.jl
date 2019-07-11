@@ -30,7 +30,7 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(NOCB(; vardim=1, context=Context(; limit=1.0)), M)
+julia> impute(M, NOCB(; vardim=1, context=Context(; limit=1.0)))
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0  5.0  5.0  5.0
  1.1  2.2  3.3  5.5  5.5
@@ -38,7 +38,7 @@ julia> impute(NOCB(; vardim=1, context=Context(; limit=1.0)), M)
 """
 NOCB(; vardim=2, context=Context()) = NOCB(vardim, context)
 
-function impute!(imp::NOCB, data::AbstractVector)
+function impute!(data::AbstractVector, imp::NOCB)
     imp.context() do c
         end_idx = findlast(c, data) - 1
         for i in end_idx:-1:firstindex(data)

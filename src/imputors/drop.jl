@@ -22,7 +22,7 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(DropObs(; vardim=1, context=Context(; limit=1.0)), M)
+julia> impute(M, DropObs(; vardim=1, context=Context(; limit=1.0)))
 2×3 Array{Union{Missing, Float64},2}:
  1.0  2.0  5.0
  1.1  2.2  5.5
@@ -30,13 +30,13 @@ julia> impute(DropObs(; vardim=1, context=Context(; limit=1.0)), M)
 """
 DropObs(; vardim=2, context=Context()) = DropObs(vardim, context)
 
-function impute!(imp::DropObs, data::AbstractVector)
+function impute!(data::AbstractVector, imp::DropObs)
     imp.context() do c
         filter!(x -> !ismissing(c, x), data)
     end
 end
 
-function impute!(imp::DropObs, data::AbstractMatrix)
+function impute!(data::AbstractMatrix, imp::DropObs)
     imp.context() do c
         return filterobs(imp, data) do obs
             !ismissing(c, obs)
@@ -46,9 +46,9 @@ end
 
 # Deleting elements from subarrays doesn't work so we need to collect that data into
 # a separate array.
-impute!(imp::DropObs, data::SubArray) = impute!(imp::DropObs, collect(data))
+impute!(data::SubArray, imp::DropObs) = impute!(collect(data), imp::DropObs)
 
-function impute!(imp::DropObs, table)
+function impute!(table, imp::DropObs)
     imp.context() do c
         @assert istable(table)
         rows = Tables.rows(table)
@@ -90,14 +90,14 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(DropVars(; vardim=1, context=Context(; limit=0.2)), M)
+julia> impute(M, DropVars(; vardim=1, context=Context(; limit=0.2)))
 1×5 Array{Union{Missing, Float64},2}:
  1.1  2.2  3.3  missing  5.5
 ```
 """
 DropVars(; vardim=2, context=Context()) = DropVars(vardim, context)
 
-function impute!(imp::DropVars, data::AbstractMatrix)
+function impute!(data::AbstractMatrix, imp::DropVars)
     return filtervars(imp, data) do var
         try
             imp.context() do c
@@ -116,7 +116,7 @@ function impute!(imp::DropVars, data::AbstractMatrix)
     end
 end
 
-function impute!(imp::DropVars, table)
+function impute!(table, imp::DropVars)
     @assert istable(table)
     cols = Tables.columns(table)
 
