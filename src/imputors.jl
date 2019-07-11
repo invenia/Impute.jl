@@ -118,7 +118,7 @@ julia> impute(df, Interpolate(; vardim=1, context=Context(; limit=1.0)))
 """
 function impute!(table, imp::Imputor)
     @assert istable(table)
-    # Extract a columns iterate that we should be able to use to mutate the data.
+    # Extract a columns iterator that we should be able to use to mutate the data.
     # NOTE: Mutation is not guaranteed for all table types, but it avoid copying the data
     columntable = Tables.columns(table)
 
