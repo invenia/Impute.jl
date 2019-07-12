@@ -46,7 +46,7 @@ impute!(data::AbstractVector, imp::Imputor) = MethodError(impute!, (data, imp))
 """
     impute!(data::AbstractMatrix, imp::Imputor)
 
-Impute the data in a matrix by imputing the values 1 variable at a time;
+Impute the data in a matrix by imputing the values one variable at a time;
 if this is not the desired behaviour custom imputor methods should overload this method.
 
 # Arguments
