@@ -181,7 +181,7 @@ This context type can be useful if some missing observation are more important t
 """
 function WeightedContext(
     wv::AbstractWeights;
-    limit::Float64=1.0,
+    limit::Real=1.0,
     is_missing::Function=ismissing,
     on_complete::Function=complete
 )
