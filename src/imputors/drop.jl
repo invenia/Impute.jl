@@ -117,7 +117,7 @@ function impute!(data::AbstractMatrix, imp::DropVars)
 end
 
 function impute!(table, imp::DropVars)
-    @assert istable(table)
+    istable(table) || throw(MethodError(impute!, (table, imp)))
     cols = Tables.columns(table)
 
     cnames = Iterators.filter(propertynames(cols)) do cname

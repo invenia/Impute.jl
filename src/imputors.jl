@@ -39,10 +39,6 @@ function impute(data, imp::Imputor)
     return impute!(deepcopy(data), imp)
 end
 
-
-# This is a necessary fallback because the tables method doesn't have a type declaration
-impute!(data::AbstractVector, imp::Imputor) = MethodError(impute!, (data, imp))
-
 """
     impute!(data::AbstractMatrix, imp::Imputor)
 
@@ -117,7 +113,8 @@ julia> impute(df, Interpolate(; vardim=1, context=Context(; limit=1.0)))
 │ 5   │ 5.0      │ 5.5      │
 """
 function impute!(table, imp::Imputor)
-    @assert istable(table)
+    istable(table) || throw(MethodError(impute!, (table, imp)))
+
     # Extract a columns iterator that we should be able to use to mutate the data.
     # NOTE: Mutation is not guaranteed for all table types, but it avoid copying the data
     columntable = Tables.columns(table)
