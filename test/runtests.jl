@@ -187,7 +187,7 @@ import Impute:
             result = vcat(f1.(gdf1)...)
             @test df != result
             @test size(result) == (24 * 12 * 10, 3)
-            @test !any(ismissing, Tables.matrix(result))
+            @test all(!ismissing, Tables.matrix(result))
 
             # Test that we can also mutate the dataframe directly
             f2.(gdf2)
@@ -235,7 +235,7 @@ import Impute:
 
             @test size(result) == size(orig)
             # Confirm that we don't have any more missing values
-            @test !any(ismissing, Matrix(result))
+            @test all(!ismissing, Matrix(result))
 
             # We can also use the Chain type with explicit Imputor types
             result2 = impute(
@@ -259,7 +259,7 @@ import Impute:
 
             @test size(result) == size(orig)
             # Confirm that we don't have any more missing values
-            @test !any(ismissing, result)
+            @test all(!ismissing, result)
         end
 
         @testset "Matrix" begin
@@ -268,7 +268,7 @@ import Impute:
 
             @test size(result) == size(data)
             # Confirm that we don't have any more missing values
-            @test !any(ismissing, result)
+            @test all(!ismissing, result)
         end
     end
 

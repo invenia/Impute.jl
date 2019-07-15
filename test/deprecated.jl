@@ -125,7 +125,7 @@
 
             @test size(result) == size(orig)
             # Confirm that we don't have any more missing values
-            @test !any(ismissing, Matrix(result))
+            @test all(!ismissing, Matrix(result))
         end
 
         @testset "Column Table" begin
@@ -140,7 +140,7 @@
 
             @test size(result) == size(orig)
             # Confirm that we don't have any more missing values
-            @test !any(ismissing, result)
+            @test all(!ismissing, result)
         end
 
         @testset "Matrix" begin
@@ -155,7 +155,7 @@
 
             @test size(result) == size(data)
             # Confirm that we don't have any more missing values
-            @test !any(ismissing, result)
+            @test all(!ismissing, result)
         end
     end
 
