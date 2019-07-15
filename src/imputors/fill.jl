@@ -12,7 +12,7 @@ The current implementation is univariate, so each variable in a table or matrix 
 be handled independently.
 
 # Keyword Arguments
-* `value::Any`: A scalar missing value or a function that returns the a scalar if
+* `value::Any`: A scalar or a function that returns a scalar if
   passed the data with missing data removed (e.g, `mean`)
 * `vardim=2::Int`: Specify the dimension for variables in matrix input data
 * `context::AbstractContext`: A context which keeps track of missing data
