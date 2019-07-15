@@ -112,7 +112,7 @@ weighted.
 * `n::Int`: number of observations
 * `count::Int`: number of missing values found
 * `limit::Float64`: portion of total values allowed to be imputed (should be between 0.0 and 1.0).
-* `is_missing::Function`: returns a Bool if the value counts as missing
+* `is_missing::Function`: must return a Bool indicating if the value counts as missing
 * `on_complete::Function`: a function to run when imputation is complete
 """
 function Context(;
