@@ -55,10 +55,11 @@ function impute!(table, imp::DropObs)
 
         # Unfortunately, we'll need to construct a new table
         # since Tables.rows is just an iterator
-        table = Iterators.filter(rows) do r
+        filtered = Iterators.filter(rows) do r
             !any(x -> ismissing(c, x), propertyvalues(r))
-        end |> materializer(table)
+        end
 
+        table = materializer(table)(filtered)
         return table
     end
 end
@@ -138,6 +139,7 @@ function impute!(table, imp::DropVars)
         end
     end
 
-    table = Tables.select(table, cnames...) |> materializer(table)
+    selected = Tables.select(table, cnames...)
+    table = materializer(table)(selected)
     return table
 end
