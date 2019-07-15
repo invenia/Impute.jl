@@ -12,11 +12,11 @@ obsdim(imp::Imputor) = imp.vardim == 1 ? 2 : 1
 vardim(imp::Imputor) = imp.vardim
 
 function obswise(imp::Imputor, data::AbstractMatrix)
-    (imp.vardim == 1 ? view(data, :, i) : view(data, i, :) for i in axes(data, obsdim(imp)))
+    return (selectdim(data, obsdim(imp), i) for i in axes(data, obsdim(imp)))
 end
 
 function varwise(imp::Imputor, data::AbstractMatrix)
-    (imp.vardim == 1 ? view(data, i, :) : view(data, :, i) for i in axes(data, vardim(imp)))
+    return (selectdim(data, vardim(imp), i) for i in axes(data, vardim(imp)))
 end
 
 function filterobs(f::Function, imp::Imputor, data::AbstractMatrix)
