@@ -1,73 +1,145 @@
-"""
-    Drop <: Imputor
-
-Removes missing values from the `AbstractArray` or `DataFrame` provided.
-"""
-struct Drop <: Imputor end
-
-"""
-    impute!(imp::Drop, ctx::Context, data::AbstractVector)
-
-Uses `filter!` to remove missing elements from the array.
-
-# Arguments
-* `imp::Drop`: this `Imputor` method
-* `ctx::Context`: contextual information for missing data
-* `data::AbstractVector`: the data to impute
-
-# Returns
-* `AbstractVector`: our data array with missing elements removed
-"""
-function impute!(imp::Drop, ctx::Context, data::AbstractVector)
-    return filter!(x -> !ismissing(ctx, x), data)
+struct DropObs <: Imputor
+    vardim::Int
+    context::AbstractContext
 end
 
 """
-    impute!(imp::Drop, ctx::Context, data::AbstractMatrix)
+    DropObs(; vardim=2, context=Context)
 
-Finds the missing rows in the matrix and uses a mask (Vector{Bool}) to return the
-`data` with those rows removed. Unfortunately, the mask approach requires copying the matrix.
+Removes missing observations from the `AbstractArray` or `Tables.table` provided.
 
-NOTES (or premature optimizations):
-* We use `view`, but this will change the type of the `data` by returning a `SubArray`
-* We might be able to do something clever by:
-    1. reshaping the data to a vector
-    2. running `deleteat!` for the appropriate indices and
-    3. reshaping the data back to the desired shape.
+# Keyword Arguments
+* `vardim=2::Int`: Specify the dimension for variables in matrix input data
+* `context::AbstractContext=Context()`: A context which keeps track of missing data
+  summary information
 
-# Arguments
-* `imp::Drop`: this `Imputor` method
-* `ctx::Context`: contextual information for missing data
-* `data::AbstractMatrix`: the data to impute
+# Example
+```jldoctest
+julia> using Impute: DropObs, Context, impute
 
-# Returns
-* `AbstractMatrix`: a new matrix with missing rows removed
+julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
+2×5 Array{Union{Missing, Float64},2}:
+ 1.0  2.0   missing  missing  5.0
+ 1.1  2.2  3.3       missing  5.5
+
+julia> impute(M, DropObs(; vardim=1, context=Context(; limit=1.0)))
+2×3 Array{Union{Missing, Float64},2}:
+ 1.0  2.0  5.0
+ 1.1  2.2  5.5
+```
 """
-function impute!(imp::Drop, ctx::Context, data::AbstractMatrix)
-    ctx.num = size(data, 1)
-    mask = map(i -> !ismissing(ctx, data[i, :]), 1:size(data, 1))
-    return data[mask, :]
+DropObs(; vardim=2, context=Context()) = DropObs(vardim, context)
+
+function impute!(data::AbstractVector, imp::DropObs)
+    imp.context() do c
+        filter!(x -> !ismissing(c, x), data)
+    end
+end
+
+function impute!(data::AbstractMatrix, imp::DropObs)
+    imp.context() do c
+        return filterobs(imp, data) do obs
+            !ismissing(c, obs)
+        end
+    end
+end
+
+# Deleting elements from subarrays doesn't work so we need to collect that data into
+# a separate array.
+impute!(data::SubArray, imp::DropObs) = impute!(collect(data), imp::DropObs)
+
+function impute!(table, imp::DropObs)
+    imp.context() do c
+        @assert istable(table)
+        rows = Tables.rows(table)
+
+        # Unfortunately, we'll need to construct a new table
+        # since Tables.rows is just an iterator
+        filtered = Iterators.filter(rows) do r
+            !any(x -> ismissing(c, x), propertyvalues(r))
+        end
+
+        table = materializer(table)(filtered)
+        return table
+    end
+end
+
+
+struct DropVars <: Imputor
+    vardim::Int
+    context::AbstractContext
 end
 
 """
-    impute!(imp::Drop, ctx::Context, data::DataFrame)
+    DropVars(; vardim=2, context=Context())
 
-Finds the missing rows in the `DataFrame` and deletes them.
 
-NOTE: this isn't quite as fast as `dropnull` in `DataFrames`s as we're using an arbitrary
-`missing` function rather than using the precomputed `dt.isnull` vector of bools.
+Finds variables with too many missing values in a `AbstractMatrix` or `Tables.table` and
+removes them from the input data.
 
-# Arguments
-* `imp::Drop`: this `Imputor` method
-* `ctx::Context`: contextual information for missing data
-* `data::DataFrame`: the data to impute
+# Keyword Arguments
+* `vardim=2::Int`: Specify the dimension for variables in matrix input data
+* `context::AbstractContext`: A context which keeps track of missing data
+  summary information
 
-# Returns
-* `DataFrame`: our data with the missing rows removed.
+# Examples
+```jldoctest
+julia> using Impute: DropVars, Context, impute
+
+julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
+2×5 Array{Union{Missing, Float64},2}:
+ 1.0  2.0   missing  missing  5.0
+ 1.1  2.2  3.3       missing  5.5
+
+julia> impute(M, DropVars(; vardim=1, context=Context(; limit=0.2)))
+1×5 Array{Union{Missing, Float64},2}:
+ 1.1  2.2  3.3  missing  5.5
+```
 """
-function impute!(imp::Drop, ctx::Context, data::DataFrame)
-    ctx.num = size(data, 1)
-    m = typeof(data).name.module
-    m.deleterows!(data, findall(r -> ismissing(ctx, r), m.eachrow(data)))
-    return data
+DropVars(; vardim=2, context=Context()) = DropVars(vardim, context)
+
+function impute!(data::AbstractMatrix, imp::DropVars)
+    return filtervars(imp, data) do var
+        try
+            imp.context() do c
+                for x in var
+                    ismissing(c, x)
+                end
+            end
+            return true
+        catch e
+            if isa(e, ImputeError)
+                return false
+            else
+                rethrow(e)
+            end
+        end
+    end
+end
+
+function impute!(table, imp::DropVars)
+    istable(table) || throw(MethodError(impute!, (table, imp)))
+    cols = Tables.columns(table)
+
+    cnames = Iterators.filter(propertynames(cols)) do cname
+        try
+            imp.context() do c
+                col = getproperty(cols, cname)
+                for i in eachindex(col)
+                    ismissing(c, col[i])
+                end
+            end
+            return true
+        catch e
+            if isa(e, ImputeError)
+                return false
+            else
+                rethrow(e)
+            end
+        end
+    end
+
+    selected = Tables.select(table, cnames...)
+    table = materializer(table)(selected)
+    return table
 end

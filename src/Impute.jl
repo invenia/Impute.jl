@@ -1,14 +1,31 @@
 module Impute
 
-using DataFrames
+using IterTools
 using Statistics
+using StatsBase
+using Tables: Tables, materializer, istable
 
-import DataFrames: DataFrameRow
-import Base.Iterators
+import Base.Iterators: drop
 
 export impute, impute!, chain, chain!, drop, drop!, interp, interp!, ImputeError
 
-const Dataset = Union{AbstractArray, DataFrame}
+function __init__()
+    sym = join(["chain", "chain!", "drop", "drop!", "interp", "interp!"], ", ", " and ")
+
+    @warn(
+        """
+        The following symbols will not be exported in future releases: $sym.
+        Please qualify your calls with `Impute.<method>(...)` or explicitly import the symbol.
+        """
+    )
+
+    @warn(
+        """
+        The default limit for all impute functions will be 1.0 going forward.
+        If you depend on a specific threshold please pass in an appropriate `AbstractContext`.
+        """
+    )
+end
 
 """
     ImputeError{T} <: Exception
@@ -27,119 +44,230 @@ Base.showerror(io::IO, err::ImputeError) = println(io, "ImputeError: $(err.msg)"
 include("context.jl")
 include("imputors.jl")
 
-const global imputation_methods = Dict{Symbol, Type}(
-    :drop => Drop,
-    :interp => Interpolate,
-    :fill => Fill,
-    :locf => LOCF,
-    :nocb => NOCB,
+const global imputation_methods = (
+    drop = DropObs,
+    dropobs = DropObs,
+    dropvars = DropVars,
+    interp = Interpolate,
+    fill = Fill,
+    locf = LOCF,
+    nocb = NOCB,
 )
 
-"""
-    impute!(data::Dataset, method::Symbol=:interp, args...; limit::Float64=0.1)
+include("deprecated.jl")
 
-Looks up the `Imputor` type for the `method`, creates it and calls
-`impute!(imputor::Imputor, data::Dataset, limit::Float64)` with it.
+for (f, v) in pairs(imputation_methods)
+    typename = nameof(v)
+    f! = Symbol(f, :!)
 
-# Arguments
-* `data::Dataset`: the datset containing missing elements we should impute.
-* `method::Symbol`: the imputation method to use
-    (options: [`:drop`, `:fill`, `:interp`, `:locf`, `:nocb`])
-* `args::Any...`: any arguments you should pass to the `Imputor` constructor.
-* `limit::Float64`: missing data ratio limit/threshold (default: 0.1)
-"""
-function impute!(data::Dataset, method::Symbol, args...; limit::Float64=0.1)
-    imputor_type = imputation_methods[method]
-    imputor = length(args) > 0 ? imputor_type(args...) : imputor_type()
-    return impute!(imputor, data, limit)
+    @eval begin
+        $f(data; kwargs...) = impute(data, $typename(; _extract_context_kwargs(kwargs...)...))
+        $f!(data; kwargs...) = impute!(data, $typename(; _extract_context_kwargs(kwargs...)...))
+        $f(; kwargs...) = data -> impute(data, $typename(; _extract_context_kwargs(kwargs...)...))
+        $f!(; kwargs...) = data -> impute!(data, $typename(; _extract_context_kwargs(kwargs...)...))
+    end
 end
 
-"""
-    impute!(data::Dataset, missing::Function, method::Symbol=:interp, args...; limit::Float64=0.1)
+@doc """
+    Impute.dropobs(data; vardim=2, context=Context())
 
-Creates the appropriate `Imputor` type and `Context` (using `missing` function) in order to call
-`impute!(imputor::Imputor, ctx::Context, data::Dataset)` with them.
+Removes missing observations from the `AbstractArray` or `Tables.table` provided.
+See [DropObs](@ref) for details.
 
-# Arguments
-* `data::Dataset`: the datset containing missing elements we should impute.
-* `missing::Function`: the missing data function to use
-* `method::Symbol`: the imputation method to use
-    (options: [`:drop`, `:fill`, `:interp`, `:locf`, `:nocb`])
-* `args::Any...`: any arguments you should pass to the `Imputor` constructor.
-* `limit::Float64`: missing data ratio limit/threshold (default: 0.1)
-"""
-function impute!(data::Dataset, missing::Function, method::Symbol, args...; limit::Float64=0.1)
-    imputor_type = imputation_methods[method]
-    imputor = length(args) > 0 ? imputor_type(args...) : imputor_type()
-    ctx = Context(*(size(data)...), 0, limit, missing)
-    return impute!(imputor, ctx, data)
-end
+# Example
+```
+julia> using DataFrames; using Impute: Impute, Context
 
-"""
-    impute(data::Dataset, args...; kwargs...)
+julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
+5×2 DataFrames.DataFrame
+│ Row │ a        │ b        │
+│     │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ missing  │ 3.3      │
+│ 4   │ missing  │ missing  │
+│ 5   │ 5.0      │ 5.5      │
 
-Copies the `data` before calling `impute!(new_data, args...; kwargs...)`
-"""
-function impute(data::Dataset, args...; kwargs...)
-    return impute!(deepcopy(data), args...; kwargs...)
-end
+julia> Impute.dropobs(df; vardim=1, context=Context(; limit=1.0))
+3×2 DataFrames.DataFrame
+│ Row │ a       │ b       │
+│     │ Float64 │ Float64 │
+├─────┼─────────┼─────────┤
+│ 1   │ 1.0     │ 1.1     │
+│ 2   │ 2.0     │ 2.2     │
+│ 3   │ 5.0     │ 5.5     │
+```
+""" dropobs
 
-"""
-    chain!(data::Dataset, missing::Function, imputors::Imputor...; kwargs...)
+@doc """
+    Impute.dropvars(data; vardim=2, context=Context())
 
-Creates a `Chain` with `imputors` and calls `impute!(imputor, missing, data; kwargs...)`
-"""
-function chain!(data::Dataset, missing::Function, imputors::Imputor...; kwargs...)
-    imputor = Chain(imputors...)
-    return impute!(imputor, missing, data; kwargs...)
-end
+Finds variables with too many missing values in a `AbstractMatrix` or `Tables.table` and
+removes them from the input data. See [DropVars](@ref) for details.
 
-"""
-    chain!(data::Dataset, imputors::Imputor...; kwargs...)
+# Example
+```jldoctest
+julia> using DataFrames; using Impute: Impute, Context
 
-Creates a `Chain` with `imputors` and calls `impute!(imputor, data; kwargs...)`
-"""
-function chain!(data::Dataset, imputors::Imputor...; kwargs...)
-    imputor = Chain(imputors...)
-    return impute!(imputor, data; kwargs...)
-end
+julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
+5×2 DataFrames.DataFrame
+│ Row │ a        │ b        │
+│     │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ missing  │ 3.3      │
+│ 4   │ missing  │ missing  │
+│ 5   │ 5.0      │ 5.5      │
 
-"""
-    chain(data::Dataset, args...; kwargs...)
+julia> Impute.dropvars(df; vardim=1, context=Context(; limit=0.2))
+5×1 DataFrames.DataFrame
+│ Row │ b        │
+│     │ Float64⍰ │
+├─────┼──────────┤
+│ 1   │ 1.1      │
+│ 2   │ 2.2      │
+│ 3   │ 3.3      │
+│ 4   │ missing  │
+│ 5   │ 5.5      │
+```
+""" dropvars
 
-Copies the `data` before calling `chain!(data, args...; kwargs...)`
-"""
-function chain(data::Dataset, args...; kwargs...)
-    result = deepcopy(data)
-    return chain!(data, args...; kwargs...)
-end
+@doc """
+    Impute.interp(data; vardim=2, context=Context())
 
-"""
-    drop!(data::Dataset; limit=1.0)
+Performs linear interpolation between the nearest values in an vector.
+See [Interpolate](@ref) for details.
 
-Utility method for `impute!(data, :drop; limit=limit)`
-"""
-drop!(data::Dataset; limit=1.0) = impute!(data, :drop; limit=limit)
+# Example
+```jldoctest
+julia> using DataFrames; using Impute: Impute, Context
 
-"""
-    drop(data::Dataset; limit=1.0)
+julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
+5×2 DataFrames.DataFrame
+│ Row │ a        │ b        │
+│     │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ missing  │ 3.3      │
+│ 4   │ missing  │ missing  │
+│ 5   │ 5.0      │ 5.5      │
 
-Utility method for `impute(data, :drop; limit=limit)`
-"""
-Iterators.drop(data::Dataset; limit=1.0) = impute(data, :drop; limit=limit)
+julia> Impute.interp(df; vardim=1, context=Context(; limit=1.0))
+5×2 DataFrames.DataFrame
+│ Row │ a        │ b        │
+│     │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ 3.0      │ 3.3      │
+│ 4   │ 4.0      │ 4.4      │
+│ 5   │ 5.0      │ 5.5      │
+```
+""" interp
 
-"""
-    interp!(data::Dataset; limit=1.0)
+@doc """
+    Impute.fill(data; value=mean, vardim=2, context=Context())
 
-Utility method for `impute!(data, :interp; limit=limit)`
-"""
-interp!(data::Dataset; limit=1.0) = impute!(data, :interp; limit=limit)
+Fills in the missing data with a specific value. See [Fill](@ref) for details.
 
-"""
-    interp(data::Dataset; limit=1.0)
+# Example
+```jldoctest
+julia> using DataFrames; using Impute: Impute, Context
 
-Utility method for `impute(data, :interp; limit=limit)`
-"""
-interp(data::Dataset; limit=1.0) = impute(data, :interp; limit=limit)
+julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
+5×2 DataFrames.DataFrame
+│ Row │ a        │ b        │
+│     │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ missing  │ 3.3      │
+│ 4   │ missing  │ missing  │
+│ 5   │ 5.0      │ 5.5      │
+
+julia> Impute.fill(df; value=-1.0, vardim=1, context=Context(; limit=1.0))
+5×2 DataFrames.DataFrame
+│ Row │ a        │ b        │
+│     │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ -1.0     │ 3.3      │
+│ 4   │ -1.0     │ -1.0     │
+│ 5   │ 5.0      │ 5.5      │
+```
+""" fill
+
+@doc """
+    Impute.locf(data; vardim=2, context=Context())
+
+Iterates forwards through the `data` and fills missing data with the last existing
+observation. See [LOCF](@ref) for details.
+
+# Example
+```jldoctest
+julia> using DataFrames; using Impute: Impute, Context
+
+julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
+5×2 DataFrames.DataFrame
+│ Row │ a        │ b        │
+│     │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ missing  │ 3.3      │
+│ 4   │ missing  │ missing  │
+│ 5   │ 5.0      │ 5.5      │
+
+julia> Impute.locf(df; vardim=1, context=Context(; limit=1.0))
+5×2 DataFrames.DataFrame
+│ Row │ a        │ b        │
+│     │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ 2.0      │ 3.3      │
+│ 4   │ 2.0      │ 3.3      │
+│ 5   │ 5.0      │ 5.5      │
+```
+""" locf
+
+@doc """
+    Impute.nocb(data; vardim=2, context=Context())
+
+Iterates backwards through the `data` and fills missing data with the next existing
+observation. See [LOCF](@ref) for details.
+
+# Example
+```jldoctest
+julia> using DataFrames; using Impute: Impute, Context
+
+julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
+5×2 DataFrames.DataFrame
+│ Row │ a        │ b        │
+│     │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ missing  │ 3.3      │
+│ 4   │ missing  │ missing  │
+│ 5   │ 5.0      │ 5.5      │
+
+julia> Impute.nocb(df; vardim=1, context=Context(; limit=1.0))
+5×2 DataFrames.DataFrame
+│ Row │ a        │ b        │
+│     │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ 5.0      │ 3.3      │
+│ 4   │ 5.0      │ 5.5      │
+│ 5   │ 5.0      │ 5.5      │
+```
+""" nocb
+
 
 end  # module

@@ -1,77 +1,129 @@
 """
     Imputor
 
-An imputor stores information about imputing values in `AbstractArray`s and `DataFrame`s.
+An imputor stores information about imputing values in `AbstractArray`s and `Tables.table`s.
 New imputation methods are expected to sutype `Imputor` and, at minimum,
-implement the `impute!{T<:Any}(imp::<MyImputor>, ctx::Context, data::AbstractArray{T, 1})`
-method.
+implement the `impute!(imp::<MyImputor>, data::AbstractVector)` method.
 """
-
 abstract type Imputor end
 
-"""
-    impute!(imp::Imputor, data::Dataset, limit::Float64=0.1)
+# A couple utility methods to avoid messing up var and obs dimensions
+obsdim(imp::Imputor) = imp.vardim == 1 ? 2 : 1
+vardim(imp::Imputor) = imp.vardim
 
-Creates a `Context` using information about `data`. These include
+function obswise(imp::Imputor, data::AbstractMatrix)
+    return (selectdim(data, obsdim(imp), i) for i in axes(data, obsdim(imp)))
+end
 
-1. missing data function which defaults to `missing`
+function varwise(imp::Imputor, data::AbstractMatrix)
+    return (selectdim(data, vardim(imp), i) for i in axes(data, vardim(imp)))
+end
 
-2. number of elements: `*(size(data)...)`
+function filterobs(f::Function, imp::Imputor, data::AbstractMatrix)
+    mask = [f(x) for x in obswise(imp, data)]
+    return imp.vardim == 1 ? data[:, mask] : data[mask, :]
+end
 
-# Arguments
-* `imp::Imputor`: the Imputor method to use
-* `data::Dataset`: the data to impute
-* `limit::Float64: missing data ratio limit/threshold (default: 0.1)`
-
-# Return
-* `Dataset`: the input `data` with values imputed.
-"""
-function impute!(imp::Imputor, data::Dataset, limit::Float64=0.1)
-    ctx = Context(*(size(data)...), 0, limit, ismissing)
-    return impute!(imp, ctx, data)
+function filtervars(f::Function, imp::Imputor, data::AbstractMatrix)
+    mask = [f(x) for x in varwise(imp, data)]
+    return imp.vardim == 1 ? data[mask, :] : data[:, mask]
 end
 
 """
-    impute!(imp::Imputor, ctx::Context, data::AbstractMatrix)
+    impute(data, imp::Imputor)
 
-Imputes the data in a matrix by imputing the values 1 column at a time;
+Returns a new copy of the `data` with the missing data imputed by the imputor `imp`.
+"""
+function impute(data, imp::Imputor)
+    # Call `deepcopy` because we can trust that it's available for all types.
+    return impute!(deepcopy(data), imp)
+end
+
+"""
+    impute!(data::AbstractMatrix, imp::Imputor)
+
+Impute the data in a matrix by imputing the values one variable at a time;
 if this is not the desired behaviour custom imputor methods should overload this method.
 
 # Arguments
-* `imp::Imputor`: the Imputor method to use
-* `ctx::Context`: the contextual information for missing data
 * `data::AbstractMatrix`: the data to impute
+* `imp::Imputor`: the Imputor method to use
 
 # Returns
 * `AbstractMatrix`: the input `data` with values imputed
+
+# Example
+```jldoctest
+julia> using Impute: Interpolate, Context, impute
+
+julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
+2×5 Array{Union{Missing, Float64},2}:
+ 1.0  2.0   missing  missing  5.0
+ 1.1  2.2  3.3       missing  5.5
+
+julia> impute(M, Interpolate(; vardim=1, context=Context(; limit=1.0)))
+2×5 Array{Union{Missing, Float64},2}:
+ 1.0  2.0  3.0  4.0  5.0
+ 1.1  2.2  3.3  4.4  5.5
+```
 """
-function impute!(imp::Imputor, ctx::Context, data::AbstractMatrix)
-    for i in 1:size(data, 2)
-        impute!(imp, ctx, view(data, :, i))
+function impute!(data::AbstractMatrix, imp::Imputor)
+    for var in varwise(imp, data)
+        impute!(var, imp)
     end
     return data
 end
 
 """
-    impute!(imp::Imputor, ctx::Context, data::DataFrame)
+    impute!(table, imp::Imputor)
 
-Imputes the data in a DataFrame by imputing the values 1 column at a time;
+Imputes the data in a table by imputing the values 1 column at a time;
 if this is not the desired behaviour custom imputor methods should overload this method.
 
 # Arguments
 * `imp::Imputor`: the Imputor method to use
-* `ctx::Context`: the contextual information for missing data
-* `data::DataFrame`: the data to impute
+* `table`: the data to impute
 
 # Returns
-* `DataFrame`: the input `data` with values imputed
+* the input `data` with values imputed
+
+# Example
+``jldoctest
+julia> using DataFrames; using Impute: Interpolate, Context, impute
+julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
+5×2 DataFrame
+│ Row │ a        │ b        │
+│     │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ missing  │ 3.3      │
+│ 4   │ missing  │ missing  │
+│ 5   │ 5.0      │ 5.5      │
+
+julia> impute(df, Interpolate(; vardim=1, context=Context(; limit=1.0)))
+5×2 DataFrame
+│ Row │ a        │ b        │
+│     │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ 3.0      │ 3.3      │
+│ 4   │ 4.0      │ 4.4      │
+│ 5   │ 5.0      │ 5.5      │
 """
-function impute!(imp::Imputor, ctx::Context, data::DataFrame)
-    colwise(data) do c
-        impute!(imp, ctx, c)
+function impute!(table, imp::Imputor)
+    istable(table) || throw(MethodError(impute!, (table, imp)))
+
+    # Extract a columns iterator that we should be able to use to mutate the data.
+    # NOTE: Mutation is not guaranteed for all table types, but it avoid copying the data
+    columntable = Tables.columns(table)
+
+    for cname in propertynames(columntable)
+        impute!(getproperty(columntable, cname), imp)
     end
 
-    return data
+    return table
 end
 
 
