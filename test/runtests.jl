@@ -181,8 +181,8 @@ import Impute:
             gdf1 = groupby(deepcopy(df), [:hod, :obj])
             gdf2 = groupby(df, [:hod, :obj])
 
-            f1 = x -> Impute.interp(x; context=ctx) |> Impute.locf!() |> Impute.nocb!()
-            f2 = x -> Impute.interp!(x; context=ctx) |> Impute.locf!() |> Impute.nocb!()
+            f1 = Impute.interp(; context=ctx) ∘ Impute.locf!() ∘ Impute.nocb!()
+            f2 = Impute.interp!(; context=ctx) ∘ Impute.locf!() ∘ Impute.nocb!()
 
             result = vcat(f1.(gdf1)...)
             @test df != result
