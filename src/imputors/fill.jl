@@ -1,4 +1,4 @@
-struct Fill{T} <: Imputor
+@auto_hash_equals struct Fill{T} <: Imputor
     value::T
     vardim::Int
     context::AbstractContext

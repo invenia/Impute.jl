@@ -1,4 +1,4 @@
-struct LOCF <: Imputor
+@auto_hash_equals struct LOCF <: Imputor
     vardim::Int
     context::AbstractContext
 end

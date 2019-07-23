@@ -1,4 +1,4 @@
-struct Interpolate <: Imputor
+@auto_hash_equals struct Interpolate <: Imputor
     vardim::Int
     context::AbstractContext
 end
