@@ -24,8 +24,8 @@ import Impute:
     mask = map(!ismissing, a)
     ctx = Context(; limit=0.2)
 
-    @testset "Equality" begin
-        @test Fill(; value=mean, context=ctx) == Fill(; value=mean, context=ctx)
+    @testset "Equality $T" for T in (DropObs, DropVars, Interpolate, Fill, LOCF, NOCB)
+        @test T() == T()
     end
 
     @testset "Drop" begin
