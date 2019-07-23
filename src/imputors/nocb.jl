@@ -1,4 +1,4 @@
-struct NOCB <: Imputor
+@auto_hash_equals struct NOCB <: Imputor
     vardim::Int
     context::AbstractContext
 end

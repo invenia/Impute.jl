@@ -1,5 +1,6 @@
 module Impute
 
+using AutoHashEquals
 using IterTools
 using Statistics
 using StatsBase

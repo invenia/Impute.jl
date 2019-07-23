@@ -1,4 +1,4 @@
-struct DropObs <: Imputor
+@auto_hash_equals struct DropObs <: Imputor
     vardim::Int
     context::AbstractContext
 end
@@ -65,7 +65,7 @@ function impute!(table, imp::DropObs)
 end
 
 
-struct DropVars <: Imputor
+@auto_hash_equals struct DropVars <: Imputor
     vardim::Int
     context::AbstractContext
 end
