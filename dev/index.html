@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Home · Impute.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/documenter.css" rel="stylesheet" type="text/css"/><link href="assets/invenia.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>Impute.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li class="current"><a class="toctext" href>Home</a><ul class="internal"><li><a class="toctext" href="#Installation-1">Installation</a></li><li><a class="toctext" href="#Quickstart-1">Quickstart</a></li></ul></li><li><a class="toctext" href="api/impute/">Impute</a></li><li><a class="toctext" href="api/context/">Context</a></li><li><a class="toctext" href="api/imputors/">Imputors</a></li><li><a class="toctext" href="api/utils/">Utilities</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Home</a></li></ul><a class="edit-page" href="https://github.com/invenia/Impute.jl/blob/master/docs/src/index.md#L"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Home</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Impute-1" href="#Impute-1">Impute</a></h1><div></div><p><a href="https://invenia.github.io/Impute.jl/stable/"><img src="https://img.shields.io/badge/docs-stable-blue.svg" alt="stable"/></a> <a href="https://invenia.github.io/Impute.jl/latest/"><img src="https://img.shields.io/badge/docs-latest-blue.svg" alt="latest"/></a> <a href="https://travis-ci.org/invenia/Impute.jl"><img src="https://travis-ci.org/invenia/Impute.jl.svg?branch=master" alt="Build Status"/></a> <a href="https://ci.appveyor.com/project/invenia/Impute-jl"><img src="https://ci.appveyor.com/api/projects/status/github/invenia/Impute.jl?svg=true" alt="Build status"/></a> <a href="https://codecov.io/gh/invenia/Impute.jl"><img src="https://codecov.io/gh/invenia/Impute.jl/branch/master/graph/badge.svg" alt="codecov"/></a></p><p>Impute.jl provides various methods for handling missing data in Vectors, Matrices and <a href="https://github.com/JuliaData/Tables.jl">Tables</a>.</p><h2><a class="nav-anchor" id="Installation-1" href="#Installation-1">Installation</a></h2><pre><code class="language-julia">julia&gt; using Pkg; Pkg.add(&quot;Impute&quot;)</code></pre><h2><a class="nav-anchor" id="Quickstart-1" href="#Quickstart-1">Quickstart</a></h2><p>Let&#39;s start by loading our dependencies:</p><pre><code class="language-julia-repl">julia&gt; using DataFrames, RDatasets, Impute</code></pre><p>We&#39;ll also want some test data containing <code>missing</code>s to work with:</p><pre><code class="language-julia-repl">julia&gt; df = dataset(&quot;boot&quot;, &quot;neuro&quot;)
+469×6 DataFrames.DataFrame
+│ Row │ V1       │ V2       │ V3      │ V4       │ V5       │ V6       │
+│     │ Float64⍰ │ Float64⍰ │ Float64 │ Float64⍰ │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┼─────────┼──────────┼──────────┼──────────┤
+│ 1   │ missing  │ -203.7   │ -84.1   │ 18.5     │ missing  │ missing  │
+│ 2   │ missing  │ -203.0   │ -97.8   │ 25.8     │ 134.7    │ missing  │
+│ 3   │ missing  │ -249.0   │ -92.1   │ 27.8     │ 177.1    │ missing  │
+│ 4   │ missing  │ -231.5   │ -97.5   │ 27.0     │ 150.3    │ missing  │
+│ 5   │ missing  │ missing  │ -130.1  │ 25.8     │ 160.0    │ missing  │
+│ 6   │ missing  │ -223.1   │ -70.7   │ 62.1     │ 197.5    │ missing  │
+│ 7   │ missing  │ -164.8   │ -12.2   │ 76.8     │ 202.8    │ missing  │
+⋮
+│ 462 │ missing  │ -207.3   │ -88.3   │ 9.6      │ 104.1    │ 218.0    │
+│ 463 │ -242.6   │ -142.0   │ -21.8   │ 69.8     │ 148.7    │ missing  │
+│ 464 │ -235.9   │ -128.8   │ -33.1   │ 68.8     │ 177.1    │ missing  │
+│ 465 │ missing  │ -140.8   │ -38.7   │ 58.1     │ 186.3    │ missing  │
+│ 466 │ missing  │ -149.5   │ -40.3   │ 62.8     │ 139.7    │ 242.5    │
+│ 467 │ -247.6   │ -157.8   │ -53.3   │ 28.3     │ 122.9    │ 227.6    │
+│ 468 │ missing  │ -154.9   │ -50.8   │ 28.1     │ 119.9    │ 201.1    │
+│ 469 │ missing  │ -180.7   │ -70.9   │ 33.7     │ 114.8    │ 222.5    │</code></pre><p>Our first instinct might be to drop all observations, but this leaves us too few rows to work with:</p><pre><code class="language-julia-repl">julia&gt; Impute.drop(df)
+4×6 DataFrames.DataFrame
+│ Row │ V1      │ V2      │ V3      │ V4      │ V5      │ V6      │
+│     │ Float64 │ Float64 │ Float64 │ Float64 │ Float64 │ Float64 │
+├─────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
+│ 1   │ -247.0  │ -132.2  │ -18.8   │ 28.2    │ 81.4    │ 237.9   │
+│ 2   │ -234.0  │ -140.8  │ -56.5   │ 28.0    │ 114.3   │ 222.9   │
+│ 3   │ -215.8  │ -114.8  │ -18.4   │ 65.3    │ 171.6   │ 249.7   │
+│ 4   │ -247.6  │ -157.8  │ -53.3   │ 28.3    │ 122.9   │ 227.6   │</code></pre><p>We could try imputing the values with linear interpolation, but that still leaves missing data at the head and tail of our dataset:</p><pre><code class="language-julia-repl">julia&gt; Impute.interp(df)
+469×6 DataFrames.DataFrame
+│ Row │ V1       │ V2       │ V3      │ V4       │ V5       │ V6       │
+│     │ Float64⍰ │ Float64⍰ │ Float64 │ Float64⍰ │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┼─────────┼──────────┼──────────┼──────────┤
+│ 1   │ missing  │ -203.7   │ -84.1   │ 18.5     │ missing  │ missing  │
+│ 2   │ missing  │ -203.0   │ -97.8   │ 25.8     │ 134.7    │ missing  │
+│ 3   │ missing  │ -249.0   │ -92.1   │ 27.8     │ 177.1    │ missing  │
+│ 4   │ missing  │ -231.5   │ -97.5   │ 27.0     │ 150.3    │ missing  │
+│ 5   │ missing  │ -227.3   │ -130.1  │ 25.8     │ 160.0    │ missing  │
+│ 6   │ missing  │ -223.1   │ -70.7   │ 62.1     │ 197.5    │ missing  │
+│ 7   │ missing  │ -164.8   │ -12.2   │ 76.8     │ 202.8    │ missing  │
+⋮
+│ 462 │ -241.025 │ -207.3   │ -88.3   │ 9.6      │ 104.1    │ 218.0    │
+│ 463 │ -242.6   │ -142.0   │ -21.8   │ 69.8     │ 148.7    │ 224.125  │
+│ 464 │ -235.9   │ -128.8   │ -33.1   │ 68.8     │ 177.1    │ 230.25   │
+│ 465 │ -239.8   │ -140.8   │ -38.7   │ 58.1     │ 186.3    │ 236.375  │
+│ 466 │ -243.7   │ -149.5   │ -40.3   │ 62.8     │ 139.7    │ 242.5    │
+│ 467 │ -247.6   │ -157.8   │ -53.3   │ 28.3     │ 122.9    │ 227.6    │
+│ 468 │ missing  │ -154.9   │ -50.8   │ 28.1     │ 119.9    │ 201.1    │
+│ 469 │ missing  │ -180.7   │ -70.9   │ 33.7     │ 114.8    │ 222.5    │</code></pre><p>Finally, we can chain multiple simple methods together to give a complete dataset:</p><pre><code class="language-julia-repl">julia&gt; Impute.interp(df) |&gt; Impute.locf() |&gt; Impute.nocb()
+469×6 DataFrames.DataFrame
+│ Row │ V1       │ V2       │ V3      │ V4       │ V5       │ V6       │
+│     │ Float64⍰ │ Float64⍰ │ Float64 │ Float64⍰ │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┼─────────┼──────────┼──────────┼──────────┤
+│ 1   │ -233.6   │ -203.7   │ -84.1   │ 18.5     │ 134.7    │ 222.7    │
+│ 2   │ -233.6   │ -203.0   │ -97.8   │ 25.8     │ 134.7    │ 222.7    │
+│ 3   │ -233.6   │ -249.0   │ -92.1   │ 27.8     │ 177.1    │ 222.7    │
+│ 4   │ -233.6   │ -231.5   │ -97.5   │ 27.0     │ 150.3    │ 222.7    │
+│ 5   │ -233.6   │ -227.3   │ -130.1  │ 25.8     │ 160.0    │ 222.7    │
+│ 6   │ -233.6   │ -223.1   │ -70.7   │ 62.1     │ 197.5    │ 222.7    │
+│ 7   │ -233.6   │ -164.8   │ -12.2   │ 76.8     │ 202.8    │ 222.7    │
+⋮
+│ 462 │ -241.025 │ -207.3   │ -88.3   │ 9.6      │ 104.1    │ 218.0    │
+│ 463 │ -242.6   │ -142.0   │ -21.8   │ 69.8     │ 148.7    │ 224.125  │
+│ 464 │ -235.9   │ -128.8   │ -33.1   │ 68.8     │ 177.1    │ 230.25   │
+│ 465 │ -239.8   │ -140.8   │ -38.7   │ 58.1     │ 186.3    │ 236.375  │
+│ 466 │ -243.7   │ -149.5   │ -40.3   │ 62.8     │ 139.7    │ 242.5    │
+│ 467 │ -247.6   │ -157.8   │ -53.3   │ 28.3     │ 122.9    │ 227.6    │
+│ 468 │ -247.6   │ -154.9   │ -50.8   │ 28.1     │ 119.9    │ 201.1    │
+│ 469 │ -247.6   │ -180.7   │ -70.9   │ 33.7     │ 114.8    │ 222.5    │</code></pre><p>Warning: Your approach should depend on the properties of you data (e.g., <a href="https://en.wikipedia.org/wiki/Missing_data#Types_of_missing_data">MCAR, MAR, MNAR</a>).</p><footer><hr/><a class="next" href="api/impute/"><span class="direction">Next</span><span class="title">Impute</span></a></footer></article></body></html>
