@@ -7,3 +7,4 @@ RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
 [compat]
 DataFrames = ">= 0.16"
 Documenter = "~0.22"
+RDatasets = ">= 0.6.2"
