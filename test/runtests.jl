@@ -5,6 +5,7 @@ using DataFrames
 using RDatasets
 using Statistics
 using StatsBase
+using Random
 
 import Impute:
     Drop,
@@ -14,6 +15,7 @@ import Impute:
     Fill,
     LOCF,
     NOCB,
+    HotDeck,
     Context,
     WeightedContext,
     ImputeError
@@ -24,7 +26,7 @@ import Impute:
     mask = map(!ismissing, a)
     ctx = Context(; limit=0.2)
 
-    @testset "Equality $T" for T in (DropObs, DropVars, Interpolate, Fill, LOCF, NOCB)
+    @testset "Equality $T" for T in (DropObs, DropVars, Interpolate, Fill, LOCF, NOCB, HotDeck)
         @test T() == T()
     end
 
@@ -160,6 +162,28 @@ import Impute:
         Impute.nocb!(a2; context=ctx)
         @test a2 == result
     end
+
+    @testset "HotDeck" begin
+        # Setting seed because Hot Deck isn't deterministic
+        Random.seed!(137)
+        result = impute(a, HotDeck(; context=ctx))
+        expected = copy(a)
+        expected[2] = 9.0
+        expected[3] = 16.0
+        expected[7] = 17.0
+
+        @test result == expected
+
+        Random.seed!(137)
+        @test result == Impute.hotdeck(a; context=ctx)
+
+        a2 = copy(a)
+
+        Random.seed!(137)
+        Impute.hotdeck!(a2; context=ctx)
+        @test a2 == result
+    end
+
 
     @testset "DataFrame" begin
         ctx = Context(; limit=1.0)

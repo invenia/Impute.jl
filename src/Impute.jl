@@ -7,6 +7,7 @@ using StatsBase
 using Tables: Tables, materializer, istable
 
 import Base.Iterators: drop
+import DataFrames: dropmissing
 
 export impute, impute!, chain, chain!, drop, drop!, interp, interp!, ImputeError
 
@@ -53,6 +54,7 @@ const global imputation_methods = (
     fill = Fill,
     locf = LOCF,
     nocb = NOCB,
+    hotdeck = HotDeck
 )
 
 include("deprecated.jl")
@@ -270,5 +272,38 @@ julia> Impute.nocb(df; vardim=1, context=Context(; limit=1.0))
 ```
 """ nocb
 
+@doc """
+    Impute.hotdeck(data; vardim=2, context=Context())
+
+Iterates backwards through the `data` and fills missing data with the next existing
+observation. See [HotDeck](@ref) for details.
+
+# Example
+```jldoctest
+julia> using DataFrames; using Impute: Impute, Context
+
+julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
+5×2 DataFrames.DataFrame
+│ Row │ a        │ b        │
+│     │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ missing  │ 3.3      │
+│ 4   │ missing  │ missing  │
+│ 5   │ 5.0      │ 5.5      │
+
+julia> Impute.hotdeck(df; vardim = 1, context = Context(; limit = 1.0))
+5×2 DataFrames.DataFrame
+│ Row │ a        │ b        │
+│     │ Float64⍰ │ Float64⍰ │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ 5.0      │ 3.3      │
+│ 4   │ 5.0      │ 5.5      │
+│ 5   │ 5.0      │ 5.5      │
+```
+""" hotdeck
 
 end  # module
