@@ -30,6 +30,39 @@ function filtervars(f::Function, imp::Imputor, data::AbstractMatrix)
 end
 
 """
+    splitkwargs(::Type{T}, kwargs...) where T <: Imputor -> (imp, rem)
+
+Takes an Imputor type with kwargs and returns the constructed imputor and the
+unused kwargs which should be passed to the `impute!` call.
+
+NOTE: This is used by utility methods with construct and imputor and call impute in 1 call.
+"""
+function splitkwargs(::Type{T}, kwargs...) where T <: Imputor
+    rem = Dict(kwargs...)
+    kwdef = empty(rem)
+
+    for f in fieldnames(T)
+        if haskey(rem, f)
+            kwdef[f] = rem[f]
+            delete!(rem, f)
+        end
+    end
+
+    return (T(; kwdef...), rem)
+end
+
+# Some utility methods for constructing and imputing data in 1 call.
+function impute(data, t::Type{T}, kwargs...) where T <: Imputor
+    imp, rem = splitkwargs(t, _extract_context_kwargs(kwargs...)...)
+    return impute(data, imp; rem...)
+end
+
+function impute!(data, t::Type{T}, kwargs...) where T <: Imputor
+    imp, rem = splitkwargs(t, _extract_context_kwargs(kwargs...)...)
+    return impute!(data, imp; rem...)
+end
+
+"""
     impute(data, imp::Imputor)
 
 Returns a new copy of the `data` with the missing data imputed by the imputor `imp`.

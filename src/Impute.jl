@@ -88,10 +88,10 @@ for (f, v) in pairs(imputation_methods)
     f! = Symbol(f, :!)
 
     @eval begin
-        $f(data; kwargs...) = impute(data, $typename(; _extract_context_kwargs(kwargs...)...))
-        $f!(data; kwargs...) = impute!(data, $typename(; _extract_context_kwargs(kwargs...)...))
-        $f(; kwargs...) = data -> impute(data, $typename(; _extract_context_kwargs(kwargs...)...))
-        $f!(; kwargs...) = data -> impute!(data, $typename(; _extract_context_kwargs(kwargs...)...))
+        $f(data; kwargs...) = impute(data, $typename, kwargs...)
+        $f!(data; kwargs...) = impute!(data, $typename, kwargs...)
+        $f(; kwargs...) = data -> impute(data, $typename, kwargs...)
+        $f!(; kwargs...) = data -> impute!(data, $typename, kwargs...)
     end
 end
 
