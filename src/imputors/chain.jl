@@ -18,6 +18,27 @@ Creates a Chain using the `Imputor`s provided (ordering matters).
 Chain(imputors::Imputor...) = Chain(collect(imputors))
 
 """
+Compose new `Imputor` chains with the composition operator
+
+# Example
+
+```jldoctest
+julia> using Impute: impute, Interpolate, NOCB, LOCF, Context
+
+julia> ctx = Context(; limit=1.0)
+Context(0, 0, 1.0, ismissing, Impute.complete)
+
+julia> imp = Interpolate(; context=ctx) ∘ NOCB(; context=ctx) ∘ LOCF(; context=ctx)
+Impute.Chain(Impute.Imputor[Interpolate(2, Context(0, 0, 1.0, ismissing, complete)), NOCB(2, Context(0, 0, 1.0, ismissing, complete)), LOCF(2, Context(0, 0, 1.0, ismissing, complete))])
+```
+"""
+Base.:(∘)(a::Imputor, b::Imputor) = Chain([a, b])
+function Base.:(∘)(a::Chain, b::Imputor)
+    push!(a.imputors, b)
+    return a
+end
+
+"""
     impute!(data, imp::Chain)
 
 Runs the `Imputor`s on the supplied data.
