@@ -42,8 +42,9 @@ HotDeck(; vardim = 2, context = Context()) = HotDeck(vardim, context)
 
 
 function impute!(data::AbstractVector, imp::HotDeck)
-    obs_values = collect(skipmissing(data))
-    imp.context() do c
+    
+    imp.context() do c 
+        obs_values = Impute.dropobs(data)
         for i = 1:lastindex(data)
             if ismissing(c, data[i])
                 data[i] = rand(obs_values)
