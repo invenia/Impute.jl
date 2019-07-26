@@ -1,6 +1,5 @@
 module Impute
 
-using AutoHashEquals
 using IterTools
 using Statistics
 using StatsBase
@@ -44,6 +43,33 @@ Base.showerror(io::IO, err::ImputeError) = println(io, "ImputeError: $(err.msg)"
 
 include("context.jl")
 include("imputors.jl")
+
+#=
+These default methods are required because @auto_hash_equals doesn't
+play nice with Base.@kwdef
+=#
+function Base.hash(imp::T, h::UInt) where T <: Union{Imputor, AbstractContext}
+    h = hash(Symbol(T), h)
+
+    for f in fieldnames(T)
+        h = hash(getfield(imp, f), h)
+    end
+
+    return h
+end
+
+function Base.:(==)(a::T, b::T) where T <: Union{Imputor, AbstractContext}
+    result = true
+
+    for f in fieldnames(T)
+        if !isequal(getfield(a, f), getfield(b, f))
+            result = false
+            break
+        end
+    end
+
+    return result
+end
 
 const global imputation_methods = (
     drop = DropObs,

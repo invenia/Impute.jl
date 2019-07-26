@@ -1,8 +1,3 @@
-@auto_hash_equals struct DropObs <: Imputor
-    vardim::Int
-    context::AbstractContext
-end
-
 """
     DropObs(; vardim=2, context=Context)
 
@@ -28,6 +23,12 @@ julia> impute(M, DropObs(; vardim=1, context=Context(; limit=1.0)))
  1.1  2.2  5.5
 ```
 """
+struct DropObs <: Imputor
+    vardim::Int
+    context::AbstractContext
+end
+
+# TODO: Switch to using Base.@kwdef on 1.1
 DropObs(; vardim=2, context=Context()) = DropObs(vardim, context)
 
 function impute!(data::AbstractVector, imp::DropObs)
@@ -65,11 +66,6 @@ function impute!(table, imp::DropObs)
 end
 
 
-@auto_hash_equals struct DropVars <: Imputor
-    vardim::Int
-    context::AbstractContext
-end
-
 """
     DropVars(; vardim=2, context=Context())
 
@@ -96,6 +92,12 @@ julia> impute(M, DropVars(; vardim=1, context=Context(; limit=0.2)))
  1.1  2.2  3.3  missing  5.5
 ```
 """
+struct DropVars <: Imputor
+    vardim::Int
+    context::AbstractContext
+end
+
+# TODO: Switch to using Base.@kwdef on 1.1
 DropVars(; vardim=2, context=Context()) = DropVars(vardim, context)
 
 function impute!(data::AbstractMatrix, imp::DropVars)

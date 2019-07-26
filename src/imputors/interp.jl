@@ -1,8 +1,3 @@
-@auto_hash_equals struct Interpolate <: Imputor
-    vardim::Int
-    context::AbstractContext
-end
-
 """
     Interpolate(; vardim=2, context=Context())
 
@@ -34,6 +29,12 @@ julia> impute(M, Interpolate(; vardim=1, context=Context(; limit=1.0)))
  1.1  2.2  3.3  4.4  5.5
 ```
 """
+struct Interpolate <: Imputor
+    vardim::Int
+    context::AbstractContext
+end
+
+# TODO: Switch to using Base.@kwdef on 1.1
 Interpolate(; vardim=2, context=Context()) = Interpolate(vardim, context)
 
 function impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) where T

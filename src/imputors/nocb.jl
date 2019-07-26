@@ -1,8 +1,3 @@
-@auto_hash_equals struct NOCB <: Imputor
-    vardim::Int
-    context::AbstractContext
-end
-
 """
     NOCB(; vardim=2, context=Context())
 
@@ -36,6 +31,12 @@ julia> impute(M, NOCB(; vardim=1, context=Context(; limit=1.0)))
  1.1  2.2  3.3  5.5  5.5
 ```
 """
+struct NOCB <: Imputor
+    vardim::Int
+    context::AbstractContext
+end
+
+# TODO: Switch to using Base.@kwdef on 1.1
 NOCB(; vardim=2, context=Context()) = NOCB(vardim, context)
 
 function impute!(data::AbstractVector, imp::NOCB)
