@@ -19,9 +19,10 @@ Tables = "0.2"
 julia = "1"
 
 [extras]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
-DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+
 
 [targets]
 test = ["DataFrames", "RDatasets", "Test"]

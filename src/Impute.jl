@@ -275,8 +275,9 @@ julia> Impute.nocb(df; vardim=1, context=Context(; limit=1.0))
 @doc """
     Impute.hotdeck(data; vardim=2, context=Context())
 
-Iterates backwards through the `data` and fills missing data with the next existing
-observation. See [HotDeck](@ref) for details.
+Hot deck imputation is a method for imputing both continuous and categorical
+variables. Furthermore, it completes imputation while preserving the distributional 
+properties of the variables (e.g., mean, standard deviation). 
 
 # Example
 ```jldoctest
