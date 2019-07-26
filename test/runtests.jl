@@ -7,6 +7,7 @@ using Dates
 using RDatasets
 using Statistics
 using StatsBase
+using Random
 
 import Impute:
     Drop,
@@ -16,6 +17,7 @@ import Impute:
     Fill,
     LOCF,
     NOCB,
+    HotDeck,
     Context,
     WeightedContext,
     ImputeError
@@ -45,7 +47,7 @@ import Impute:
     table.sin[[2, 3, 7, 12, 19]] .= missing
 
     @testset "Equality" begin
-        @testset "$T" for T in (DropObs, DropVars, Interpolate, Fill, LOCF, NOCB)
+        @testset "$T" for T in (DropObs, DropVars, Interpolate, Fill, LOCF, NOCB, HotDeck)
             @test T() == T()
         end
     end
@@ -318,6 +320,27 @@ import Impute:
 
         a2 = copy(a)
         Impute.nocb!(a2; context=ctx)
+        @test a2 == result
+    end
+
+    @testset "HotDeck" begin
+        # Setting seed because Hot Deck isn't deterministic
+        Random.seed!(137)
+        result = impute(a, HotDeck(; context=ctx))
+        expected = copy(a)
+        expected[2] = 9.0
+        expected[3] = 16.0
+        expected[7] = 17.0
+
+        @test result == expected
+
+        Random.seed!(137)
+        @test result == Impute.hotdeck(a; context=ctx)
+
+        a2 = copy(a)
+
+        Random.seed!(137)
+        Impute.hotdeck!(a2; context=ctx)
         @test a2 == result
     end
 

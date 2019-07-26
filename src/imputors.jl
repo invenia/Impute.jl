@@ -167,6 +167,6 @@ function impute!(table, imp::Imputor)
 end
 
 
-for file in ("drop.jl", "locf.jl", "nocb.jl", "interp.jl", "fill.jl", "chain.jl")
+for file in ("drop.jl", "locf.jl", "nocb.jl", "interp.jl", "fill.jl", "chain.jl", "hotdeck.jl")
     include(joinpath("imputors", file))
 end
