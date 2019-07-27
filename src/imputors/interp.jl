@@ -1,5 +1,5 @@
 """
-    Interpolate(; vardim=2, context=Context())
+    Interpolate(; context=Context())
 
 Performs linear interpolation between the nearest values in an vector.
 The current implementation is univariate, so each variable in a table or matrix will
@@ -10,7 +10,6 @@ are no existing values on both sides. As a result, this method does not guarante
 that all missing values will be imputed.
 
 # Keyword Arguments
-* `vardim=2::Int`: Specify the dimension for variables in matrix input data
 * `context::AbstractContext`: A context which keeps track of missing data
   summary information
 
@@ -23,19 +22,18 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(M, Interpolate(; vardim=1, context=Context(; limit=1.0)))
+julia> impute(M, Interpolate(; context=Context(; limit=1.0)); dims=2)
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0  3.0  4.0  5.0
  1.1  2.2  3.3  4.4  5.5
 ```
 """
 struct Interpolate <: Imputor
-    vardim::Int
     context::AbstractContext
 end
 
 # TODO: Switch to using Base.@kwdef on 1.1
-Interpolate(; vardim=2, context=Context()) = Interpolate(vardim, context)
+Interpolate(; context=Context()) = Interpolate(context)
 
 function impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) where T
     imp.context() do c

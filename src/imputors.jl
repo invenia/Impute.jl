@@ -8,25 +8,25 @@ implement the `impute!(imp::<MyImputor>, data::AbstractVector)` method.
 abstract type Imputor end
 
 # A couple utility methods to avoid messing up var and obs dimensions
-obsdim(imp::Imputor) = imp.vardim == 1 ? 2 : 1
-vardim(imp::Imputor) = imp.vardim
+obsdim(dims) = dims
+vardim(dims) = dims == 1 ? 2 : 1
 
-function obswise(imp::Imputor, data::AbstractMatrix)
-    return (selectdim(data, obsdim(imp), i) for i in axes(data, obsdim(imp)))
+function obswise(data::AbstractMatrix; dims=1)
+    return (selectdim(data, obsdim(dims), i) for i in axes(data, obsdim(dims)))
 end
 
-function varwise(imp::Imputor, data::AbstractMatrix)
-    return (selectdim(data, vardim(imp), i) for i in axes(data, vardim(imp)))
+function varwise(data::AbstractMatrix; dims=2)
+    return (selectdim(data, vardim(dims), i) for i in axes(data, vardim(dims)))
 end
 
-function filterobs(f::Function, imp::Imputor, data::AbstractMatrix)
-    mask = [f(x) for x in obswise(imp, data)]
-    return imp.vardim == 1 ? data[:, mask] : data[mask, :]
+function filterobs(f::Function, data::AbstractMatrix; dims=1)
+    mask = [f(x) for x in obswise(data; dims=dims)]
+    return dims == 1 ? data[mask, :] : data[:, mask]
 end
 
-function filtervars(f::Function, imp::Imputor, data::AbstractMatrix)
-    mask = [f(x) for x in varwise(imp, data)]
-    return imp.vardim == 1 ? data[mask, :] : data[:, mask]
+function filtervars(f::Function, data::AbstractMatrix; dims=2)
+    mask = [f(x) for x in varwise(data; dims=dims)]
+    return dims == 1 ? data[:, mask] : data[mask, :]
 end
 
 """
@@ -51,7 +51,7 @@ function splitkwargs(::Type{T}, kwargs...) where T <: Imputor
     return (T(; kwdef...), rem)
 end
 
-# Some utility methods for constructing and imputing data in 1 call.
+# Some utility methods for constructing imputors and imputing data in 1 call.
 function impute(data, t::Type{T}, kwargs...) where T <: Imputor
     imp, rem = splitkwargs(t, _extract_context_kwargs(kwargs...)...)
     return impute(data, imp; rem...)
@@ -63,17 +63,20 @@ function impute!(data, t::Type{T}, kwargs...) where T <: Imputor
 end
 
 """
-    impute(data, imp::Imputor)
+    impute(data, imp::Imputor; kwargs...)
 
 Returns a new copy of the `data` with the missing data imputed by the imputor `imp`.
+
+# Keywords
+* `dims`: The dimension to impute along (e.g., observations dim)
 """
-function impute(data, imp::Imputor)
+function impute(data, imp::Imputor; kwargs...)
     # Call `deepcopy` because we can trust that it's available for all types.
-    return impute!(deepcopy(data), imp)
+    return impute!(deepcopy(data), imp; kwargs...)
 end
 
 """
-    impute!(data::AbstractMatrix, imp::Imputor)
+    impute!(data::AbstractMatrix, imp::Imputor; kwargs...)
 
 Impute the data in a matrix by imputing the values one variable at a time;
 if this is not the desired behaviour custom imputor methods should overload this method.
@@ -81,6 +84,9 @@ if this is not the desired behaviour custom imputor methods should overload this
 # Arguments
 * `data::AbstractMatrix`: the data to impute
 * `imp::Imputor`: the Imputor method to use
+
+# Keywords
+* `dims`: The dimension to impute along (e.g., observations dim)
 
 # Returns
 * `AbstractMatrix`: the input `data` with values imputed
@@ -94,14 +100,14 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(M, Interpolate(; vardim=1, context=Context(; limit=1.0)))
+julia> impute(M, Interpolate(; context=Context(; limit=1.0)); dims=2)
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0  3.0  4.0  5.0
  1.1  2.2  3.3  4.4  5.5
 ```
 """
-function impute!(data::AbstractMatrix, imp::Imputor)
-    for var in varwise(imp, data)
+function impute!(data::AbstractMatrix, imp::Imputor; dims=1)
+    for var in varwise(data; dims=dims)
         impute!(var, imp)
     end
     return data
@@ -134,7 +140,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia> impute(df, Interpolate(; vardim=1, context=Context(; limit=1.0)))
+julia> impute(df, Interpolate(; context=Context(; limit=1.0)))
 5×2 DataFrame
 │ Row │ a        │ b        │
 │     │ Float64⍰ │ Float64⍰ │

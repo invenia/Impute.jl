@@ -54,7 +54,7 @@ import Impute:
 
                 @test isequal(result, expected)
                 @test isequal(result, Impute.dropvars(m; context=ctx))
-                @test isequal(result', Impute.dropvars(m'; vardim=1, context=ctx))
+                @test isequal(result', Impute.dropvars(m'; dims=2, context=ctx))
 
                 Impute.dropvars!(m; context=ctx)
                 # The mutating test is broken because we need to making a copy of
@@ -207,10 +207,10 @@ import Impute:
         @testset "Drop" begin
             result = impute(data, DropObs(; context=ctx))
             @test size(result, 1) == 4
-            @test result == Impute.dropobs(data; context=ctx)
+            @test result == Impute.dropobs(data; context=ctx, dims=1)
 
             @test result == expected
-            @test Impute.dropobs(data'; vardim=1, context=ctx) == expected'
+            @test Impute.dropobs(data'; dims=2, context=ctx) == expected'
         end
 
         @testset "Fill" begin
@@ -319,28 +319,26 @@ import Impute:
     end
 
     @testset "Utils" begin
-        drop_dim1 = DropObs(; vardim=1)
-        drop_dim2 = DropObs(; vardim=2)
         M = [1.0 2.0 3.0 4.0 5.0; 1.1 2.2 3.3 4.4 5.5]
 
         @testset "obswise" begin
-            @test map(sum, Impute.obswise(drop_dim1, M)) == [2.1, 4.2, 6.3, 8.4, 10.5]
-            @test map(sum, Impute.obswise(drop_dim2, M)) == [15, 16.5]
+            @test map(sum, Impute.obswise(M; dims=2)) == [2.1, 4.2, 6.3, 8.4, 10.5]
+            @test map(sum, Impute.obswise(M; dims=1)) == [15, 16.5]
         end
 
         @testset "varwise" begin
-            @test map(sum, Impute.varwise(drop_dim1, M)) == [15, 16.5]
-            @test map(sum, Impute.varwise(drop_dim2, M)) == [2.1, 4.2, 6.3, 8.4, 10.5]
+            @test map(sum, Impute.varwise(M; dims=2)) == [15, 16.5]
+            @test map(sum, Impute.varwise(M; dims=1)) == [2.1, 4.2, 6.3, 8.4, 10.5]
         end
 
         @testset "filterobs" begin
-            @test Impute.filterobs(x -> sum(x) > 5.0, drop_dim1, M) == M[:, 3:5]
-            @test Impute.filterobs(x -> sum(x) > 15.0, drop_dim2, M) == M[[false, true], :]
+            @test Impute.filterobs(x -> sum(x) > 5.0, M; dims=2) == M[:, 3:5]
+            @test Impute.filterobs(x -> sum(x) > 15.0, M; dims=1) == M[[false, true], :]
         end
 
         @testset "filtervars" begin
-            @test Impute.filtervars(x -> sum(x) > 15.0, drop_dim1, M) == M[[false, true], :]
-            @test Impute.filtervars(x -> sum(x) > 5.0, drop_dim2, M) == M[:, 3:5]
+            @test Impute.filtervars(x -> sum(x) > 15.0, M; dims=2) == M[[false, true], :]
+            @test Impute.filtervars(x -> sum(x) > 5.0, M; dims=1) == M[:, 3:5]
         end
     end
 

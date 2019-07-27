@@ -1,5 +1,5 @@
 """
-    LOCF(; vardim=2, context=Context())
+    LOCF(; context=Context())
 
 Last observation carried forward (LOCF) iterates forwards through the `data` and fills
 missing data with the last existing observation. The current implementation is univariate,
@@ -13,7 +13,6 @@ existing observation to carry forward. As a result, this method does not guarant
 that all missing values will be imputed.
 
 # Keyword Arguments
-* `vardim=2::Int`: Specify the dimension for variables in matrix input data
 * `context::AbstractContext`: A context which keeps track of missing data
   summary information
 
@@ -26,19 +25,18 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(M, LOCF(; vardim=1, context=Context(; limit=1.0)))
+julia> impute(M, LOCF(; context=Context(; limit=1.0)); dims=2)
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0  2.0  2.0  5.0
  1.1  2.2  3.3  3.3  5.5
 ```
 """
 struct LOCF <: Imputor
-    vardim::Int
     context::AbstractContext
 end
 
 # TODO: Switch to using Base.@kwdef on 1.1
-LOCF(; vardim=2, context=Context()) = LOCF(vardim, context)
+LOCF(; context=Context()) = LOCF(context)
 
 function impute!(data::AbstractVector, imp::LOCF)
     imp.context() do c

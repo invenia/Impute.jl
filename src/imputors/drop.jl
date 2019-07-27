@@ -1,10 +1,9 @@
 """
-    DropObs(; vardim=2, context=Context)
+    DropObs(; ontext=Context)
 
 Removes missing observations from the `AbstractArray` or `Tables.table` provided.
 
 # Keyword Arguments
-* `vardim=2::Int`: Specify the dimension for variables in matrix input data
 * `context::AbstractContext=Context()`: A context which keeps track of missing data
   summary information
 
@@ -17,19 +16,18 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(M, DropObs(; vardim=1, context=Context(; limit=1.0)))
+julia> impute(M, DropObs(; context=Context(; limit=1.0)); dims=2)
 2×3 Array{Union{Missing, Float64},2}:
  1.0  2.0  5.0
  1.1  2.2  5.5
 ```
 """
 struct DropObs <: Imputor
-    vardim::Int
     context::AbstractContext
 end
 
 # TODO: Switch to using Base.@kwdef on 1.1
-DropObs(; vardim=2, context=Context()) = DropObs(vardim, context)
+DropObs(; context=Context()) = DropObs(context)
 
 function impute!(data::AbstractVector, imp::DropObs)
     imp.context() do c
@@ -37,9 +35,9 @@ function impute!(data::AbstractVector, imp::DropObs)
     end
 end
 
-function impute!(data::AbstractMatrix, imp::DropObs)
+function impute!(data::AbstractMatrix, imp::DropObs; dims=1)
     imp.context() do c
-        return filterobs(imp, data) do obs
+        return filterobs(data; dims=dims) do obs
             !ismissing(c, obs)
         end
     end
@@ -67,14 +65,13 @@ end
 
 
 """
-    DropVars(; vardim=2, context=Context())
+    DropVars(; context=Context())
 
 
 Finds variables with too many missing values in a `AbstractMatrix` or `Tables.table` and
 removes them from the input data.
 
 # Keyword Arguments
-* `vardim=2::Int`: Specify the dimension for variables in matrix input data
 * `context::AbstractContext`: A context which keeps track of missing data
   summary information
 
@@ -87,21 +84,20 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(M, DropVars(; vardim=1, context=Context(; limit=0.2)))
+julia> impute(M, DropVars(; context=Context(; limit=0.2)); dims=2)
 1×5 Array{Union{Missing, Float64},2}:
  1.1  2.2  3.3  missing  5.5
 ```
 """
 struct DropVars <: Imputor
-    vardim::Int
     context::AbstractContext
 end
 
 # TODO: Switch to using Base.@kwdef on 1.1
-DropVars(; vardim=2, context=Context()) = DropVars(vardim, context)
+DropVars(; context=Context()) = DropVars(context)
 
-function impute!(data::AbstractMatrix, imp::DropVars)
-    return filtervars(imp, data) do var
+function impute!(data::AbstractMatrix, imp::DropVars; dims=1)
+    return filtervars(data; dims=dims) do var
         try
             imp.context() do c
                 for x in var
