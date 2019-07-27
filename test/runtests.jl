@@ -251,7 +251,11 @@ import Impute:
                 ),
             )
 
+            # Test creating a Chain via Imputor composition
+            imp = Impute.Interpolate(; context=ctx) ∘ Impute.LOCF() ∘ Impute.NOCB()
+            result3 = impute(orig, imp)
             @test result == result2
+            @test result == result3
         end
 
         @testset "Column Table" begin
