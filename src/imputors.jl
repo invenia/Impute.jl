@@ -52,12 +52,13 @@ function splitkwargs(::Type{T}, kwargs...) where T <: Imputor
 end
 
 # Some utility methods for constructing imputors and imputing data in 1 call.
-function impute(data, t::Type{T}, kwargs...) where T <: Imputor
+# NOTE: This is only intended for internal use and is not part of the public API.
+function _impute(data, t::Type{T}, kwargs...) where T <: Imputor
     imp, rem = splitkwargs(t, _extract_context_kwargs(kwargs...)...)
     return impute(data, imp; rem...)
 end
 
-function impute!(data, t::Type{T}, kwargs...) where T <: Imputor
+function _impute!(data, t::Type{T}, kwargs...) where T <: Imputor
     imp, rem = splitkwargs(t, _extract_context_kwargs(kwargs...)...)
     return impute!(data, imp; rem...)
 end

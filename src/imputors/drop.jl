@@ -1,5 +1,5 @@
 """
-    DropObs(; ontext=Context)
+    DropObs(; context=Context)
 
 Removes missing observations from the `AbstractArray` or `Tables.table` provided.
 
