@@ -94,7 +94,7 @@ function Base.findnext(ctx::AbstractContext, data::AbstractVector, idx::Int)
     return findnext(x -> !ismissing(ctx, x), data, idx)
 end
 
-@auto_hash_equals mutable struct Context <: AbstractContext
+mutable struct Context <: AbstractContext
     num::Int
     count::Int
     limit::Float64
@@ -152,7 +152,7 @@ function complete(ctx::Context, data)
 end
 
 
-@auto_hash_equals mutable struct WeightedContext <: AbstractContext
+mutable struct WeightedContext <: AbstractContext
     num::Int
     s::Float64
     limit::Float64
