@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Impute · Impute.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link href="../../assets/documenter.css" rel="stylesheet" type="text/css"/><link href="../../assets/invenia.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>Impute.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../../">Home</a></li><li class="current"><a class="toctext" href>Impute</a><ul class="internal"></ul></li><li><a class="toctext" href="../context/">Context</a></li><li><a class="toctext" href="../imputors/">Imputors</a></li><li><a class="toctext" href="../utils/">Utilities</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Impute</a></li></ul><a class="edit-page" href="https://github.com/invenia/Impute.jl/blob/master/docs/src/api/impute.md#L"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Impute</span><a class="fa fa-bars" href="#"></a></div></header><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Impute.ImputeError" href="#Impute.ImputeError"><code>Impute.ImputeError</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-julia">ImputeError{T} &lt;: Exception</code></pre><p>Is thrown by <code>impute</code> methods when the limit of imputable values has been exceeded.</p><p><strong>Fields</strong></p><ul><li>msg::T - the message to print.</li></ul></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Impute.jl/blob/9d82f48a0fe287130fa15a6dbff3fa834d2dfeb7/src/Impute.jl#LL31-L38">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Impute.interp" href="#Impute.interp"><code>Impute.interp</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">Impute.interp(data; vardim=2, context=Context())</code></pre><p>Performs linear interpolation between the nearest values in an vector. See <a href="../imputors/#Interpolate-1">Interpolate</a> for details.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames; using Impute: Impute, Context
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Impute · Impute.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link href="../../assets/documenter.css" rel="stylesheet" type="text/css"/><link href="../../assets/invenia.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>Impute.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../../">Home</a></li><li class="current"><a class="toctext" href>Impute</a><ul class="internal"></ul></li><li><a class="toctext" href="../context/">Context</a></li><li><a class="toctext" href="../imputors/">Imputors</a></li><li><a class="toctext" href="../utils/">Utilities</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href>Impute</a></li></ul><a class="edit-page" href="https://github.com/invenia/Impute.jl/blob/master/docs/src/api/impute.md#L"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Impute</span><a class="fa fa-bars" href="#"></a></div></header><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Impute.ImputeError" href="#Impute.ImputeError"><code>Impute.ImputeError</code></a> — <span class="docstring-category">Type</span>.</div><div><div><pre><code class="language-julia">ImputeError{T} &lt;: Exception</code></pre><p>Is thrown by <code>impute</code> methods when the limit of imputable values has been exceeded.</p><p><strong>Fields</strong></p><ul><li>msg::T - the message to print.</li></ul></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Impute.jl/blob/946152b3d7a1a4375bd85a0ebf7804ddc622223b/src/Impute.jl#LL30-L37">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Impute.interp" href="#Impute.interp"><code>Impute.interp</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">Impute.interp(data; dims=1, context=Context())</code></pre><p>Performs linear interpolation between the nearest values in an vector. See <a href="../imputors/#Interpolate-1">Interpolate</a> for details.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames; using Impute: Impute, Context
 
 julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
@@ -12,7 +12,7 @@ julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia&gt; Impute.interp(df; vardim=1, context=Context(; limit=1.0))
+julia&gt; Impute.interp(df; context=Context(; limit=1.0))
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
 │     │ Float64⍰ │ Float64⍰ │
@@ -21,7 +21,7 @@ julia&gt; Impute.interp(df; vardim=1, context=Context(; limit=1.0))
 │ 2   │ 2.0      │ 2.2      │
 │ 3   │ 3.0      │ 3.3      │
 │ 4   │ 4.0      │ 4.4      │
-│ 5   │ 5.0      │ 5.5      │</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Impute.jl/blob/9d82f48a0fe287130fa15a6dbff3fa834d2dfeb7/src/Impute.jl#LL138-L170">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Impute.dropobs" href="#Impute.dropobs"><code>Impute.dropobs</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">Impute.dropobs(data; vardim=2, context=Context())</code></pre><p>Removes missing observations from the <code>AbstractArray</code> or <code>Tables.table</code> provided. See <a href="api/@ref">DropObs</a> for details.</p><p><strong>Example</strong></p><pre><code class="language-none">julia&gt; using DataFrames; using Impute: Impute, Context
+│ 5   │ 5.0      │ 5.5      │</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Impute.jl/blob/946152b3d7a1a4375bd85a0ebf7804ddc622223b/src/Impute.jl#LL164-L196">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Impute.dropobs" href="#Impute.dropobs"><code>Impute.dropobs</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">Impute.dropobs(data; dims=1, context=Context())</code></pre><p>Removes missing observations from the <code>AbstractArray</code> or <code>Tables.table</code> provided. See <a href="api/@ref">DropObs</a> for details.</p><p><strong>Example</strong></p><pre><code class="language-none">julia&gt; using DataFrames; using Impute: Impute, Context
 
 julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
@@ -34,14 +34,14 @@ julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia&gt; Impute.dropobs(df; vardim=1, context=Context(; limit=1.0))
+julia&gt; Impute.dropobs(df; dims=2, context=Context(; limit=1.0))
 3×2 DataFrames.DataFrame
 │ Row │ a       │ b       │
 │     │ Float64 │ Float64 │
 ├─────┼─────────┼─────────┤
 │ 1   │ 1.0     │ 1.1     │
 │ 2   │ 2.0     │ 2.2     │
-│ 3   │ 5.0     │ 5.5     │</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Impute.jl/blob/9d82f48a0fe287130fa15a6dbff3fa834d2dfeb7/src/Impute.jl#LL72-L102">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Impute.dropvars" href="#Impute.dropvars"><code>Impute.dropvars</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">Impute.dropvars(data; vardim=2, context=Context())</code></pre><p>Finds variables with too many missing values in a <code>AbstractMatrix</code> or <code>Tables.table</code> and removes them from the input data. See <a href="api/@ref">DropVars</a> for details.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames; using Impute: Impute, Context
+│ 3   │ 5.0     │ 5.5     │</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Impute.jl/blob/946152b3d7a1a4375bd85a0ebf7804ddc622223b/src/Impute.jl#LL98-L128">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Impute.dropvars" href="#Impute.dropvars"><code>Impute.dropvars</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">Impute.dropvars(data; dims=1, context=Context())</code></pre><p>Finds variables with too many missing values in a <code>AbstractMatrix</code> or <code>Tables.table</code> and removes them from the input data. See <a href="api/@ref">DropVars</a> for details.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames; using Impute: Impute, Context
 
 julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
@@ -54,7 +54,7 @@ julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia&gt; Impute.dropvars(df; vardim=1, context=Context(; limit=0.2))
+julia&gt; Impute.dropvars(df; context=Context(; limit=0.2))
 5×1 DataFrames.DataFrame
 │ Row │ b        │
 │     │ Float64⍰ │
@@ -63,7 +63,7 @@ julia&gt; Impute.dropvars(df; vardim=1, context=Context(; limit=0.2))
 │ 2   │ 2.2      │
 │ 3   │ 3.3      │
 │ 4   │ missing  │
-│ 5   │ 5.5      │</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Impute.jl/blob/9d82f48a0fe287130fa15a6dbff3fa834d2dfeb7/src/Impute.jl#LL104-L136">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Impute.fill" href="#Impute.fill"><code>Impute.fill</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">Impute.fill(data; value=mean, vardim=2, context=Context())</code></pre><p>Fills in the missing data with a specific value. See <a href="../imputors/#Fill-1">Fill</a> for details.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames; using Impute: Impute, Context
+│ 5   │ 5.5      │</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Impute.jl/blob/946152b3d7a1a4375bd85a0ebf7804ddc622223b/src/Impute.jl#LL130-L162">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Impute.fill" href="#Impute.fill"><code>Impute.fill</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">Impute.fill(data; value=mean, dims=1, context=Context())</code></pre><p>Fills in the missing data with a specific value. See <a href="../imputors/#Fill-1">Fill</a> for details.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames; using Impute: Impute, Context
 
 julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
@@ -76,7 +76,7 @@ julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia&gt; Impute.fill(df; value=-1.0, vardim=1, context=Context(; limit=1.0))
+julia&gt; Impute.fill(df; value=-1.0, context=Context(; limit=1.0))
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
 │     │ Float64⍰ │ Float64⍰ │
@@ -85,7 +85,7 @@ julia&gt; Impute.fill(df; value=-1.0, vardim=1, context=Context(; limit=1.0))
 │ 2   │ 2.0      │ 2.2      │
 │ 3   │ -1.0     │ 3.3      │
 │ 4   │ -1.0     │ -1.0     │
-│ 5   │ 5.0      │ 5.5      │</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Impute.jl/blob/9d82f48a0fe287130fa15a6dbff3fa834d2dfeb7/src/Impute.jl#LL172-L203">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Impute.locf" href="#Impute.locf"><code>Impute.locf</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">Impute.locf(data; vardim=2, context=Context())</code></pre><p>Iterates forwards through the <code>data</code> and fills missing data with the last existing observation. See <a href="api/@ref">LOCF</a> for details.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames; using Impute: Impute, Context
+│ 5   │ 5.0      │ 5.5      │</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Impute.jl/blob/946152b3d7a1a4375bd85a0ebf7804ddc622223b/src/Impute.jl#LL198-L229">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Impute.locf" href="#Impute.locf"><code>Impute.locf</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">Impute.locf(data; dims=1, context=Context())</code></pre><p>Iterates forwards through the <code>data</code> and fills missing data with the last existing observation. See <a href="api/@ref">LOCF</a> for details.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames; using Impute: Impute, Context
 
 julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
@@ -98,7 +98,7 @@ julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia&gt; Impute.locf(df; vardim=1, context=Context(; limit=1.0))
+julia&gt; Impute.locf(df; context=Context(; limit=1.0))
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
 │     │ Float64⍰ │ Float64⍰ │
@@ -107,7 +107,7 @@ julia&gt; Impute.locf(df; vardim=1, context=Context(; limit=1.0))
 │ 2   │ 2.0      │ 2.2      │
 │ 3   │ 2.0      │ 3.3      │
 │ 4   │ 2.0      │ 3.3      │
-│ 5   │ 5.0      │ 5.5      │</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Impute.jl/blob/9d82f48a0fe287130fa15a6dbff3fa834d2dfeb7/src/Impute.jl#LL205-L237">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Impute.nocb" href="#Impute.nocb"><code>Impute.nocb</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">Impute.nocb(data; vardim=2, context=Context())</code></pre><p>Iterates backwards through the <code>data</code> and fills missing data with the next existing observation. See <a href="api/@ref">LOCF</a> for details.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames; using Impute: Impute, Context
+│ 5   │ 5.0      │ 5.5      │</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Impute.jl/blob/946152b3d7a1a4375bd85a0ebf7804ddc622223b/src/Impute.jl#LL231-L263">source</a></section><section class="docstring"><div class="docstring-header"><a class="docstring-binding" id="Impute.nocb" href="#Impute.nocb"><code>Impute.nocb</code></a> — <span class="docstring-category">Function</span>.</div><div><div><pre><code class="language-julia">Impute.nocb(data; dims=1, context=Context())</code></pre><p>Iterates backwards through the <code>data</code> and fills missing data with the next existing observation. See <a href="api/@ref">LOCF</a> for details.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames; using Impute: Impute, Context
 
 julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
@@ -120,7 +120,7 @@ julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia&gt; Impute.nocb(df; vardim=1, context=Context(; limit=1.0))
+julia&gt; Impute.nocb(df; context=Context(; limit=1.0))
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
 │     │ Float64⍰ │ Float64⍰ │
@@ -129,4 +129,4 @@ julia&gt; Impute.nocb(df; vardim=1, context=Context(; limit=1.0))
 │ 2   │ 2.0      │ 2.2      │
 │ 3   │ 5.0      │ 3.3      │
 │ 4   │ 5.0      │ 5.5      │
-│ 5   │ 5.0      │ 5.5      │</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Impute.jl/blob/9d82f48a0fe287130fa15a6dbff3fa834d2dfeb7/src/Impute.jl#LL239-L271">source</a></section><footer><hr/><a class="previous" href="../../"><span class="direction">Previous</span><span class="title">Home</span></a><a class="next" href="../context/"><span class="direction">Next</span><span class="title">Context</span></a></footer></article></body></html>
+│ 5   │ 5.0      │ 5.5      │</code></pre></div></div><a class="source-link" target="_blank" href="https://github.com/invenia/Impute.jl/blob/946152b3d7a1a4375bd85a0ebf7804ddc622223b/src/Impute.jl#LL265-L297">source</a></section><footer><hr/><a class="previous" href="../../"><span class="direction">Previous</span><span class="title">Home</span></a><a class="next" href="../context/"><span class="direction">Next</span><span class="title">Context</span></a></footer></article></body></html>
