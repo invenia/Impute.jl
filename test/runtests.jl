@@ -61,24 +61,58 @@ import Impute:
                 # the original matrix
                 @test_broken isequal(m, expected)
             end
-            @testset "DataFrame" begin
-                df = DataFrame(
+
+            @testset "Tables" begin
+                orig = DataFrame(
                     :sin => allowmissing(sin.(1.0:1.0:20.0)),
                     :cos => allowmissing(sin.(1.0:1.0:20.0)),
                 )
-                df.sin[[2, 3, 7, 12, 19]] .= missing
-                df.cos[[4, 9]] .= missing
 
-                result = impute(df, DropVars(; context=ctx))
-                expected = select(df, :cos)
+                orig.sin[[2, 3, 7, 12, 19]] .= missing
+                orig.cos[[4, 9]] .= missing
 
-                @test isequal(result, expected)
-                @test isequal(result, Impute.dropvars(df; context=ctx))
+                @testset "DataFrame" begin
+                    df = deepcopy(orig)
+                    result = impute(df, DropVars(; context=ctx))
+                    expected = select(df, :cos)
 
-                Impute.dropvars!(df; context=ctx)
-                # The mutating test is broken because we need to making a copy of
-                # the original table
-                @test_broken isequal(df, expected)
+                    @test isequal(result, expected)
+                    @test isequal(result, Impute.dropvars(df; context=ctx))
+
+                    Impute.dropvars!(df; context=ctx)
+                    # The mutating test is broken because we need to making a copy of
+                    # the original table
+                    @test_broken isequal(df, expected)
+                end
+
+                @testset "Column Table" begin
+                    coltab = Tables.columntable(orig)
+
+                    result = impute(coltab, DropVars(; context=ctx))
+                    expected = Tables.columntable(Tables.select(coltab, :cos))
+
+                    @test isequal(result, expected)
+                    @test isequal(result, Impute.dropvars(coltab; context=ctx))
+
+                    Impute.dropvars!(coltab; context=ctx)
+                    # The mutating test is broken because we need to making a copy of
+                    # the original table
+                    @test_broken isequal(coltab, expected)
+                end
+
+                @testset "Row Table" begin
+                    rowtab = Tables.rowtable(orig)
+                    result = impute(rowtab, DropVars(; context=ctx))
+                    expected = Tables.rowtable(Tables.select(rowtab, :cos))
+
+                    @test isequal(result, expected)
+                    @test isequal(result, Impute.dropvars(rowtab; context=ctx))
+
+                    Impute.dropvars!(rowtab; context=ctx)
+                    # The mutating test is broken because we need to making a copy of
+                    # the original table
+                    @test_broken isequal(rowtab, expected)
+                end
             end
         end
     end
@@ -260,6 +294,18 @@ import Impute:
 
         @testset "Column Table" begin
             result = Tables.columntable(orig) |>
+                Impute.interp!(; context=ctx) |>
+                Impute.locf!() |>
+                Impute.nocb!() |>
+                Tables.matrix
+
+            @test size(result) == size(orig)
+            # Confirm that we don't have any more missing values
+            @test all(!ismissing, result)
+        end
+
+        @testset "Row Table" begin
+            result = Tables.rowtable(orig) |>
                 Impute.interp!(; context=ctx) |>
                 Impute.locf!() |>
                 Impute.nocb!() |>
