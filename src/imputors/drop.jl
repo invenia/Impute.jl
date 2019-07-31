@@ -21,8 +21,6 @@ julia> impute(M, DropObs(; context=Context(; limit=1.0)); dims=2)
  1.0  2.0  5.0
  1.1  2.2  5.5
 ```
-
-WARNING: In-place dropping of observations is not supported.
 """
 struct DropObs <: Imputor
     context::AbstractContext
@@ -31,10 +29,13 @@ end
 # TODO: Switch to using Base.@kwdef on 1.1
 DropObs(; context=Context()) = DropObs(context)
 
+# Special case impute! for vectors because we know filter! will work
+function impute!(data::Vector, imp::DropObs)
+    imp.context(c -> filter!(x -> !ismissing!(c, x), data))
+end
+
 function impute(data::AbstractVector, imp::DropObs)
-    imp.context() do c
-        return filter(x -> !ismissing!(c, x), data)
-    end
+    imp.context(c -> filter(x -> !ismissing!(c, x), data))
 end
 
 function impute(data::AbstractMatrix, imp::DropObs; dims=1)
@@ -86,8 +87,6 @@ julia> impute(M, DropVars(; context=Context(; limit=0.2)); dims=2)
 1×5 Array{Union{Missing, Float64},2}:
  1.1  2.2  3.3  missing  5.5
 ```
-
-WARNING: In-place dropping of variables is not supported.
 """
 struct DropVars <: Imputor
     context::AbstractContext
@@ -97,8 +96,6 @@ end
 DropVars(; context=Context()) = DropVars(context)
 
 function impute(data::AbstractMatrix, imp::DropVars; dims=1)
-    # parent(data) === data || return impute!(parent(data), imp)
-
     imp.context() do c
         return filtervars(data; dims=dims) do vars
             !ismissing!(c, vars)
@@ -122,12 +119,5 @@ function impute(table, imp::DropVars)
 end
 
 # Add impute! methods to override the default behaviour in imputors.jl
-function impute!(data::AbstractMatrix, imp::Union{DropObs, DropVars})
-    @warn "In-place dropping of observations is not supported"
-    return impute(data, imp)
-end
-
-function impute!(data, imp::Union{DropObs, DropVars})
-    @warn "In-place dropping of observations is not supported"
-    return impute(data, imp)
-end
+impute!(data::AbstractMatrix, imp::Union{DropObs, DropVars}) = impute(data, imp)
+impute!(data, imp::Union{DropObs, DropVars}) = impute(data, imp)

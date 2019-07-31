@@ -52,4 +52,7 @@ Finally, we can chain multiple simple methods together to give a complete datase
 Impute.interp(df) |> Impute.locf() |> Impute.nocb()
 ```
 
-Warning: Your approach should depend on the properties of you data (e.g., [MCAR, MAR, MNAR](https://en.wikipedia.org/wiki/Missing_data#Types_of_missing_data)).
+**Warning:**
+
+- Your approach should depend on the properties of you data (e.g., [MCAR, MAR, MNAR](https://en.wikipedia.org/wiki/Missing_data#Types_of_missing_data)).
+- In-place calls aren't guaranteedto mutate the original data, but it will try avoid copying if possible.

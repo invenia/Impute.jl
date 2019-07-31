@@ -12,9 +12,8 @@
 
         # Mutating method
         a2 = copy(a)
-        a2_ = Impute.drop!(a2; limit=0.2)
-        @test_broken a2 == expected
-        @test a2_ == expected
+        Impute.drop!(a2; limit=0.2)
+        @test a2 == expected
     end
 
     @testset "Interpolate" begin

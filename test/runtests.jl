@@ -60,9 +60,8 @@ import Impute:
                 @test result == Impute.dropobs(a; context=ctx)
 
                 a2 = deepcopy(a)
-                a2_ = Impute.dropobs!(a2; context=ctx)
-                @test_broken a2 == expected
-                @test a2_ == expected
+                Impute.dropobs!(a2; context=ctx)
+                @test a2 == expected
             end
 
             @testset "Matrix" begin
