@@ -40,7 +40,7 @@ function impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) wh
         i = findfirst(c, data) + 1
 
         while i < lastindex(data)
-            if ismissing(c, data[i])
+            if ismissing!(c, data[i])
                 prev_idx = i - 1
                 next_idx = findnext(c, data, i + 1)
 

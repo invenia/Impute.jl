@@ -31,14 +31,14 @@ DropObs(; context=Context()) = DropObs(context)
 
 function impute!(data::AbstractVector, imp::DropObs)
     imp.context() do c
-        filter!(x -> !ismissing(c, x), data)
+        filter!(x -> !ismissing!(c, x), data)
     end
 end
 
 function impute!(data::AbstractMatrix, imp::DropObs; dims=1)
     imp.context() do c
         return filterobs(data; dims=dims) do obs
-            !ismissing(c, obs)
+            !ismissing!(c, obs)
         end
     end
 end
@@ -55,7 +55,7 @@ function impute!(table, imp::DropObs)
         # Unfortunately, we'll need to construct a new table
         # since Tables.rows is just an iterator
         filtered = Iterators.filter(rows) do r
-            !any(x -> ismissing(c, x), propertyvalues(r))
+            !any(x -> ismissing!(c, x), propertyvalues(r))
         end
 
         table = materializer(table)(filtered)
@@ -101,7 +101,7 @@ function impute!(data::AbstractMatrix, imp::DropVars; dims=1)
         try
             imp.context() do c
                 for x in var
-                    ismissing(c, x)
+                    ismissing!(c, x)
                 end
             end
             return true
@@ -124,7 +124,7 @@ function impute!(table, imp::DropVars)
             imp.context() do c
                 col = getproperty(cols, cname)
                 for i in eachindex(col)
-                    ismissing(c, col[i])
+                    ismissing!(c, col[i])
                 end
             end
             return true

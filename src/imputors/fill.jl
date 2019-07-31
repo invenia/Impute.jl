@@ -44,7 +44,7 @@ function impute!(data::AbstractVector, imp::Fill)
         end
 
         for i in eachindex(data)
-            if ismissing(c, data[i])
+            if ismissing!(c, data[i])
                 data[i] = fill_val
             end
         end
