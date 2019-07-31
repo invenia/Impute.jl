@@ -76,6 +76,7 @@ const global imputation_methods = (
     dropobs = DropObs,
     dropvars = DropVars,
     interp = Interpolate,
+    interpolate = Interpolate,
     fill = Fill,
     locf = LOCF,
     nocb = NOCB,
