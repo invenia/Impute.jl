@@ -1,7 +1,9 @@
 using Impute
 using Tables
 using Test
+using AxisArrays
 using DataFrames
+using Dates
 using RDatasets
 using Statistics
 using StatsBase
@@ -28,6 +30,12 @@ import Impute:
 
     # We call collect to not have a wrapper type that references the same data.
     m = collect(reshape(a, 5, 4))
+
+    aa = AxisArray(
+        deepcopy(m),
+        Axis{:time}(DateTime(2017, 6, 5, 5):Hour(1):DateTime(2017, 6, 5, 9)),
+        Axis{:id}(1:4)
+    )
 
     table = DataFrame(
         :sin => allowmissing(sin.(1.0:1.0:20.0)),
@@ -111,8 +119,6 @@ import Impute:
                     result = impute(rowtab, DropObs(; context=ctx))
                     expected = Tables.rowtable(dropmissing(table))
 
-                    @show result
-                    @show expected
                     @test isequal(result, expected)
                     @test isequal(result, Impute.dropobs(rowtab; context=ctx))
 
@@ -122,6 +128,22 @@ import Impute:
                     # @test_broken isequal(rowtab, expected)
                     @test isequal(rowtab_, expected)
                 end
+            end
+
+            @testset "AxisArray" begin
+                # Because we're removing 2 of our 5 rows we need to change the limit.
+                ctx = Context(; limit=0.4)
+                result = impute(aa, DropObs(; context=ctx))
+                expected = aa[[1, 4, 5], :]
+
+                @test isequal(result, expected)
+                @test isequal(result, Impute.dropobs(aa; context=ctx))
+
+                aa_ = Impute.dropobs!(aa; context=ctx)
+                # The mutating test is broken because we need to making a copy of
+                # the original matrix
+                @test_broken isequal(aa, expected)
+                @test isequal(aa_, expected)
             end
         end
 
@@ -152,8 +174,6 @@ import Impute:
                     result = impute(df, DropVars(; context=ctx))
                     expected = select(df, :cos)
 
-                    @show result
-                    @show expected
                     @test isequal(result, expected)
                     @test isequal(result, Impute.dropvars(df; context=ctx))
 
@@ -191,6 +211,20 @@ import Impute:
                     # the original table
                     @test_broken isequal(rowtab, expected)
                 end
+            end
+            @testset "AxisArray" begin
+                ctx = Context(; limit=0.5)
+                result = impute(aa, DropVars(; context=ctx))
+                expected = copy(aa)[:, 3:4]
+
+                @test isequal(result, expected)
+                @test isequal(result, Impute.dropvars(aa; context=ctx))
+
+                aa_ = Impute.dropvars!(aa; context=ctx)
+                # The mutating test is broken because we need to making a copy of
+                # the original matrix
+                @test_broken isequal(aa, expected)
+                @test isequal(aa_, expected)
             end
         end
     end
@@ -377,6 +411,19 @@ import Impute:
 
         @testset "Matrix" begin
             data = Matrix(orig)
+            result = Impute.interp(data; context=ctx) |> Impute.locf!() |> Impute.nocb!()
+
+            @test size(result) == size(data)
+            # Confirm that we don't have any more missing values
+            @test all(!ismissing, result)
+        end
+
+        @testset "AxisArray" begin
+            data = AxisArray(
+                Matrix(orig),
+                Axis{:row}(1:size(orig, 1)),
+                Axis{:V}(names(orig)),
+            )
             result = Impute.interp(data; context=ctx) |> Impute.locf!() |> Impute.nocb!()
 
             @test size(result) == size(data)
