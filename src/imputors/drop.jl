@@ -22,8 +22,7 @@ julia> impute(M, DropObs(; context=Context(; limit=1.0)); dims=2)
  1.1  2.2  5.5
 ```
 
-WARNING: Observations can only be removed in-place for some input data types others
-(e.g., matrices, array views, some tables) will require a copy/collect.
+WARNING: In-place dropping of observations is not supported.
 """
 struct DropObs <: Imputor
     context::AbstractContext
@@ -32,19 +31,13 @@ end
 # TODO: Switch to using Base.@kwdef on 1.1
 DropObs(; context=Context()) = DropObs(context)
 
-function impute!(data::AbstractVector, imp::DropObs)
-    parent(data) === data || return impute!(parent(data), imp)
-
+function impute(data::AbstractVector, imp::DropObs)
     imp.context() do c
-        filter!(x -> !ismissing!(c, x), data)
+        return filter(x -> !ismissing!(c, x), data)
     end
-
-    return data
 end
 
-function impute!(data::AbstractMatrix, imp::DropObs; dims=1)
-    # parent(data) === data || return impute!(parent(data), imp)
-
+function impute(data::AbstractMatrix, imp::DropObs; dims=1)
     imp.context() do c
         return filterobs(data; dims=dims) do obs
             !ismissing!(c, obs)
@@ -52,7 +45,7 @@ function impute!(data::AbstractMatrix, imp::DropObs; dims=1)
     end
 end
 
-function impute!(table, imp::DropObs)
+function impute(table, imp::DropObs)
     imp.context() do c
         @assert istable(table)
         rows = Tables.rows(table)
@@ -94,7 +87,7 @@ julia> impute(M, DropVars(; context=Context(; limit=0.2)); dims=2)
  1.1  2.2  3.3  missing  5.5
 ```
 
-WARNING: Variables cannot be removed in-place, so this method will internally perform a copy.
+WARNING: In-place dropping of variables is not supported.
 """
 struct DropVars <: Imputor
     context::AbstractContext
@@ -103,7 +96,7 @@ end
 # TODO: Switch to using Base.@kwdef on 1.1
 DropVars(; context=Context()) = DropVars(context)
 
-function impute!(data::AbstractMatrix, imp::DropVars; dims=1)
+function impute(data::AbstractMatrix, imp::DropVars; dims=1)
     # parent(data) === data || return impute!(parent(data), imp)
 
     imp.context() do c
@@ -113,7 +106,7 @@ function impute!(data::AbstractMatrix, imp::DropVars; dims=1)
     end
 end
 
-function impute!(table, imp::DropVars)
+function impute(table, imp::DropVars)
     istable(table) || throw(MethodError(impute!, (table, imp)))
     cols = Tables.columns(table)
 
@@ -126,4 +119,15 @@ function impute!(table, imp::DropVars)
         table = materializer(table)(selected)
         return table
     end
+end
+
+# Add impute! methods to override the default behaviour in imputors.jl
+function impute!(data::AbstractMatrix, imp::Union{DropObs, DropVars})
+    @warn "In-place dropping of observations is not supported"
+    return impute(data, imp)
+end
+
+function impute!(data, imp::Union{DropObs, DropVars})
+    @warn "In-place dropping of observations is not supported"
+    return impute(data, imp)
 end
