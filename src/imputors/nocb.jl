@@ -41,7 +41,7 @@ function impute!(data::AbstractVector, imp::NOCB)
     imp.context() do c
         end_idx = findlast(c, data) - 1
         for i in end_idx:-1:firstindex(data)
-            if ismissing(c, data[i])
+            if ismissing!(c, data[i])
                 data[i] = data[i+1]
             end
         end

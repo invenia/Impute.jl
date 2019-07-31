@@ -21,10 +21,10 @@ abstract type AbstractContext end
 Base.copy(ctx::T) where {T <: AbstractContext} = T(fieldvalues(ctx)...)
 
 """
-    ismissing(ctx::AbstractContext, x) -> Bool
+    ismissing!(ctx::AbstractContext, x) -> Bool
 
 Uses `ctx.is_missing` to determine if x is missing. If x is a `NamedTuple` or an `AbstractArray`
-then `ismissing` will return true if `ctx.is_missing` returns true for any element.
+then `ismissing!` will return true if `ctx.is_missing` returns true for any element.
 The ctx.count is increased whenever whenever we return true and if `ctx.count / ctx.num`
 exceeds our `ctx.limit` we throw an `ImputeError`
 
@@ -32,7 +32,7 @@ exceeds our `ctx.limit` we throw an `ImputeError`
 * `ctx::Context`: the contextual information about missing information.
 * `x`: the value to check (may be an single values, abstract array or row)
 """
-function Base.ismissing(ctx::AbstractContext, x)
+function ismissing!(ctx::AbstractContext, x)
     was_missing = if isa(x, NamedTuple)
         any(ctx.is_missing, Tuple(x))
     elseif isa(x, AbstractArray)
@@ -52,14 +52,14 @@ end
 Returns the first non-missing index in `data`.
 
 # Arguments
-* `ctx::AbstractContext`: the context to pass into `ismissing`
+* `ctx::AbstractContext`: the context to pass into `ismissing!`
 * `data::AbstractVector`: the data array to search
 
 # Returns
 * `Int`: the first index in `data` that isn't missing
 """
 function Base.findfirst(ctx::AbstractContext, data::AbstractVector)
-    return findfirst(x -> !ismissing(ctx, x), data)
+    return findfirst(x -> !ismissing!(ctx, x), data)
 end
 
 """
@@ -68,14 +68,14 @@ end
 Returns the last non-missing index in `data`.
 
 # Arguments
-* `ctx::AbstractContext`: the context to pass into `ismissing`
+* `ctx::AbstractContext`: the context to pass into `ismissing!`
 * `data::AbstractVector`: the data array to search
 
 # Returns
 * `Int`: the last index in `data` that isn't missing
 """
 function Base.findlast(ctx::AbstractContext, data::AbstractVector)
-    return findlast(x -> !ismissing(ctx, x), data)
+    return findlast(x -> !ismissing!(ctx, x), data)
 end
 
 """
@@ -84,14 +84,14 @@ end
 Returns the next non-missing index in `data`.
 
 # Arguments
-* `ctx::AbstractContext`: the context to pass into `ismissing`
+* `ctx::AbstractContext`: the context to pass into `ismissing!`
 * `data::AbstractVector`: the data array to search
 
 # Returns
 * `Int`: the next index in `data` that isn't missing
 """
 function Base.findnext(ctx::AbstractContext, data::AbstractVector, idx::Int)
-    return findnext(x -> !ismissing(ctx, x), data, idx)
+    return findnext(x -> !ismissing!(ctx, x), data, idx)
 end
 
 mutable struct Context <: AbstractContext

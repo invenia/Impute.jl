@@ -42,7 +42,7 @@ function impute!(data::AbstractVector, imp::LOCF)
     imp.context() do c
         start_idx = findfirst(c, data) + 1
         for i in start_idx:lastindex(data)
-            if ismissing(c, data[i])
+            if ismissing!(c, data[i])
                 data[i] = data[i-1]
             end
         end
