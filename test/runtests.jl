@@ -18,64 +18,142 @@ import Impute:
     WeightedContext,
     ImputeError
 
+
 @testset "Impute" begin
+    # Defining our missing datasets
     a = allowmissing(1.0:1.0:20.0)
     a[[2, 3, 7]] .= missing
     mask = map(!ismissing, a)
     ctx = Context(; limit=0.2)
 
-    @testset "Equality $T" for T in (DropObs, DropVars, Interpolate, Fill, LOCF, NOCB)
-        @test T() == T()
+    # We call collect to not have a wrapper type that references the same data.
+    m = collect(reshape(a, 5, 4))
+
+    table = DataFrame(
+        :sin => allowmissing(sin.(1.0:1.0:20.0)),
+        :cos => allowmissing(sin.(1.0:1.0:20.0)),
+    )
+
+    table.sin[[2, 3, 7, 12, 19]] .= missing
+
+    @testset "Equality" begin
+        @testset "$T" for T in (DropObs, DropVars, Interpolate, Fill, LOCF, NOCB)
+            @test T() == T()
+        end
     end
 
     @testset "Drop" begin
         @testset "DropObs" begin
-            result = impute(a, DropObs(; context=ctx))
-            expected = copy(a)
-            deleteat!(expected, [2, 3, 7])
+            @testset "Vector" begin
+                result = impute(a, DropObs(; context=ctx))
+                expected = deleteat!(deepcopy(a), [2, 3, 7])
 
-            @test result == expected
-            @test result == Impute.dropobs(a; context=ctx)
+                @test result == expected
+                @test result == Impute.dropobs(a; context=ctx)
 
-            a2 = copy(a)
-            Impute.dropobs!(a2; context=ctx)
-            @test a2 == expected
+                a2 = deepcopy(a)
+                Impute.dropobs!(a2; context=ctx)
+                @test a2 == expected
+            end
+
+            @testset "Matrix" begin
+                # Because we're removing 2 of our 5 rows we need to change the limit.
+                ctx = Context(; limit=0.4)
+                result = impute(m, DropObs(; context=ctx))
+                expected = m[[1, 4, 5], :]
+
+                @test isequal(result, expected)
+                @test isequal(result, Impute.dropobs(m; context=ctx))
+                @test isequal(collect(result'), Impute.dropobs(collect(m'); dims=2, context=ctx))
+
+                m_ = Impute.dropobs!(m; context=ctx)
+                # The mutating test is broken because we need to making a copy of
+                # the original matrix
+                @test_broken isequal(m, expected)
+                @test isequal(m_, expected)
+            end
+
+            @testset "Tables" begin
+                ctx = Context(; limit=0.4)
+                @testset "DataFrame" begin
+                    df = deepcopy(table)
+                    result = impute(df, DropObs(; context=ctx))
+                    expected = dropmissing(df)
+
+                    @test isequal(result, expected)
+                    @test isequal(result, Impute.dropobs(df; context=ctx))
+
+                    df_ = Impute.dropobs!(df; context=ctx)
+                    # The mutating test is broken because we need to making a copy of
+                    # the original table
+                    @test_broken isequal(df, expected)
+                    @test isequal(df_, expected)
+                end
+
+                @testset "Column Table" begin
+                    coltab = Tables.columntable(table)
+
+                    result = impute(coltab, DropObs(; context=ctx))
+                    expected = Tables.columntable(dropmissing(table))
+
+                    @test isequal(result, expected)
+                    @test isequal(result, Impute.dropobs(coltab; context=ctx))
+
+                    coltab_ = Impute.dropobs!(coltab; context=ctx)
+                    # The mutating test is broken because we need to making a copy of
+                    # the original table
+                    @test_broken isequal(coltab, expected)
+                    @test isequal(coltab_, expected)
+                end
+
+                @testset "Row Table" begin
+                    rowtab = Tables.rowtable(table)
+                    result = impute(rowtab, DropObs(; context=ctx))
+                    expected = Tables.rowtable(dropmissing(table))
+
+                    @show result
+                    @show expected
+                    @test isequal(result, expected)
+                    @test isequal(result, Impute.dropobs(rowtab; context=ctx))
+
+                    rowtab_ = Impute.dropobs!(rowtab; context=ctx)
+                    # The mutating test is broken because we need to making a copy of
+                    # the original table
+                    # @test_broken isequal(rowtab, expected)
+                    @test isequal(rowtab_, expected)
+                end
+            end
         end
+
         @testset "DropVars" begin
             @testset "Vector" begin
                 @test_throws MethodError Impute.dropvars(a)
             end
 
             @testset "Matrix" begin
-                m = reshape(a, 5, 4)
-
+                ctx = Context(; limit=0.5)
                 result = impute(m, DropVars(; context=ctx))
-                expected = copy(m)[:, 2:4]
+                expected = copy(m)[:, 3:4]
 
                 @test isequal(result, expected)
                 @test isequal(result, Impute.dropvars(m; context=ctx))
-                @test isequal(result', Impute.dropvars(m'; dims=2, context=ctx))
+                @test isequal(collect(result'), Impute.dropvars(collect(m'); dims=2, context=ctx))
 
-                Impute.dropvars!(m; context=ctx)
+                m_ = Impute.dropvars!(m; context=ctx)
                 # The mutating test is broken because we need to making a copy of
                 # the original matrix
                 @test_broken isequal(m, expected)
+                @test isequal(m_, expected)
             end
 
             @testset "Tables" begin
-                orig = DataFrame(
-                    :sin => allowmissing(sin.(1.0:1.0:20.0)),
-                    :cos => allowmissing(sin.(1.0:1.0:20.0)),
-                )
-
-                orig.sin[[2, 3, 7, 12, 19]] .= missing
-                orig.cos[[4, 9]] .= missing
-
                 @testset "DataFrame" begin
-                    df = deepcopy(orig)
+                    df = deepcopy(table)
                     result = impute(df, DropVars(; context=ctx))
                     expected = select(df, :cos)
 
+                    @show result
+                    @show expected
                     @test isequal(result, expected)
                     @test isequal(result, Impute.dropvars(df; context=ctx))
 
@@ -86,7 +164,7 @@ import Impute:
                 end
 
                 @testset "Column Table" begin
-                    coltab = Tables.columntable(orig)
+                    coltab = Tables.columntable(table)
 
                     result = impute(coltab, DropVars(; context=ctx))
                     expected = Tables.columntable(Tables.select(coltab, :cos))
@@ -101,7 +179,7 @@ import Impute:
                 end
 
                 @testset "Row Table" begin
-                    rowtab = Tables.rowtable(orig)
+                    rowtab = Tables.rowtable(table)
                     result = impute(rowtab, DropVars(; context=ctx))
                     expected = Tables.rowtable(Tables.select(rowtab, :cos))
 
@@ -163,6 +241,20 @@ import Impute:
             Impute.fill!(a2; context=ctx)
             @test a2 == result
         end
+
+        @testset "Matrix" begin
+            ctx = Context(; limit=1.0)
+            expected = Matrix(Impute.dropobs(dataset("boot", "neuro"); context=ctx))
+            data = Matrix(dataset("boot", "neuro"))
+
+            result = impute(data, Fill(; value=0.0, context=ctx))
+            @test size(result) == size(data)
+            @test result == Impute.fill(data; value=0.0, context=ctx)
+
+            data2 = copy(data)
+            Impute.fill!(data2; value=0.0, context=ctx)
+            @test data2 == result
+        end
     end
 
     @testset "LOCF" begin
@@ -193,69 +285,6 @@ import Impute:
         a2 = copy(a)
         Impute.nocb!(a2; context=ctx)
         @test a2 == result
-    end
-
-    @testset "DataFrame" begin
-        ctx = Context(; limit=1.0)
-        @testset "Single DataFrame" begin
-            data = dataset("boot", "neuro")
-            df = impute(data, Interpolate(; context=ctx))
-            @test isequal(df, Impute.interp(data; context=ctx))
-        end
-        @testset "GroupedDataFrame" begin
-            hod = repeat(1:24, 12 * 10)
-            obj = repeat(1:12, 24 * 10)
-            n = length(hod)
-
-            df = DataFrame(
-                :hod => hod,
-                :obj => obj,
-                :val => allowmissing(
-                    [sin(x) * cos(y) for (x, y) in zip(hod, obj)]
-                ),
-            )
-
-            df.val[rand(1:n, 20)] .= missing
-            gdf1 = groupby(deepcopy(df), [:hod, :obj])
-            gdf2 = groupby(df, [:hod, :obj])
-
-            f1 = Impute.interp(; context=ctx) ∘ Impute.locf!() ∘ Impute.nocb!()
-            f2 = Impute.interp!(; context=ctx) ∘ Impute.locf!() ∘ Impute.nocb!()
-
-            result = vcat(f1.(gdf1)...)
-            @test df != result
-            @test size(result) == (24 * 12 * 10, 3)
-            @test all(!ismissing, Tables.matrix(result))
-
-            # Test that we can also mutate the dataframe directly
-            f2.(gdf2)
-            @test result == sort(df, (:hod, :obj))
-        end
-    end
-
-    @testset "Matrix" begin
-        ctx = Context(; limit=1.0)
-        expected = Matrix(Impute.dropobs(dataset("boot", "neuro"); context=ctx))
-        data = Matrix(dataset("boot", "neuro"))
-
-        @testset "Drop" begin
-            result = impute(data, DropObs(; context=ctx))
-            @test size(result, 1) == 4
-            @test result == Impute.dropobs(data; context=ctx, dims=1)
-
-            @test result == expected
-            @test Impute.dropobs(data'; dims=2, context=ctx) == expected'
-        end
-
-        @testset "Fill" begin
-            result = impute(data, Fill(; value=0.0, context=ctx))
-            @test size(result) == size(data)
-            @test result == Impute.fill(data; value=0.0, context=ctx)
-
-            data2 = copy(data)
-            Impute.fill!(data2; value=0.0, context=ctx)
-            @test data2 == result
-        end
     end
 
     @testset "Not enough data" begin
@@ -290,6 +319,36 @@ import Impute:
             result3 = impute(orig, imp)
             @test result == result2
             @test result == result3
+
+            @testset "GroupedDataFrame" begin
+                hod = repeat(1:24, 12 * 10)
+                obj = repeat(1:12, 24 * 10)
+                n = length(hod)
+
+                df = DataFrame(
+                    :hod => hod,
+                    :obj => obj,
+                    :val => allowmissing(
+                        [sin(x) * cos(y) for (x, y) in zip(hod, obj)]
+                    ),
+                )
+
+                df.val[rand(1:n, 20)] .= missing
+                gdf1 = groupby(deepcopy(df), [:hod, :obj])
+                gdf2 = groupby(df, [:hod, :obj])
+
+                f1 = Impute.interp(; context=ctx) ∘ Impute.locf!() ∘ Impute.nocb!()
+                f2 = Impute.interp!(; context=ctx) ∘ Impute.locf!() ∘ Impute.nocb!()
+
+                result = vcat(f1.(gdf1)...)
+                @test df != result
+                @test size(result) == (24 * 12 * 10, 3)
+                @test all(!ismissing, Tables.matrix(result))
+
+                # Test that we can also mutate the dataframe directly
+                f2.(gdf2)
+                @test result == sort(df, (:hod, :obj))
+            end
         end
 
         @testset "Column Table" begin

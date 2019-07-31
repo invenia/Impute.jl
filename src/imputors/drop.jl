@@ -21,6 +21,9 @@ julia> impute(M, DropObs(; context=Context(; limit=1.0)); dims=2)
  1.0  2.0  5.0
  1.1  2.2  5.5
 ```
+
+WARNING: Observations can only be removed in-place for some input data types others
+(e.g., matrices, array views, some tables) will require a copy/collect.
 """
 struct DropObs <: Imputor
     context::AbstractContext
@@ -30,22 +33,24 @@ end
 DropObs(; context=Context()) = DropObs(context)
 
 function impute!(data::AbstractVector, imp::DropObs)
+    parent(data) === data || return impute!(parent(data), imp)
+
     imp.context() do c
         filter!(x -> !ismissing!(c, x), data)
     end
+
+    return data
 end
 
 function impute!(data::AbstractMatrix, imp::DropObs; dims=1)
+    # parent(data) === data || return impute!(parent(data), imp)
+
     imp.context() do c
         return filterobs(data; dims=dims) do obs
             !ismissing!(c, obs)
         end
     end
 end
-
-# Deleting elements from subarrays doesn't work so we need to collect that data into
-# a separate array.
-impute!(data::SubArray, imp::DropObs) = impute!(collect(data), imp::DropObs)
 
 function impute!(table, imp::DropObs)
     imp.context() do c
@@ -88,6 +93,8 @@ julia> impute(M, DropVars(; context=Context(; limit=0.2)); dims=2)
 1×5 Array{Union{Missing, Float64},2}:
  1.1  2.2  3.3  missing  5.5
 ```
+
+WARNING: Variables cannot be removed in-place, so this method will internally perform a copy.
 """
 struct DropVars <: Imputor
     context::AbstractContext
@@ -97,20 +104,11 @@ end
 DropVars(; context=Context()) = DropVars(context)
 
 function impute!(data::AbstractMatrix, imp::DropVars; dims=1)
-    return filtervars(data; dims=dims) do var
-        try
-            imp.context() do c
-                for x in var
-                    ismissing!(c, x)
-                end
-            end
-            return true
-        catch e
-            if isa(e, ImputeError)
-                return false
-            else
-                rethrow(e)
-            end
+    # parent(data) === data || return impute!(parent(data), imp)
+
+    imp.context() do c
+        return filtervars(data; dims=dims) do vars
+            !ismissing!(c, vars)
         end
     end
 end
@@ -119,25 +117,13 @@ function impute!(table, imp::DropVars)
     istable(table) || throw(MethodError(impute!, (table, imp)))
     cols = Tables.columns(table)
 
-    cnames = Iterators.filter(propertynames(cols)) do cname
-        try
-            imp.context() do c
-                col = getproperty(cols, cname)
-                for i in eachindex(col)
-                    ismissing!(c, col[i])
-                end
-            end
-            return true
-        catch e
-            if isa(e, ImputeError)
-                return false
-            else
-                rethrow(e)
-            end
+    imp.context() do c
+        cnames = Iterators.filter(propertynames(cols)) do cname
+            !ismissing!(c, getproperty(cols, cname))
         end
-    end
 
-    selected = Tables.select(table, cnames...)
-    table = materializer(table)(selected)
-    return table
+        selected = Tables.select(table, cnames...)
+        table = materializer(table)(selected)
+        return table
+    end
 end
