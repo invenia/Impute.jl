@@ -17,9 +17,11 @@ Tables = "0.2"
 julia = "1"
 
 [extras]
+AxisArrays = "39de3d68-74b9-583c-8d2d-e117c070f3a9"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["DataFrames", "RDatasets", "Test"]
+test = ["AxisArrays", "DataFrames", "Dates", "RDatasets", "Test"]

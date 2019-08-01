@@ -29,13 +29,16 @@ end
 # TODO: Switch to using Base.@kwdef on 1.1
 DropObs(; context=Context()) = DropObs(context)
 
-function impute!(data::AbstractVector, imp::DropObs)
-    imp.context() do c
-        filter!(x -> !ismissing!(c, x), data)
-    end
+# Special case impute! for vectors because we know filter! will work
+function impute!(data::Vector, imp::DropObs)
+    imp.context(c -> filter!(x -> !ismissing!(c, x), data))
 end
 
-function impute!(data::AbstractMatrix, imp::DropObs; dims=1)
+function impute(data::AbstractVector, imp::DropObs)
+    imp.context(c -> filter(x -> !ismissing!(c, x), data))
+end
+
+function impute(data::AbstractMatrix, imp::DropObs; dims=1)
     imp.context() do c
         return filterobs(data; dims=dims) do obs
             !ismissing!(c, obs)
@@ -43,11 +46,7 @@ function impute!(data::AbstractMatrix, imp::DropObs; dims=1)
     end
 end
 
-# Deleting elements from subarrays doesn't work so we need to collect that data into
-# a separate array.
-impute!(data::SubArray, imp::DropObs) = impute!(collect(data), imp::DropObs)
-
-function impute!(table, imp::DropObs)
+function impute(table, imp::DropObs)
     imp.context() do c
         @assert istable(table)
         rows = Tables.rows(table)
@@ -96,48 +95,29 @@ end
 # TODO: Switch to using Base.@kwdef on 1.1
 DropVars(; context=Context()) = DropVars(context)
 
-function impute!(data::AbstractMatrix, imp::DropVars; dims=1)
-    return filtervars(data; dims=dims) do var
-        try
-            imp.context() do c
-                for x in var
-                    ismissing!(c, x)
-                end
-            end
-            return true
-        catch e
-            if isa(e, ImputeError)
-                return false
-            else
-                rethrow(e)
-            end
+function impute(data::AbstractMatrix, imp::DropVars; dims=1)
+    imp.context() do c
+        return filtervars(data; dims=dims) do vars
+            !ismissing!(c, vars)
         end
     end
 end
 
-function impute!(table, imp::DropVars)
+function impute(table, imp::DropVars)
     istable(table) || throw(MethodError(impute!, (table, imp)))
     cols = Tables.columns(table)
 
-    cnames = Iterators.filter(propertynames(cols)) do cname
-        try
-            imp.context() do c
-                col = getproperty(cols, cname)
-                for i in eachindex(col)
-                    ismissing!(c, col[i])
-                end
-            end
-            return true
-        catch e
-            if isa(e, ImputeError)
-                return false
-            else
-                rethrow(e)
-            end
+    imp.context() do c
+        cnames = Iterators.filter(propertynames(cols)) do cname
+            !ismissing!(c, getproperty(cols, cname))
         end
-    end
 
-    selected = Tables.select(table, cnames...)
-    table = materializer(table)(selected)
-    return table
+        selected = Tables.select(table, cnames...)
+        table = materializer(table)(selected)
+        return table
+    end
 end
+
+# Add impute! methods to override the default behaviour in imputors.jl
+impute!(data::AbstractMatrix, imp::Union{DropObs, DropVars}) = impute(data, imp)
+impute!(data, imp::Union{DropObs, DropVars}) = impute(data, imp)

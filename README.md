@@ -111,4 +111,10 @@ julia> Impute.interp(df) |> Impute.locf() |> Impute.nocb()
 │ 469 │ -247.6   │ -180.7   │ -70.9   │ 33.7     │ 114.8    │ 222.5    │
 ```
 
-**Warning**: Your approach should depend on the properties of you data (e.g., [MCAR, MAR, MNAR](https://en.wikipedia.org/wiki/Missing_data#Types_of_missing_data)).
+**Warning:**
+
+- Your approach should depend on the properties of you data (e.g., [MCAR, MAR, MNAR](https://en.wikipedia.org/wiki/Missing_data#Types_of_missing_data)).
+- In-place calls aren't guaranteedto mutate the original data, but it will try avoid copying if possible.
+  In the future, it may be possible to detect whether in-place operations are permitted on an array or table using traits:
+    - https://github.com/JuliaData/Tables.jl/issues/116
+    - https://github.com/JuliaDiffEq/ArrayInterface.jl/issues/22
