@@ -1,6 +1,7 @@
 module Impute
 
 using IterTools
+using Random
 using Statistics
 using StatsBase
 using Tables: Tables, materializer, istable
@@ -81,7 +82,7 @@ const global imputation_methods = (
     fill = Fill,
     locf = LOCF,
     nocb = NOCB,
-    hotdeck = HotDeck
+    srs = SRS,
 )
 
 include("deprecated.jl")
@@ -300,15 +301,15 @@ julia> Impute.nocb(df; context=Context(; limit=1.0))
 """ nocb
 
 @doc """
-    Impute.hotdeck(data; vardim=2, context=Context())
+    Impute.srs(data; rng=Random.GLOBAL_RNG, context=Context())
 
-Hot deck imputation is a method for imputing both continuous and categorical
-variables. Furthermore, it completes imputation while preserving the distributional 
-properties of the variables (e.g., mean, standard deviation). 
+Simple Random Sampling (SRS) imputation is a method for imputing both continuous and
+categorical variables. Furthermore, it completes imputation while preserving the
+distributional properties of the variables (e.g., mean, standard deviation).
 
 # Example
 ```jldoctest
-julia> using DataFrames; using Impute: Impute, Context
+julia> using DataFrames; using Random; using Impute: Impute, Context
 
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
@@ -321,17 +322,17 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia> Impute.hotdeck(df; vardim = 1, context = Context(; limit = 1.0))
-5×2 DataFrames.DataFrame
+julia> Impute.srs(df; rng=MersenneTwister(1234), context=Context(; limit=1.0))
+5×2 DataFrame
 │ Row │ a        │ b        │
 │     │ Float64⍰ │ Float64⍰ │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
-│ 3   │ 5.0      │ 3.3      │
-│ 4   │ 5.0      │ 5.5      │
+│ 3   │ 1.0      │ 3.3      │
+│ 4   │ 5.0      │ 3.3      │
 │ 5   │ 5.0      │ 5.5      │
 ```
-""" hotdeck
+""" srs
 
 end  # module

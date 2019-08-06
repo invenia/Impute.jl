@@ -17,7 +17,7 @@ import Impute:
     Fill,
     LOCF,
     NOCB,
-    HotDeck,
+    SRS,
     Context,
     WeightedContext,
     ImputeError
@@ -47,7 +47,7 @@ import Impute:
     table.sin[[2, 3, 7, 12, 19]] .= missing
 
     @testset "Equality" begin
-        @testset "$T" for T in (DropObs, DropVars, Interpolate, Fill, LOCF, NOCB, HotDeck)
+        @testset "$T" for T in (DropObs, DropVars, Interpolate, Fill, LOCF, NOCB, SRS)
             @test T() == T()
         end
     end
@@ -323,10 +323,8 @@ import Impute:
         @test a2 == result
     end
 
-    @testset "HotDeck" begin
-        # Setting seed because Hot Deck isn't deterministic
-        Random.seed!(137)
-        result = impute(a, HotDeck(; context=ctx))
+    @testset "SRS" begin
+        result = impute(a, SRS(; rng=MersenneTwister(137), context=ctx))
         expected = copy(a)
         expected[2] = 9.0
         expected[3] = 16.0
@@ -334,13 +332,11 @@ import Impute:
 
         @test result == expected
 
-        Random.seed!(137)
-        @test result == Impute.hotdeck(a; context=ctx)
+        @test result == Impute.srs(a; rng=MersenneTwister(137), context=ctx)
 
         a2 = copy(a)
 
-        Random.seed!(137)
-        Impute.hotdeck!(a2; context=ctx)
+        Impute.srs!(a2; rng=MersenneTwister(137), context=ctx)
         @test a2 == result
     end
 
