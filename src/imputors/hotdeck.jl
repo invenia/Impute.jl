@@ -1,25 +1,23 @@
-@auto_hash_equals struct HotDeck <: Imputor
-   vardim::Int
+struct HotDeck <: Imputor
    context::AbstractContext
 end
 
 
 """
-    HotDeck(; vardim = 2, context = Context())
+    HotDeck(; context = Context())
 
 Hot deck imputation is a method for imputing both continuous and categorical
-variables. Furthermore, it completes imputation while preserving the distributional 
-properties of the variables (e.g., mean, standard deviation). 
+variables. Furthermore, it completes imputation while preserving the distributional
+properties of the variables (e.g., mean, standard deviation).
 
-The basic idea is that for a given variable, `x`, with missing data, we randomly draw 
+The basic idea is that for a given variable, `x`, with missing data, we randomly draw
 from the observed values of `x` to impute the missing elements. Since the random draws
-from `x` for imputation are done in proportion to the frequency distribution of the values 
-in `x`, the univariate distributional properties are generally not impacted; this is true 
+from `x` for imputation are done in proportion to the frequency distribution of the values
+in `x`, the univariate distributional properties are generally not impacted; this is true
 for both categorical and continuous data.
 
 
 # Keyword Arguments
-* `vardim = 2::Int`: Specify the dimension for variables in matrix input data
 * `context::AbstractContext`: A context which keeps track of missing data
   summary information
 
@@ -38,15 +36,13 @@ julia> impute(M, HotDeck(; vardim = 1, context = Context(; limit = 1.0)))
  1.1  2.2  3.3  3.3  5.5
 ```
 """
-HotDeck(; vardim = 2, context = Context()) = HotDeck(vardim, context)
-
+HotDeck(; context = Context()) = HotDeck(context)
 
 function impute!(data::AbstractVector, imp::HotDeck)
-    
-    imp.context() do c 
+    imp.context() do c
         obs_values = Impute.dropobs(data)
         for i = 1:lastindex(data)
-            if ismissing(c, data[i])
+            if ismissing!(c, data[i])
                 data[i] = rand(obs_values)
             end
         end
