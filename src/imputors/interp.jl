@@ -37,7 +37,12 @@ Interpolate(; context=Context()) = Interpolate(context)
 
 function impute!(data::AbstractVector{Missing}, imp::Interpolate)
     @warn "Cannot interpolate points when all values are missing"
-    return data
+
+    # NOTE: We still do this so we can throw an ImputeError if the context has a limit set.
+    imp.context() do c
+        findfirst(c, data)
+        return data
+    end
 end
 
 function impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) where T
