@@ -77,16 +77,14 @@ function test_vector(tester::ImputorTester)
                 end
             end
 
-            # @testset "Too many missing values" begin
-            #     # Test Context error condition
-            #     c = fill(missing, 10)
-            #     settings = deepcopy(tester.kwargs)
-            #     settings[:context] = Context(; limit=0.1)
-            #     # @test_throws ImputeError
-            #     impute(c, tester.imp(; settings...))
-            #     # @test_throws ImputeError
-            #     tester.f(c; settings...)
-            # end
+            @testset "Too many missing values" begin
+                # Test Context error condition
+                c = fill(missing, 10)
+                settings = deepcopy(tester.kwargs)
+                settings[:context] = Context(; limit=0.1)
+                @test_throws ImputeError impute(c, tester.imp(; settings...))
+                @test_throws ImputeError tester.f(c; settings...)
+            end
         end
     end
 end
@@ -138,14 +136,14 @@ function test_matrix(tester::ImputorTester)
             end
         end
 
-        # @testset "Too many missing values" begin
-        #     # Test Context error condition
-        #     c = fill(missing, 5, 2)
-        #     settings = deepcopy(tester.kwargs)
-        #     settings[:context] = Context(; limit=0.1)
-        #     @test_throws ImputeError impute(c, tester.imp(; settings...))
-        #     @test_throws ImputeError tester.f(c; settings...)
-        # end
+        @testset "Too many missing values" begin
+            # Test Context error condition
+            c = fill(missing, 5, 2)
+            settings = deepcopy(tester.kwargs)
+            settings[:context] = Context(; limit=0.1)
+            @test_throws ImputeError impute(c, tester.imp(; settings...))
+            @test_throws ImputeError tester.f(c; settings...)
+        end
     end
 end
 
@@ -205,18 +203,22 @@ function test_dataframe(tester::ImputorTester)
             end
         end
 
-        # @testset "Too many missing values" begin
-        #     # Test Context error condition
-        #     c = DataFrame(
-        #         :sin => fill(missing, 10),
-        #         :cos => fill(missing, 10),
-        #     )
-        #     settings = deepcopy(tester.kwargs)
-        #     settings[:context] = Context(; limit=0.1)
-        #     # @test_throws ImputeError
-        #     impute(c, tester.imp(; settings...))
-        #     # @test_throws ImputeError
-        #     tester.f(c; settings...)
-        # end
+        @testset "Too many missing values" begin
+            # Test Context error condition
+            c = DataFrame(
+                :sin => fill(missing, 10),
+                :cos => fill(missing, 10),
+            )
+            settings = deepcopy(tester.kwargs)
+            settings[:context] = Context(; limit=0.1)
+            if tester.imp == DropVars
+                # https://github.com/JuliaData/Tables.jl/issues/117
+                @test_throws MethodError impute(c, tester.imp(; settings...))
+                @test_throws MethodError tester.f(c; settings...)
+            else
+                @test_throws ImputeError impute(c, tester.imp(; settings...))
+                @test_throws ImputeError tester.f(c; settings...)
+            end
+        end
     end
 end
