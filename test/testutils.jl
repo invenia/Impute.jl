@@ -24,6 +24,9 @@ function test_all(tester::ImputorTester)
     test_vector(tester)
     test_matrix(tester)
     test_dataframe(tester)
+    test_axisarray(tester)
+    test_columntable(tester)
+    # test_rowtable(tester)
 end
 
 function test_equality(tester::ImputorTester)
@@ -222,3 +225,107 @@ function test_dataframe(tester::ImputorTester)
         end
     end
 end
+
+function test_axisarray(tester::ImputorTester)
+    @testset "AxisArray" begin
+        a = allowmissing(1.0:1.0:20.0)
+        a[[2, 3, 7]] .= missing
+        m = collect(reshape(a, 5, 4))
+        aa = AxisArray(
+            deepcopy(m),
+            Axis{:time}(DateTime(2017, 6, 5, 5):Hour(1):DateTime(2017, 6, 5, 9)),
+            Axis{:id}(1:4)
+        )
+        result = impute(aa, tester.imp(; tester.kwargs...))
+
+        @testset "Base" begin
+            # Test that we have fewer missing values
+            @test count(ismissing, result) < count(ismissing, aa)
+            @test isa(result, AxisArray)
+            @test eltype(result) <: eltype(aa)
+
+            # Test that functional form behaves the same way
+            @test result == tester.f(aa; tester.kwargs...)
+        end
+
+        @testset "In-place" begin
+            # Test that the in-place function return the new results and logs whether it
+            # successfully did it in-place
+            aa2 = deepcopy(aa)
+            aa2_ = tester.f!(aa2; tester.kwargs...)
+            @test aa2_ == result
+            if aa2 != result
+                @warn "$(tester.f!) did not mutate input data of type AxisArray"
+            end
+        end
+    end
+end
+
+function test_columntable(tester::ImputorTester)
+    @testset "Column Table" begin
+        table = DataFrame(
+            :sin => allowmissing(sin.(1.0:1.0:20.0)),
+            :cos => allowmissing(sin.(1.0:1.0:20.0)),
+        )
+
+        table.sin[[2, 3, 7, 12, 19]] .= missing
+        coltab = Tables.columntable(table)
+
+        result = impute(coltab, tester.imp(; tester.kwargs...))
+
+        @testset "Base" begin
+            # Test that we have fewer missing values
+            @test count(ismissing, Tables.matrix(result)) < count(ismissing, Tables.matrix(coltab))
+            @test isa(result, NamedTuple)
+
+            # Test that functional form behaves the same way
+            @test result == tester.f(coltab; tester.kwargs...)
+        end
+
+        @testset "In-place" begin
+            # Test that the in-place function return the new results and logs whether it
+            # successfully did it in-place
+            coltab2 = deepcopy(coltab)
+            coltab2_ = tester.f!(coltab2; tester.kwargs...)
+            @test coltab2_ == result
+            if coltab2 != result
+                @warn "$(tester.f!) did not mutate input data of column table"
+            end
+        end
+    end
+end
+
+# Row table tests will fail because vector input could be a row table or a vector of scalars
+# function test_rowtable(tester::ImputorTester)
+#     @testset "Row Table" begin
+#         table = DataFrame(
+#             :sin => allowmissing(sin.(1.0:1.0:20.0)),
+#             :cos => allowmissing(sin.(1.0:1.0:20.0)),
+#         )
+
+#         table.sin[[2, 3, 7, 12, 19]] .= missing
+#         rowtab = Tables.rowtable(table)
+
+#         result = impute(rowtab, tester.imp(; tester.kwargs...))
+
+#         @testset "Base" begin
+#             # Test that we have fewer missing values
+#             @test count(ismissing, Tables.matrix(result)) < count(ismissing, Tables.matrix(rowtab))
+#             @test isa(result, Vector)
+
+#             # Test that functional form behaves the same way
+#             @test result == tester.f(rowtab; tester.kwargs...)
+#         end
+
+#         @testset "In-place" begin
+#             # Test that the in-place function return the new results and logs whether it
+#             # successfully did it in-place
+#             rowtab2 = deepcopy(rowtab)
+#             rowtab2_ = tester.f!(rowtab2; tester.kwargs...)
+#             @test rowtab2_ == result
+#             if rowtab2 != result
+#                 @warn "$(tester.f!) did not mutate input data of row table"
+#             end
+#         end
+#     end
+# end
