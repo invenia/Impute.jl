@@ -37,7 +37,7 @@ end
 # TODO: Switch to using Base.@kwdef on 1.1
 NOCB(; context=Context()) = NOCB(context)
 
-function impute!(data::AbstractVector, imp::NOCB)
+function _impute!(data::AbstractVector, imp::NOCB)
     imp.context() do c
         end_idx = findlast(c, data)
         if end_idx === nothing

@@ -34,7 +34,7 @@ end
 # TODO: Switch to using Base.@kwdef on 1.1
 Fill(; value=mean, context=Context()) = Fill(value, context)
 
-function impute!(data::AbstractVector, imp::Fill)
+function _impute!(data::AbstractVector, imp::Fill)
     imp.context() do c
         fill_val = if isa(imp.value, Function)
             available = Impute.drop(data; context=c)

@@ -26,7 +26,7 @@ function test_all(tester::ImputorTester)
     test_dataframe(tester)
     test_axisarray(tester)
     test_columntable(tester)
-    # test_rowtable(tester)
+    test_rowtable(tester)
 end
 
 function test_equality(tester::ImputorTester)
@@ -295,37 +295,36 @@ function test_columntable(tester::ImputorTester)
     end
 end
 
-# Row table tests will fail because vector input could be a row table or a vector of scalars
-# function test_rowtable(tester::ImputorTester)
-#     @testset "Row Table" begin
-#         table = DataFrame(
-#             :sin => allowmissing(sin.(1.0:1.0:20.0)),
-#             :cos => allowmissing(sin.(1.0:1.0:20.0)),
-#         )
+function test_rowtable(tester::ImputorTester)
+    @testset "Row Table" begin
+        table = DataFrame(
+            :sin => allowmissing(sin.(1.0:1.0:20.0)),
+            :cos => allowmissing(sin.(1.0:1.0:20.0)),
+        )
 
-#         table.sin[[2, 3, 7, 12, 19]] .= missing
-#         rowtab = Tables.rowtable(table)
+        table.sin[[2, 3, 7, 12, 19]] .= missing
+        rowtab = Tables.rowtable(table)
 
-#         result = impute(rowtab, tester.imp(; tester.kwargs...))
+        result = impute(rowtab, tester.imp(; tester.kwargs...))
 
-#         @testset "Base" begin
-#             # Test that we have fewer missing values
-#             @test count(ismissing, Tables.matrix(result)) < count(ismissing, Tables.matrix(rowtab))
-#             @test isa(result, Vector)
+        @testset "Base" begin
+            # Test that we have fewer missing values
+            @test count(ismissing, Tables.matrix(result)) < count(ismissing, Tables.matrix(rowtab))
+            @test isa(result, Vector)
 
-#             # Test that functional form behaves the same way
-#             @test result == tester.f(rowtab; tester.kwargs...)
-#         end
+            # Test that functional form behaves the same way
+            @test result == tester.f(rowtab; tester.kwargs...)
+        end
 
-#         @testset "In-place" begin
-#             # Test that the in-place function return the new results and logs whether it
-#             # successfully did it in-place
-#             rowtab2 = deepcopy(rowtab)
-#             rowtab2_ = tester.f!(rowtab2; tester.kwargs...)
-#             @test rowtab2_ == result
-#             if rowtab2 != result
-#                 @warn "$(tester.f!) did not mutate input data of row table"
-#             end
-#         end
-#     end
-# end
+        @testset "In-place" begin
+            # Test that the in-place function return the new results and logs whether it
+            # successfully did it in-place
+            rowtab2 = deepcopy(rowtab)
+            rowtab2_ = tester.f!(rowtab2; tester.kwargs...)
+            @test rowtab2_ == result
+            if !isequal(rowtab2, result)
+                @warn "$(tester.f!) did not mutate input data of row table"
+            end
+        end
+    end
+end

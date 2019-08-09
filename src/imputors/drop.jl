@@ -121,3 +121,10 @@ end
 # Add impute! methods to override the default behaviour in imputors.jl
 impute!(data::AbstractMatrix, imp::Union{DropObs, DropVars}) = impute(data, imp)
 impute!(data, imp::Union{DropObs, DropVars}) = impute(data, imp)
+function impute!(data::AbstractVector, imp::Union{DropObs, DropVars})
+    if istable(data)
+        return materializer(data)(impute!(Tables.columns(data), imp))
+    else
+        throw(MethodError(impute!, (data, imp)))
+    end
+end
