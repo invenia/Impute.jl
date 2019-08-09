@@ -38,7 +38,7 @@ end
 # TODO: Switch to using Base.@kwdef on 1.1
 LOCF(; context=Context()) = LOCF(context)
 
-function impute!(data::AbstractVector, imp::LOCF)
+function _impute!(data::AbstractVector, imp::LOCF)
     imp.context() do c
         start_idx = findfirst(c, data)
         if start_idx === nothing
