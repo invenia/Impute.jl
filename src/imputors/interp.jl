@@ -35,9 +35,15 @@ end
 # TODO: Switch to using Base.@kwdef on 1.1
 Interpolate(; context=Context()) = Interpolate(context)
 
+function impute!(data::AbstractVector{Missing}, imp::Interpolate)
+    @warn "Cannot interpolate points when all values are missing"
+    return data
+end
+
 function impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) where T
     imp.context() do c
         i = findfirst(c, data) + 1
+        i < lastindex(data) || @warn "Cannot interpolate points when all values are missing"
 
         while i < lastindex(data)
             if ismissing!(c, data[i])

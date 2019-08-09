@@ -37,8 +37,14 @@ Fill(; value=mean, context=Context()) = Fill(value, context)
 function impute!(data::AbstractVector, imp::Fill)
     imp.context() do c
         fill_val = if isa(imp.value, Function)
-            # Call `deepcopy` because we can trust that it's available for all types.
-            imp.value(Impute.drop(data; context=c))
+            available = Impute.drop(data; context=c)
+
+            if isempty(available)
+                @warn "Cannot apply fill function $(imp.value) as all values are missing"
+                return data
+            else
+                imp.value(available)
+            end
         else
             imp.value
         end
