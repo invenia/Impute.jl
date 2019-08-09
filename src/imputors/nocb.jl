@@ -39,7 +39,13 @@ NOCB(; context=Context()) = NOCB(context)
 
 function impute!(data::AbstractVector, imp::NOCB)
     imp.context() do c
-        end_idx = findlast(c, data) - 1
+        end_idx = findlast(c, data)
+        if end_idx === nothing
+            @warn "Cannot carry backward points when all values are missing"
+            return data
+        end
+
+        end_idx -= 1
         for i in end_idx:-1:firstindex(data)
             if ismissing!(c, data[i])
                 data[i] = data[i+1]

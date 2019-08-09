@@ -67,15 +67,15 @@ function test_vector(tester::ImputorTester)
                 @test impute(b, tester.imp(; tester.kwargs...)) == b
             end
 
-            # @testset "All missing" begin
-            #     # Test having only missing data
-            #     c = fill(missing, 10)
-            #     if tester.imp != Impute.DropObs
-            #         @test impute(c, tester.imp(; tester.kwargs...)) == c
-            #     else
-            #         @test impute(c, tester.imp(; tester.kwargs...)) == empty(c)
-            #     end
-            # end
+            @testset "All missing" begin
+                # Test having only missing data
+                c = fill(missing, 10)
+                if tester.imp != Impute.DropObs
+                    @test isequal(impute(c, tester.imp(; tester.kwargs...)), c)
+                else
+                    @test impute(c, tester.imp(; tester.kwargs...)) == empty(c)
+                end
+            end
 
             # @testset "Too many missing values" begin
             #     # Test Context error condition
@@ -126,17 +126,17 @@ function test_matrix(tester::ImputorTester)
             @test impute(b, tester.imp(; tester.kwargs...)) == b
         end
 
-        # @testset "All missing" begin
-        #     # Test having only missing data
-        #     c = fill(missing, 5, 2)
-        #     if tester.imp == DropObs
-        #         @test impute(c, tester.imp(; tester.kwargs...)) == Matrix{Missing}(missing, 0, 2)
-        #     elseif tester.imp == DropVars
-        #         @test impute(c, tester.imp(; tester.kwargs...)) == Matrix{Missing}(missing, 5, 0)
-        #     else
-        #         @test impute(c, tester.imp(; tester.kwargs...)) == c
-        #     end
-        # end
+        @testset "All missing" begin
+            # Test having only missing data
+            c = fill(missing, 5, 2)
+            if tester.imp == DropObs
+                @test impute(c, tester.imp(; tester.kwargs...)) == Matrix{Missing}(missing, 0, 2)
+            elseif tester.imp == DropVars
+                @test impute(c, tester.imp(; tester.kwargs...)) == Matrix{Missing}(missing, 5, 0)
+            else
+                @test isequal(impute(c, tester.imp(; tester.kwargs...)), c)
+            end
+        end
 
         # @testset "Too many missing values" begin
         #     # Test Context error condition
@@ -189,18 +189,21 @@ function test_dataframe(tester::ImputorTester)
             @test impute(b, tester.imp(; tester.kwargs...)) == b
         end
 
-        # @testset "All missing" begin
-        #     # Test having only missing data
-        #     c = DataFrame(
-        #         :sin => fill(missing, 10),
-        #         :cos => fill(missing, 10),
-        #     )
-        #     if tester.imp == DropObs || tester.imp == DropVars
-        #         @test impute(c, tester.imp(; tester.kwargs...)) == DataFrame()
-        #     else
-        #         @test impute(c, tester.imp(; tester.kwargs...)) == c
-        #     end
-        # end
+        @testset "All missing" begin
+            # Test having only missing data
+            c = DataFrame(
+                :sin => fill(missing, 10),
+                :cos => fill(missing, 10),
+            )
+            if tester.imp == DropObs
+                @test impute(c, tester.imp(; tester.kwargs...)) == DataFrame()
+            elseif tester.imp == DropVars
+                # https://github.com/JuliaData/Tables.jl/issues/117
+                @test_broken impute(c, tester.imp(; tester.kwargs...)) == DataFrame()
+            else
+                @test isequal(impute(c, tester.imp(; tester.kwargs...)), c)
+            end
+        end
 
         # @testset "Too many missing values" begin
         #     # Test Context error condition

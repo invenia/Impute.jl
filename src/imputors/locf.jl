@@ -40,7 +40,13 @@ LOCF(; context=Context()) = LOCF(context)
 
 function impute!(data::AbstractVector, imp::LOCF)
     imp.context() do c
-        start_idx = findfirst(c, data) + 1
+        start_idx = findfirst(c, data)
+        if start_idx === nothing
+            @warn "Cannot carry forward points when all values are missing"
+            return data
+        end
+
+        start_idx += 1
         for i in start_idx:lastindex(data)
             if ismissing!(c, data[i])
                 data[i] = data[i-1]
