@@ -25,6 +25,7 @@ function test_all(tester::ImputorTester)
     test_vector(tester)
     test_matrix(tester)
     test_dataframe(tester)
+    test_groupby(tester)
     test_axisarray(tester)
     test_columntable(tester)
     test_rowtable(tester)
@@ -118,6 +119,16 @@ function test_matrix(tester::ImputorTester)
             @test m2_ == result
             if m2 != result
                 @warn "$(tester.f!) did not mutate input data of type Matrix"
+            end
+        end
+
+        @testset "Transpose" begin
+            m_ = collect(m')
+            result_ = collect(result')
+            @test isequal(tester.f(m_; dims=2, tester.kwargs...), result_)
+
+            if tester.imp != DropVars && tester.imp != DropObs
+                @test isequal(tester.f!(m_; dims=2, tester.kwargs...), result_)
             end
         end
 
@@ -220,6 +231,42 @@ function test_dataframe(tester::ImputorTester)
                 @test_throws ImputeError impute(c, tester.imp(; kwargs...))
                 @test_throws ImputeError tester.f(c; kwargs...)
             end
+        end
+    end
+end
+
+function test_groupby(tester::ImputorTester)
+    @testset "GroupBy" begin
+        hod = repeat(1:24, 12 * 10)
+        obj = repeat(1:12, 24 * 10)
+        n = length(hod)
+
+        df = DataFrame(
+            :hod => hod,
+            :obj => obj,
+            :val => allowmissing(
+                [sin(x) * cos(y) for (x, y) in zip(hod, obj)]
+            ),
+        )
+
+        df.val[rand(1:n, 20)] .= missing
+
+        # Deleting variables in a groupby doesn't really make sense
+        if tester.imp != DropVars
+            result = mapreduce(tester.f, vcat, groupby(df, [:hod, :obj]))
+            @test !isequal(df, result)
+
+            if tester.imp == DropObs
+                @test size(result) == (24 * 12 * 10 - 20, 3)
+            else
+                @test size(result) == (24 * 12 * 10, 3)
+            end
+
+            @test count(ismissing, Tables.matrix(result)) < 20
+            @test isequal(
+                mapreduce(tester.f!, vcat, groupby(deepcopy(df), [:hod, :obj])),
+                result
+            )
         end
     end
 end
