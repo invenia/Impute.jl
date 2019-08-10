@@ -41,7 +41,7 @@ function _impute!(data::AbstractVector, imp::NOCB)
     imp.context() do c
         end_idx = findlast(c, data)
         if end_idx === nothing
-            @warn "Cannot carry backward points when all values are missing"
+            @debug "Cannot carry backward points when all values are missing"
             return data
         end
 

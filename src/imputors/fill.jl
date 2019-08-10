@@ -40,7 +40,7 @@ function _impute!(data::AbstractVector, imp::Fill)
             available = Impute.drop(data; context=c)
 
             if isempty(available)
-                @warn "Cannot apply fill function $(imp.value) as all values are missing"
+                @debug "Cannot apply fill function $(imp.value) as all values are missing"
                 return data
             else
                 imp.value(available)

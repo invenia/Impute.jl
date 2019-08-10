@@ -3,19 +3,20 @@ struct ImputorTester{I<:Imputor}
     imp::Type{I}
     f::Function
     f!::Function
-    kwargs::Dict
+    kwargs::NamedTuple
 end
 
 function ImputorTester(imp::Type{<:Imputor}; kwargs...)
     fname = lowercase(string(nameof(imp)))
-    settings = Dict(kwargs...)
-    settings[:context] = Context(; limit=1.0)
 
     return ImputorTester(
         imp,
         getfield(Impute, Symbol(fname)),
         getfield(Impute, Symbol(fname * "!")),
-        settings,
+        merge(
+            NamedTuple{keys(kwargs)}(values(kwargs)),
+            (context = Context(; limit=1.0),),
+        ),
     )
 end
 
@@ -83,10 +84,9 @@ function test_vector(tester::ImputorTester)
             @testset "Too many missing values" begin
                 # Test Context error condition
                 c = fill(missing, 10)
-                settings = deepcopy(tester.kwargs)
-                settings[:context] = Context(; limit=0.1)
-                @test_throws ImputeError impute(c, tester.imp(; settings...))
-                @test_throws ImputeError tester.f(c; settings...)
+                kwargs = merge(tester.kwargs, (context = Context(; limit=0.1),))
+                @test_throws ImputeError impute(c, tester.imp(; kwargs...))
+                @test_throws ImputeError tester.f(c; kwargs...)
             end
         end
     end
@@ -142,10 +142,9 @@ function test_matrix(tester::ImputorTester)
         @testset "Too many missing values" begin
             # Test Context error condition
             c = fill(missing, 5, 2)
-            settings = deepcopy(tester.kwargs)
-            settings[:context] = Context(; limit=0.1)
-            @test_throws ImputeError impute(c, tester.imp(; settings...))
-            @test_throws ImputeError tester.f(c; settings...)
+            kwargs = merge(tester.kwargs, (context = Context(; limit=0.1),))
+            @test_throws ImputeError impute(c, tester.imp(; kwargs...))
+            @test_throws ImputeError tester.f(c; kwargs...)
         end
     end
 end
@@ -212,15 +211,14 @@ function test_dataframe(tester::ImputorTester)
                 :sin => fill(missing, 10),
                 :cos => fill(missing, 10),
             )
-            settings = deepcopy(tester.kwargs)
-            settings[:context] = Context(; limit=0.1)
+            kwargs = merge(tester.kwargs, (context = Context(; limit=0.1),))
             if tester.imp == DropVars
                 # https://github.com/JuliaData/Tables.jl/issues/117
-                @test_throws MethodError impute(c, tester.imp(; settings...))
-                @test_throws MethodError tester.f(c; settings...)
+                @test_throws MethodError impute(c, tester.imp(; kwargs...))
+                @test_throws MethodError tester.f(c; kwargs...)
             else
-                @test_throws ImputeError impute(c, tester.imp(; settings...))
-                @test_throws ImputeError tester.f(c; settings...)
+                @test_throws ImputeError impute(c, tester.imp(; kwargs...))
+                @test_throws ImputeError tester.f(c; kwargs...)
             end
         end
     end
@@ -263,13 +261,12 @@ end
 
 function test_columntable(tester::ImputorTester)
     @testset "Column Table" begin
-        table = DataFrame(
-            :sin => allowmissing(sin.(1.0:1.0:20.0)),
-            :cos => allowmissing(sin.(1.0:1.0:20.0)),
+        coltab = (
+            sin = allowmissing(sin.(1.0:1.0:20.0)),
+            cos = allowmissing(sin.(1.0:1.0:20.0)),
         )
 
-        table.sin[[2, 3, 7, 12, 19]] .= missing
-        coltab = Tables.columntable(table)
+        coltab.sin[[2, 3, 7, 12, 19]] .= missing
 
         result = impute(coltab, tester.imp(; tester.kwargs...))
 

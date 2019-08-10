@@ -42,7 +42,7 @@ function _impute!(data::AbstractVector, imp::LOCF)
     imp.context() do c
         start_idx = findfirst(c, data)
         if start_idx === nothing
-            @warn "Cannot carry forward points when all values are missing"
+            @debug "Cannot carry forward points when all values are missing"
             return data
         end
 
