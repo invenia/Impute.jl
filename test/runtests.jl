@@ -7,6 +7,7 @@ using Dates
 using RDatasets
 using Statistics
 using StatsBase
+using Random
 
 import Impute:
     Drop,
@@ -16,6 +17,7 @@ import Impute:
     Fill,
     LOCF,
     NOCB,
+    SRS,
     Context,
     WeightedContext,
     ImputeError
@@ -45,7 +47,7 @@ import Impute:
     table.sin[[2, 3, 7, 12, 19]] .= missing
 
     @testset "Equality" begin
-        @testset "$T" for T in (DropObs, DropVars, Interpolate, Fill, LOCF, NOCB)
+        @testset "$T" for T in (DropObs, DropVars, Interpolate, Fill, LOCF, NOCB, SRS)
             @test T() == T()
         end
     end
@@ -318,6 +320,23 @@ import Impute:
 
         a2 = copy(a)
         Impute.nocb!(a2; context=ctx)
+        @test a2 == result
+    end
+
+    @testset "SRS" begin
+        result = impute(a, SRS(; rng=MersenneTwister(137), context=ctx))
+        expected = copy(a)
+        expected[2] = 9.0
+        expected[3] = 16.0
+        expected[7] = 17.0
+
+        @test result == expected
+
+        @test result == Impute.srs(a; rng=MersenneTwister(137), context=ctx)
+
+        a2 = copy(a)
+
+        Impute.srs!(a2; rng=MersenneTwister(137), context=ctx)
         @test a2 == result
     end
 
