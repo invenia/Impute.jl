@@ -393,13 +393,13 @@ import Impute:
                 f1 = Impute.interp(; context=ctx) ∘ Impute.locf!() ∘ Impute.nocb!()
                 f2 = Impute.interp!(; context=ctx) ∘ Impute.locf!() ∘ Impute.nocb!()
 
-                result = vcat(f1.(gdf1)...)
+                result = mapreduce(f1, vcat, gdf1)
                 @test df != result
                 @test size(result) == (24 * 12 * 10, 3)
                 @test all(!ismissing, Tables.matrix(result))
 
                 # Test that we can also mutate the dataframe directly
-                f2.(gdf2)
+                map(f2, gdf2)
                 @test result == sort(df, (:hod, :obj))
             end
         end
