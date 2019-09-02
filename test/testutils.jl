@@ -127,7 +127,7 @@ function test_matrix(tester::ImputorTester)
             result_ = collect(result')
             @test isequal(tester.f(m_; dims=2, tester.kwargs...), result_)
 
-            if tester.imp != DropVars && tester.imp != DropObs
+            if !(tester.imp in (DropVars, DropObs, SRS))
                 @test isequal(tester.f!(m_; dims=2, tester.kwargs...), result_)
             end
         end
@@ -210,7 +210,7 @@ function test_dataframe(tester::ImputorTester)
                 @test impute(c, tester.imp(; tester.kwargs...)) == DataFrame()
             elseif tester.imp == DropVars
                 # https://github.com/JuliaData/Tables.jl/issues/117
-                @test_broken impute(c, tester.imp(; tester.kwargs...)) == DataFrame()
+                @test impute(c, tester.imp(; tester.kwargs...)) == DataFrame()
             else
                 @test isequal(impute(c, tester.imp(; tester.kwargs...)), c)
             end
@@ -223,14 +223,8 @@ function test_dataframe(tester::ImputorTester)
                 :cos => fill(missing, 10),
             )
             kwargs = merge(tester.kwargs, (context = Context(; limit=0.1),))
-            if tester.imp == DropVars
-                # https://github.com/JuliaData/Tables.jl/issues/117
-                @test_throws MethodError impute(c, tester.imp(; kwargs...))
-                @test_throws MethodError tester.f(c; kwargs...)
-            else
-                @test_throws ImputeError impute(c, tester.imp(; kwargs...))
-                @test_throws ImputeError tester.f(c; kwargs...)
-            end
+            @test_throws ImputeError impute(c, tester.imp(; kwargs...))
+            @test_throws ImputeError tester.f(c; kwargs...)
         end
     end
 end
