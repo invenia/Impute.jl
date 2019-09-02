@@ -123,28 +123,13 @@ using Impute:
         expected = copy(a)
         expected[[2, 3, 7]] = [4.0, 4.0, 8.0]
         @test result == expected
-        @test result == Impute.nocb(a; context=ctx)
-
-        a2 = copy(a)
-        Impute.nocb!(a2; context=ctx)
-        @test a2 == result
     end
 
     @testset "SRS" begin
-        result = impute(a, SRS(; rng=MersenneTwister(137), context=ctx))
+        result = Impute.srs(a; rng=MersenneTwister(137))
         expected = copy(a)
-        expected[2] = 9.0
-        expected[3] = 16.0
-        expected[7] = 17.0
-
+        expected[[2, 3, 7]] = [9.0, 16.0, 17.0]
         @test result == expected
-
-        @test result == Impute.srs(a; rng=MersenneTwister(137), context=ctx)
-
-        a2 = copy(a)
-
-        Impute.srs!(a2; rng=MersenneTwister(137), context=ctx)
-        @test a2 == result
     end
 
     @testset "Not enough data" begin
