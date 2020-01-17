@@ -9,25 +9,6 @@ using Tables: Tables, materializer, istable
 import Base.Iterators: drop
 import DataFrames: dropmissing
 
-export impute, impute!, chain, chain!, drop, drop!, interp, interp!, ImputeError
-
-function __init__()
-    sym = join(["chain", "chain!", "drop", "drop!", "interp", "interp!"], ", ", " and ")
-
-    @warn(
-        """
-        The following symbols will not be exported in future releases: $sym.
-        Please qualify your calls with `Impute.<method>(...)` or explicitly import the symbol.
-        """
-    )
-
-    @warn(
-        """
-        The default limit for all impute functions will be 1.0 going forward.
-        If you depend on a specific threshold please pass in an appropriate `AbstractContext`.
-        """
-    )
-end
 
 """
     ImputeError{T} <: Exception
