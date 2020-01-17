@@ -9,7 +9,7 @@ using Statistics
 using StatsBase
 using Random
 
-import Impute:
+using Impute:
     Drop,
     DropObs,
     DropVars,
@@ -20,7 +20,9 @@ import Impute:
     SRS,
     Context,
     WeightedContext,
-    ImputeError
+    ImputeError,
+    interp,
+    chain
 
 
 @testset "Impute" begin
