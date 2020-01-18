@@ -116,7 +116,7 @@ weighted.
 * `on_complete::Function`: a function to run when imputation is complete
 """
 function Context(;
-    limit::Float64=0.1,
+    limit::Float64=1.0,
     is_missing::Function=ismissing,
     on_complete::Function=complete
 )
