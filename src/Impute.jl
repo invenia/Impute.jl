@@ -7,7 +7,6 @@ using StatsBase
 using Tables: Tables, materializer, istable
 
 import Base.Iterators: drop
-import DataFrames: dropmissing
 
 
 """
