@@ -92,7 +92,7 @@ julia> using DataFrames; using Impute: Impute, Context
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
-│     │ Float64⍰ │ Float64⍰ │
+│     │ Float64  │ Float64  │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -124,7 +124,7 @@ julia> using DataFrames; using Impute: Impute, Context
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
-│     │ Float64⍰ │ Float64⍰ │
+│     │ Float64  │ Float64  │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -135,7 +135,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 julia> Impute.dropvars(df; context=Context(; limit=0.2))
 5×1 DataFrames.DataFrame
 │ Row │ b        │
-│     │ Float64⍰ │
+│     │ Float64  │
 ├─────┼──────────┤
 │ 1   │ 1.1      │
 │ 2   │ 2.2      │
@@ -158,7 +158,7 @@ julia> using DataFrames; using Impute: Impute, Context
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
-│     │ Float64⍰ │ Float64⍰ │
+│     │ Float64  │ Float64  │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -169,7 +169,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 julia> Impute.interp(df; context=Context(; limit=1.0))
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
-│     │ Float64⍰ │ Float64⍰ │
+│     │ Float64  │ Float64  │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -191,7 +191,7 @@ julia> using DataFrames; using Impute: Impute, Context
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
-│     │ Float64⍰ │ Float64⍰ │
+│     │ Float64  │ Float64  │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -202,7 +202,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 julia> Impute.fill(df; value=-1.0, context=Context(; limit=1.0))
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
-│     │ Float64⍰ │ Float64⍰ │
+│     │ Float64  │ Float64  │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -225,7 +225,7 @@ julia> using DataFrames; using Impute: Impute, Context
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
-│     │ Float64⍰ │ Float64⍰ │
+│     │ Float64  │ Float64  │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -236,7 +236,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 julia> Impute.locf(df; context=Context(; limit=1.0))
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
-│     │ Float64⍰ │ Float64⍰ │
+│     │ Float64  │ Float64  │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -259,7 +259,7 @@ julia> using DataFrames; using Impute: Impute, Context
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
-│     │ Float64⍰ │ Float64⍰ │
+│     │ Float64  │ Float64  │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -270,7 +270,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 julia> Impute.nocb(df; context=Context(; limit=1.0))
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
-│     │ Float64⍰ │ Float64⍰ │
+│     │ Float64  │ Float64  │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -294,7 +294,7 @@ julia> using DataFrames; using Random; using Impute: Impute, Context
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
-│     │ Float64⍰ │ Float64⍰ │
+│     │ Float64  │ Float64  │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -305,7 +305,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 julia> Impute.srs(df; rng=MersenneTwister(1234), context=Context(; limit=1.0))
 5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64⍰ │ Float64⍰ │
+│     │ Float64  │ Float64  │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
