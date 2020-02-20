@@ -42,7 +42,7 @@ SRS(; rng=Random.GLOBAL_RNG, context=Context()) = SRS(rng, context)
 
 function impute!(data::AbstractVector, imp::SRS)
     imp.context() do c
-        obs_values = Impute.dropobs(data)
+        obs_values = Impute.dropobs(data; context=imp.context)
         if !isempty(obs_values)
             for i in eachindex(data)
                 if ismissing!(c, data[i])

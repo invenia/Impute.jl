@@ -76,6 +76,15 @@ function impute(data, imp::Imputor; kwargs...)
     return impute!(deepcopy(data), imp; kwargs...)
 end
 
+# Wrapper method intended to handle ambiguities between vector and row tables.
+function impute!(data::AbstractVector, imp::Imputor)
+    if istable(data)
+        return materializer(data)(impute!(Tables.columns(data), imp))
+    else
+        return _impute!(data, imp)
+    end
+end
+
 """
     impute!(data::AbstractMatrix, imp::Imputor; kwargs...)
 

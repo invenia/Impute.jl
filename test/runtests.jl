@@ -10,6 +10,8 @@ using StatsBase
 using Random
 
 using Impute:
+    Impute,
+    Imputor,
     Drop,
     DropObs,
     DropVars,
@@ -516,4 +518,9 @@ using Impute:
     end
 
     include("deprecated.jl")
+    include("testutils.jl")
+
+    @testset "$T" for T in (DropObs, DropVars, Interpolate, Fill, LOCF, NOCB)
+        test_all(ImputorTester(T))
+    end
 end
