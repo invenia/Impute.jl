@@ -1,14 +1,18 @@
-using Impute
-using Tables
-using Test
+
 using AxisArrays
+using Combinatorics
 using DataFrames
 using Dates
+using Distances
+using LinearAlgebra
 using RDatasets
+using Random
 using Statistics
 using StatsBase
-using Random
+using Tables
+using Test
 
+using Impute
 using Impute:
     Impute,
     Imputor,
@@ -26,6 +30,16 @@ using Impute:
     interp,
     chain
 
+
+function add_missings(X, ratio=0.1)
+    result = Matrix{Union{Float64, Missing}}(X)
+
+    for i in 1:floor(Int, length(X) * ratio)
+        result[rand(1:length(X))] = missing
+    end
+
+    return result
+end
 
 @testset "Impute" begin
     # Defining our missing datasets
@@ -522,5 +536,64 @@ using Impute:
 
     @testset "$T" for T in (DropObs, DropVars, Interpolate, Fill, LOCF, NOCB)
         test_all(ImputorTester(T))
+    end
+
+    @testset "SVD" begin
+        # Test a case where we expect SVD to perform well (e.g., many variables, )
+        @testset "Data match" begin
+            data = mapreduce(hcat, 1:1000) do i
+                seeds = [sin(i), cos(i), tan(i), atan(i)]
+                mapreduce(vcat, combinations(seeds)) do args
+                    [
+                        +(args...),
+                        *(args...),
+                        +(args...) * 100,
+                        +(abs.(args)...),
+                        (+(args...) * 10) ^ 2,
+                        (+(abs.(args)...) * 10) ^ 2,
+                        log(+(abs.(args)...) * 100),
+                        +(args...) * 100 + rand(-10:0.1:10),
+                    ]
+                end
+            end
+
+            # println(svd(data').S)
+            X = add_missings(data')
+
+            svd_imputed = Impute.svd(X)
+            mean_imputed = impute(copy(X), :fill; limit=1.0)
+
+            # With sufficient correlation between the variables and enough observation we
+            # expect the svd imputation to perform severl times better than mean imputation.
+            @test nrmsd(svd_imputed, data') < nrmsd(mean_imputed, data') * 0.5
+        end
+
+        # Test a case where we know SVD imputation won't perform well
+        # (e.g., only a few variables, only )
+        @testset "Data mismatch - too few variables" begin
+            data = Matrix(dataset("Ecdat", "Electricity"))
+            X = add_missings(data)
+
+            svd_imputed = Impute.svd(X)
+            mean_imputed = impute(copy(X), :fill; limit=1.0)
+
+            # If we don't have enough variables then SVD imputation will probably perform
+            # about as well as mean imputation.
+            @test nrmsd(svd_imputed, data) > nrmsd(mean_imputed, data) * 0.9
+        end
+
+        @testset "Data mismatch - poor low rank approximations" begin
+            M = rand(100, 200)
+            data = M * M'
+            X = add_missings(data)
+
+            svd_imputed = Impute.svd(X)
+            mean_imputed = impute(copy(X), :fill; limit=1.0)
+
+            # If most of the variance in the original data can't be explained by a small
+            # subset of the eigen values in the svd decomposition then our low rank approximations
+            # won't perform very well.
+            @test nrmsd(svd_imputed, data) > nrmsd(mean_imputed, data) * 0.9
+        end
     end
 end
