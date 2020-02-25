@@ -1,6 +1,9 @@
 module Impute
 
+using Distances
 using IterTools
+using Missings
+using NearestNeighbors
 using Random
 using Statistics
 using StatsBase
@@ -67,6 +70,7 @@ const global imputation_methods = (
     nocb = NOCB,
     srs = SRS,
     svd = SVD,
+    knn = KNN,
 )
 
 include("deprecated.jl")
@@ -332,5 +336,19 @@ svd!(data::AbstractMatrix; limit=1.0) = impute!(data, :svd; limit=limit)
 Utility method for `impute(data, :svd; limit=limit)`
 """
 svd(data::AbstractMatrix; limit=1.0) = impute(data, :svd; limit=limit)
+
+"""
+    knn!(data::AbstractMatrix; limit=1.0)
+
+Utility method for `impute!(data, :knn; limit=limit)`
+"""
+knn!(data::AbstractMatrix; limit=1.0) = impute!(data, :knn; limit=limit)
+
+"""
+    knn(data::AbstractMatrix; limit=1.0)
+
+Utility method for `impute(data, :knn; limit=limit)`
+"""
+knn(data::AbstractMatrix; limit=1.0) = impute(data, :knn; limit=limit)
 
 end  # module
