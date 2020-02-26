@@ -9,6 +9,7 @@ using RDatasets
 using Random
 using Statistics
 using StatsBase
+using TableOperations
 using Tables
 using Test
 
@@ -207,7 +208,7 @@ end
                     coltab = Tables.columntable(table)
 
                     result = impute(coltab, DropVars(; context=ctx))
-                    expected = Tables.columntable(Tables.select(coltab, :cos))
+                    expected = Tables.columntable(TableOperations.select(coltab, :cos))
 
                     @test isequal(result, expected)
                     @test isequal(result, Impute.dropvars(coltab; context=ctx))
@@ -221,7 +222,7 @@ end
                 @testset "Row Table" begin
                     rowtab = Tables.rowtable(table)
                     result = impute(rowtab, DropVars(; context=ctx))
-                    expected = Tables.rowtable(Tables.select(rowtab, :cos))
+                    expected = Tables.rowtable(TableOperations.select(rowtab, :cos))
 
                     @test isequal(result, expected)
                     @test isequal(result, Impute.dropvars(rowtab; context=ctx))
