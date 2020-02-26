@@ -4,6 +4,7 @@ using IterTools
 using Random
 using Statistics
 using StatsBase
+using TableOperations
 using Tables: Tables, materializer, istable
 
 using Base.Iterators

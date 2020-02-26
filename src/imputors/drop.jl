@@ -112,7 +112,7 @@ function impute(table, imp::DropVars)
             !ismissing!(c, getproperty(cols, cname))
         end
 
-        selected = Tables.select(table, cnames...)
+        selected = TableOperations.select(table, cnames...)
         table = materializer(table)(selected)
         return table
     end
