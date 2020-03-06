@@ -333,4 +333,6 @@ Utility method for `impute(data, :svd; limit=limit)`
 """
 svd(data::AbstractMatrix; limit=1.0) = impute(data, :svd; limit=limit)
 
+include("iter.jl")
+
 end  # module
