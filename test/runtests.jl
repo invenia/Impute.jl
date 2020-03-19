@@ -1,4 +1,3 @@
-
 using AxisArrays
 using Combinatorics
 using DataFrames
@@ -31,12 +30,22 @@ using Impute:
     interp,
     chain
 
-
 function add_missings(X, ratio=0.1)
     result = Matrix{Union{Float64, Missing}}(X)
 
     for i in 1:floor(Int, length(X) * ratio)
         result[rand(1:length(X))] = missing
+    end
+
+    return result
+end
+
+function add_missings_single(X, ratio=0.1)
+    result = Matrix{Union{Float64, Missing}}(X)
+
+    randcols = 1:floor(Int, size(X, 2) * ratio)
+    for col in randcols
+        result[rand(1:size(X, 1)), col] = missing
     end
 
     return result
@@ -529,6 +538,120 @@ end
         @testset "filtervars" begin
             @test Impute.filtervars(x -> sum(x) > 15.0, M; dims=2) == M[[false, true], :]
             @test Impute.filtervars(x -> sum(x) > 5.0, M; dims=1) == M[:, 3:5]
+        end
+    end
+
+    @testset "KNN" begin
+        @testset "Iris" begin
+            # Reference
+            # P. Schimitt, et. al
+            # A comparison of six methods for missing data imputation
+            iris = dataset("datasets", "iris")
+            iris2 = filter(row -> row[:Species] == "versicolor" || row[:Species] == "virginica", iris)
+            data = Array(iris2[:, [:SepalLength, :SepalWidth, :PetalLength, :PetalWidth]])
+            num_tests = 100
+
+            @testset "Iris - 0.15" begin
+                X = add_missings(data, 0.15)
+
+                knn_nrmsd, mean_nrmsd = 0.0, 0.0
+
+                for i = 1:num_tests
+                    knn_imputed = impute(copy(X), Impute.KNN(; k=2))
+                    mean_imputed = impute(copy(X),
+                        Fill(; value=mean, context=Context(; limit=1.0)))
+
+                    knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data, knn_imputed)) / i
+                    mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data, mean_imputed)) / i
+                end
+
+                @test knn_nrmsd < mean_nrmsd
+                # test type stability
+                @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2)))
+                @test typeof(X) == typeof(impute(copy(X), Fill(; value=mean,
+                    context=Context(; limit=1.0))))
+            end
+
+            @testset "Iris - 0.25" begin
+                X = add_missings(data, 0.25)
+
+                knn_nrmsd, mean_nrmsd = 0.0, 0.0
+
+                for i = 1:num_tests
+                    knn_imputed = impute(copy(X), Impute.KNN(; k=2))
+                    mean_imputed = impute(copy(X),
+                        Fill(; value=mean, context=Context(; limit=1.0)))
+
+                    knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data, knn_imputed)) / i
+                    mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data, mean_imputed)) / i
+                end
+
+                @test knn_nrmsd < mean_nrmsd
+                # test type stability
+                @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2)))
+                @test typeof(X) == typeof(impute(copy(X), Fill(; value=mean,
+                    context=Context(; limit=1.0))))
+            end
+
+            @testset "Iris - 0.35" begin
+                X = add_missings(data, 0.35)
+
+                knn_nrmsd, mean_nrmsd = 0.0, 0.0
+
+                for i = 1:num_tests
+                    knn_imputed = impute(copy(X), Impute.KNN(; k=2))
+                    mean_imputed = impute(copy(X),
+                        Fill(; value=mean, context=Context(; limit=1.0)))
+
+                    knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data, knn_imputed)) / i
+                    mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data, mean_imputed)) / i
+                end
+
+                @test knn_nrmsd < mean_nrmsd
+                # test type stability
+                @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2)))
+                @test typeof(X) == typeof(impute(copy(X), Fill(; value=mean,
+                    context=Context(; limit=1.0))))
+            end
+        end
+
+        # Test a case where we expect kNN to perform well (e.g., many variables, )
+        @testset "Data match" begin
+            data = mapreduce(hcat, 1:1000) do i
+                seeds = [sin(i), cos(i), tan(i), atan(i)]
+                mapreduce(vcat, combinations(seeds)) do args
+                    [
+                        +(args...),
+                        *(args...),
+                        +(args...) * 100,
+                        +(abs.(args)...),
+                        (+(args...) * 10) ^ 2,
+                        (+(abs.(args)...) * 10) ^ 2,
+                        log(+(abs.(args)...) * 100),
+                        +(args...) * 100 + rand(-10:0.1:10),
+                    ]
+                end
+            end
+
+            X = add_missings(data')
+            num_tests = 100
+
+            knn_nrmsd, mean_nrmsd = 0.0, 0.0
+
+            for i = 1:num_tests
+                knn_imputed = impute(copy(X), Impute.KNN(; k=2))
+                mean_imputed = impute(copy(X),
+                    Fill(; value=mean, context=Context(; limit=1.0)))
+
+                knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data', knn_imputed)) / i
+                mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data', mean_imputed)) / i
+            end
+
+            @test knn_nrmsd < mean_nrmsd
+            # test type stability
+            @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2)))
+            @test typeof(X) == typeof(impute(copy(X), Fill(; value=mean,
+                context=Context(; limit=1.0))))
         end
     end
 
