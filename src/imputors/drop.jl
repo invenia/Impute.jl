@@ -34,6 +34,10 @@ function impute!(data::Vector, imp::DropObs)
     imp.context(c -> filter!(x -> !ismissing!(c, x), data))
 end
 
+function impute!(data::Vector{<:NamedTuple}, imp::DropObs)
+    return materializer(data)(impute(Tables.columns(data), imp))
+end
+
 function impute(data::AbstractVector, imp::DropObs)
     imp.context(c -> filter(x -> !ismissing!(c, x), data))
 end
@@ -95,6 +99,10 @@ end
 # TODO: Switch to using Base.@kwdef on 1.1
 DropVars(; context=Context()) = DropVars(context)
 
+function impute!(data::Vector{<:NamedTuple}, imp::DropVars)
+    return materializer(data)(impute(Tables.columns(data), imp))
+end
+
 function impute(data::AbstractMatrix, imp::DropVars; dims=1)
     imp.context() do c
         return filtervars(data; dims=dims) do vars
@@ -121,10 +129,3 @@ end
 # Add impute! methods to override the default behaviour in imputors.jl
 impute!(data::AbstractMatrix, imp::Union{DropObs, DropVars}) = impute(data, imp)
 impute!(data, imp::Union{DropObs, DropVars}) = impute(data, imp)
-function impute!(data::AbstractVector, imp::Union{DropObs, DropVars})
-    if istable(data)
-        return materializer(data)(impute(Tables.columns(data), imp))
-    else
-        throw(MethodError(impute!, (data, imp)))
-    end
-end
