@@ -1,7 +1,7 @@
 name = "Impute"
 uuid = "f7bf1975-0170-51b9-8c5f-a992d46b9575"
 authors = ["Invenia Technical Computing"]
-version = "0.5.0"
+version = "0.5.1"
 
 [deps]
 Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
@@ -16,7 +16,7 @@ TableOperations = "ab02a1b2-a7df-11e8-156e-fb1833f50b87"
 Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 
 [compat]
-Distances = "0.8"
+Distances = "0.9"
 IterTools = "1.2, 1.3"
 Missings = "0.4"
 NearestNeighbors = "0.4"
