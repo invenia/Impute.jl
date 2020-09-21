@@ -51,6 +51,17 @@ function add_missings_single(X, ratio=0.1)
     return result
 end
 
+# A sequential RNG for consistent testing across julia versions
+mutable struct SequentialRNG <: AbstractRNG
+    idx::Int
+end
+SequentialRNG(; start_idx=1) = SequentialRNG(start_idx)
+
+function Base.rand(srng::SequentialRNG, x::Vector)
+    srng.idx = srng.idx < length(x) ? srng.idx + 1 : 1
+    return x[srng.idx]
+end
+
 @testset "Impute" begin
     # Defining our missing datasets
     a = allowmissing(1.0:1.0:20.0)
@@ -352,19 +363,19 @@ end
     end
 
     @testset "SRS" begin
-        result = impute(a, SRS(; rng=MersenneTwister(137), context=ctx))
+        result = impute(a, SRS(; rng=SequentialRNG(), context=ctx))
         expected = copy(a)
-        expected[2] = 9.0
-        expected[3] = 16.0
-        expected[7] = 17.0
+        expected[2] = 4.0
+        expected[3] = 5.0
+        expected[7] = 6.0
 
         @test result == expected
 
-        @test result == Impute.srs(a; rng=MersenneTwister(137), context=ctx)
+        @test result == Impute.srs(a; rng=SequentialRNG(), context=ctx)
 
         a2 = copy(a)
 
-        Impute.srs!(a2; rng=MersenneTwister(137), context=ctx)
+        Impute.srs!(a2; rng=SequentialRNG(), context=ctx)
         @test a2 == result
     end
 
