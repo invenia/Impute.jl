@@ -1,4 +1,5 @@
 using AxisArrays
+using AxisKeys
 using Combinatorics
 using DataFrames
 using Dates
@@ -482,6 +483,15 @@ end
                 Axis{:row}(1:size(orig, 1)),
                 Axis{:V}(names(orig)),
             )
+            result = Impute.interp(data; context=ctx) |> Impute.locf!() |> Impute.nocb!()
+
+            @test size(result) == size(data)
+            # Confirm that we don't have any more missing values
+            @test all(!ismissing, result)
+        end
+
+        @testset "KeyedArray" begin
+            data = KeyedArray(Matrix(orig); row=1:size(orig, 1), V=names(orig))
             result = Impute.interp(data; context=ctx) |> Impute.locf!() |> Impute.nocb!()
 
             @test size(result) == size(data)

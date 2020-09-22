@@ -76,14 +76,8 @@ function impute(data, imp::Imputor; kwargs...)
     return impute!(deepcopy(data), imp; kwargs...)
 end
 
-# Wrapper method intended to handle ambiguities between vector and row tables.
-function impute!(data::AbstractVector, imp::Imputor)
-    if istable(data)
-        return materializer(data)(impute!(Tables.columns(data), imp))
-    else
-        return _impute!(data, imp)
-    end
-end
+# Generic fallback for methods that have only defined _impute(v, imp; kwargs...)
+impute!(data::AbstractVector, imp::Imputor; kwargs...) = _impute!(data, imp; kwargs...)
 
 """
     impute!(data::AbstractMatrix, imp::Imputor; kwargs...)
@@ -173,6 +167,13 @@ function impute!(table, imp::Imputor)
     end
 
     return table
+end
+
+# Special case row tables
+# NOTE: This may introduce ambiguities for specific imputors that have defined a
+# `impute!(data, imp)`` method
+function impute!(data::Vector{<:NamedTuple}, imp::Imputor)
+    return materializer(data)(impute!(Tables.columns(data), imp))
 end
 
 for file in ("drop.jl", "locf.jl", "nocb.jl", "interp.jl", "fill.jl", "chain.jl", "srs.jl", "svd.jl", "knn.jl")
