@@ -231,19 +231,19 @@ end
 
 function test_groupby(tester::ImputorTester)
     @testset "GroupBy" begin
-        hod = repeat(1:24, 12 * 10)
-        obj = repeat(1:12, 24 * 10)
-        n = length(hod)
+        T = NamedTuple{(:hod, :obj, :val), Tuple{Int, Int, Union{Float64, Missing}}}
 
-        df = DataFrame(
-            :hod => hod,
-            :obj => obj,
-            :val => allowmissing(
-                [sin(x) * cos(y) for (x, y) in zip(hod, obj)]
-            ),
-        )
+        rows = map(Iterators.product(1:24, 1:8, 0:19)) do t
+            hod, obj, x = t
+            # Deterministically return some `missing`s per hod/obj pair
+            return if x in (0, 5, 12, 19)
+                T((hod, obj, missing))
+            else
+                T((hod, obj, sin(hod) * cos(x) + obj))
+            end
+        end
 
-        df.val[rand(1:n, 20)] .= missing
+        df = DataFrame(rows)
 
         # Deleting variables in a groupby doesn't really make sense
         if tester.imp != DropVars
@@ -251,12 +251,17 @@ function test_groupby(tester::ImputorTester)
             @test !isequal(df, result)
 
             if tester.imp == DropObs
-                @test size(result) == (24 * 12 * 10 - 20, 3)
+                # If we've dropped some observations then we should get back
+                # all, but the 4 missing observations per 24 hods and 8 objs.
+                @test size(result) == (24 * 8 * 16, 3)
             else
-                @test size(result) == (24 * 12 * 10, 3)
+                @test size(result) == size(df)
             end
 
-            @test count(ismissing, Tables.matrix(result)) < 20
+            # Test that we successfully imputed something.
+            # We expect LOCF and NOCB to leave `missing`s at the start and end of each
+            # group respectively.
+            @test count(ismissing, Tables.matrix(result)) < count(ismissing, df.val)
             @test isequal(
                 mapreduce(tester.f!, vcat, groupby(deepcopy(df), [:hod, :obj])),
                 result
