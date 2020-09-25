@@ -17,7 +17,6 @@ using Impute
 using Impute:
     Impute,
     Imputor,
-    Drop,
     DropObs,
     DropVars,
     Interpolate,
@@ -28,6 +27,8 @@ using Impute:
     Context,
     WeightedContext,
     ImputeError,
+    impute,
+    impute!,
     interp,
     chain
 
@@ -711,7 +712,7 @@ end
             X = add_missings(data')
 
             svd_imputed = Impute.svd(X)
-            mean_imputed = impute(copy(X), :fill; limit=1.0)
+            mean_imputed = Impute.fill(copy(X))
 
             # With sufficient correlation between the variables and enough observation we
             # expect the svd imputation to perform severl times better than mean imputation.
@@ -725,7 +726,7 @@ end
             X = add_missings(data)
 
             svd_imputed = Impute.svd(X)
-            mean_imputed = impute(copy(X), :fill; limit=1.0)
+            mean_imputed = Impute.fill(copy(X))
 
             # If we don't have enough variables then SVD imputation will probably perform
             # about as well as mean imputation.
@@ -738,7 +739,7 @@ end
             X = add_missings(data)
 
             svd_imputed = Impute.svd(X)
-            mean_imputed = impute(copy(X), :fill; limit=1.0)
+            mean_imputed = Impute.fill(copy(X))
 
             # If most of the variance in the original data can't be explained by a small
             # subset of the eigen values in the svd decomposition then our low rank approximations
