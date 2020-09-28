@@ -324,32 +324,4 @@ julia> Impute.srs(df; rng=MersenneTwister(1234), context=Context(; limit=1.0))
 ```
 """ srs
 
-"""
-    svd!(data::AbstractMatrix; limit=1.0)
-
-Utility method for `impute!(data, :svd; limit=limit)`
-"""
-svd!(data::AbstractMatrix; limit=1.0) = impute!(data, :svd; limit=limit)
-
-"""
-    svd(data::AbstractMatrix; limit=1.0)
-
-Utility method for `impute(data, :svd; limit=limit)`
-"""
-svd(data::AbstractMatrix; limit=1.0) = impute(data, :svd; limit=limit)
-
-"""
-    knn!(data::AbstractMatrix; limit=1.0)
-
-Utility method for `impute!(data, :knn; limit=limit)`
-"""
-knn!(data::AbstractMatrix; limit=1.0) = impute!(data, :knn; limit=limit)
-
-"""
-    knn(data::AbstractMatrix; limit=1.0)
-
-Utility method for `impute(data, :knn; limit=limit)`
-"""
-knn(data::AbstractMatrix; limit=1.0) = impute(data, :knn; limit=limit)
-
 end  # module
