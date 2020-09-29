@@ -24,7 +24,9 @@ using Impute:
     LOCF,
     NOCB,
     SRS,
+    Threshold,
     ImputeError,
+    assert,
     impute,
     impute!,
     interp,
@@ -371,13 +373,6 @@ end
         @test a2 == result
     end
 
-    # TODO: Re-write these for an Impute.assert function
-    # @testset "Not enough data" begin
-    #     ctx = Context(; limit=0.1)
-    #     @test_throws ImputeError impute(a, DropObs(; context=ctx))
-    #     @test_throws ImputeError Impute.dropobs(a; context=ctx)
-    # end
-
     @testset "Chain" begin
         orig = dataset("boot", "neuro")
 
@@ -511,30 +506,47 @@ end
     #     @test result1 == result2
     # end
 
-    # TODO: Replace these examples with an Impute.assert design
-    # @testset "Contexts" begin
-    #     @testset "Base" begin
-    #         ctx = Context(; limit=0.1)
-    #         @test_throws ImputeError Impute.dropobs(a; context=ctx)
-    #         @test_throws ImputeError impute(a, DropObs(; context=ctx))
-    #     end
+    @testset "Assertions" begin
+        @testset "Base" begin
+            t = Threshold(0.1)
+            @test_throws AssertionError assert(a, t)
+            @test_throws AssertionError assert(m, t)
+            @test_throws AssertionError assert(aa, t)
+            @test_throws AssertionError assert(table, t)
 
-    #     @testset "Weighted" begin
-    #         # If we use an exponentially weighted context then we won't pass the limit
-    #         # because missing earlier observations is less important than later ones.
-    #         ctx = WeightedContext(eweights(20, 0.3); limit=0.1)
-    #         @test isa(ctx, WeightedContext)
-    #         result = impute(a, DropObs(; context=ctx))
-    #         expected = copy(a)
-    #         deleteat!(expected, [2, 3, 7])
-    #         @test result == expected
+            t = Threshold(0.8)
+            # Use isequal because we expect the results to contain missings
+            @test isequal(assert(a, t), a)
+            @test isequal(assert(m, t), m)
+            @test isequal(assert(aa, t), aa)
+            @test isequal(assert(table, t), table)
+        end
 
-    #         # If we reverse the weights such that earlier observations are more important
-    #         # then our previous limit of 0.2 won't be enough to succeed.
-    #         ctx = WeightedContext(reverse!(eweights(20, 0.3)); limit=0.2)
-    #         @test_throws ImputeError impute(a, DropObs(; context=ctx))
-    #     end
-    # end
+        @testset "Weighted" begin
+            # If we use an exponentially weighted context then we won't pass the limit
+            # because missing earlier observations is less important than later ones.
+            t = Threshold(0.8; weights=eweights(20, 0.3))
+            @test isequal(assert(a, t), a)
+            @test isequal(assert(table, t), table)
+
+            t = Threshold(0.8; weights=eweights(5, 0.3))
+            @test isequal(assert(m, t), m)
+            @test isequal(assert(aa, t), aa)
+
+            # If we reverse the weights such that earlier observations are more important
+            # then our previous limit of 0.2 won't be enough to succeed.
+            t = Threshold(0.1; weights=reverse!(eweights(20, 0.3)))
+            @test_throws AssertionError assert(a, t)
+            @test_throws AssertionError assert(table, t)
+
+            t = Threshold(0.1; weights=reverse!(eweights(5, 0.3)))
+            @test_throws AssertionError assert(m, t)
+            @test_throws AssertionError assert(aa, t)
+
+            @test_throws DimensionMismatch assert(a[1:10], t)
+            @test_throws DimensionMismatch assert(m[1:3, :], t)
+        end
+    end
 
     @testset "Utils" begin
         M = [1.0 2.0 3.0 4.0 5.0; 1.1 2.2 3.3 4.4 5.5]
