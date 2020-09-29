@@ -4,6 +4,9 @@
 An imputor stores information about imputing values in `AbstractArray`s and `Tables.table`s.
 New imputation methods are expected to sutype `Imputor` and, at minimum,
 implement the `impute!(imp::<MyImputor>, data::AbstractVector)` method.
+
+Impute.
+
 """
 abstract type Imputor end
 
@@ -97,14 +100,14 @@ if this is not the desired behaviour custom imputor methods should overload this
 
 # Example
 ```jldoctest
-julia> using Impute: Interpolate, Context, impute
+julia> using Impute: Interpolate, impute
 
 julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(M, Interpolate(; context=Context(; limit=1.0)); dims=2)
+julia> impute(M, Interpolate(; dims=2)
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0  3.0  4.0  5.0
  1.1  2.2  3.3  4.4  5.5
@@ -132,7 +135,7 @@ if this is not the desired behaviour custom imputor methods should overload this
 
 # Example
 ``jldoctest
-julia> using DataFrames; using Impute: Interpolate, Context, impute
+julia> using DataFrames; using Impute: Interpolate, impute
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrame
 │ Row │ a        │ b        │
@@ -144,7 +147,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia> impute(df, Interpolate(; context=Context(; limit=1.0)))
+julia> impute(df, Interpolate())
 5×2 DataFrame
 │ Row │ a        │ b        │
 │     │ Float64  │ Float64  │

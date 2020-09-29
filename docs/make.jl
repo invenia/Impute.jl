@@ -6,7 +6,6 @@ makedocs(
     pages=[
         "Home" => "index.md",
         "Impute" => "api/impute.md",
-        "Context" => "api/context.md",
         "Imputors" => "api/imputors.md",
         "Utilities" => "api/utils.md",
     ],

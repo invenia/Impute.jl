@@ -23,13 +23,10 @@ Compose new `Imputor` chains with the composition operator
 # Example
 
 ```jldoctest
-julia> using Impute: impute, Interpolate, NOCB, LOCF, Context
+julia> using Impute: impute, Interpolate, NOCB, LOCF
 
-julia> ctx = Context(; limit=1.0)
-Context(0, 0, 1.0, ismissing, Impute.complete)
-
-julia> imp = Interpolate(; context=ctx) ∘ NOCB(; context=ctx) ∘ LOCF(; context=ctx)
-Impute.Chain(Impute.Imputor[Interpolate(2, Context(0, 0, 1.0, ismissing, complete)), NOCB(2, Context(0, 0, 1.0, ismissing, complete)), LOCF(2, Context(0, 0, 1.0, ismissing, complete))])
+julia> imp = Interpolate() ∘ NOCB() ∘ LOCF()
+Impute.Chain(Impute.Imputor[Interpolate(2), NOCB(2), LOCF(2)])
 ```
 """
 Base.:(∘)(a::Imputor, b::Imputor) = Chain([a, b])

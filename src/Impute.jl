@@ -30,14 +30,13 @@ end
 
 Base.showerror(io::IO, err::ImputeError) = println(io, "ImputeError: $(err.msg)")
 
-include("context.jl")
 include("imputors.jl")
 
 #=
 These default methods are required because @auto_hash_equals doesn't
 play nice with Base.@kwdef
 =#
-function Base.hash(imp::T, h::UInt) where T <: Union{Imputor, AbstractContext}
+function Base.hash(imp::T, h::UInt) where T <: Imputor
     h = hash(Symbol(T), h)
 
     for f in fieldnames(T)
@@ -47,7 +46,7 @@ function Base.hash(imp::T, h::UInt) where T <: Union{Imputor, AbstractContext}
     return h
 end
 
-function Base.:(==)(a::T, b::T) where T <: Union{Imputor, AbstractContext}
+function Base.:(==)(a::T, b::T) where T <: Imputor
     result = true
 
     for f in fieldnames(T)
@@ -89,14 +88,14 @@ for (f, v) in pairs(imputation_methods)
 end
 
 @doc """
-    Impute.dropobs(data; dims=1, context=Context())
+    Impute.dropobs(data; dims=1)
 
 Removes missing observations from the `AbstractArray` or `Tables.table` provided.
 See [DropObs](@ref) for details.
 
 # Example
 ```
-julia> using DataFrames; using Impute: Impute, Context
+julia> using DataFrames; using Impute: Impute
 
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
@@ -109,7 +108,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia> Impute.dropobs(df; dims=2, context=Context(; limit=1.0))
+julia> Impute.dropobs(df; dims=2)
 3×2 DataFrames.DataFrame
 │ Row │ a       │ b       │
 │     │ Float64 │ Float64 │
@@ -121,14 +120,14 @@ julia> Impute.dropobs(df; dims=2, context=Context(; limit=1.0))
 """ dropobs
 
 @doc """
-    Impute.dropvars(data; dims=1, context=Context())
+    Impute.dropvars(data; dims=1)
 
 Finds variables with too many missing values in a `AbstractMatrix` or `Tables.table` and
 removes them from the input data. See [DropVars](@ref) for details.
 
 # Example
 ```jldoctest
-julia> using DataFrames; using Impute: Impute, Context
+julia> using DataFrames; using Impute: Impute
 
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
@@ -141,7 +140,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia> Impute.dropvars(df; context=Context(; limit=0.2))
+julia> Impute.dropvars(df)
 5×1 DataFrames.DataFrame
 │ Row │ b        │
 │     │ Float64  │
@@ -155,14 +154,14 @@ julia> Impute.dropvars(df; context=Context(; limit=0.2))
 """ dropvars
 
 @doc """
-    Impute.interp(data; dims=1, context=Context())
+    Impute.interp(data; dims=1)
 
 Performs linear interpolation between the nearest values in an vector.
 See [Interpolate](@ref) for details.
 
 # Example
 ```jldoctest
-julia> using DataFrames; using Impute: Impute, Context
+julia> using DataFrames; using Impute: Impute
 
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
@@ -175,7 +174,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia> Impute.interp(df; context=Context(; limit=1.0))
+julia> Impute.interp(df)
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
 │     │ Float64  │ Float64  │
@@ -189,13 +188,13 @@ julia> Impute.interp(df; context=Context(; limit=1.0))
 """ interp
 
 @doc """
-    Impute.fill(data; value=mean, dims=1, context=Context())
+    Impute.fill(data; value=mean, dims=1)
 
 Fills in the missing data with a specific value. See [Fill](@ref) for details.
 
 # Example
 ```jldoctest
-julia> using DataFrames; using Impute: Impute, Context
+julia> using DataFrames; using Impute: Impute
 
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
@@ -208,7 +207,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia> Impute.fill(df; value=-1.0, context=Context(; limit=1.0))
+julia> Impute.fill(df; value=-1.0)
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
 │     │ Float64  │ Float64  │
@@ -222,14 +221,14 @@ julia> Impute.fill(df; value=-1.0, context=Context(; limit=1.0))
 """ fill
 
 @doc """
-    Impute.locf(data; dims=1, context=Context())
+    Impute.locf(data; dims=1)
 
 Iterates forwards through the `data` and fills missing data with the last existing
 observation. See [LOCF](@ref) for details.
 
 # Example
 ```jldoctest
-julia> using DataFrames; using Impute: Impute, Context
+julia> using DataFrames; using Impute: Impute
 
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
@@ -242,7 +241,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia> Impute.locf(df; context=Context(; limit=1.0))
+julia> Impute.locf(df)
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
 │     │ Float64  │ Float64  │
@@ -256,14 +255,14 @@ julia> Impute.locf(df; context=Context(; limit=1.0))
 """ locf
 
 @doc """
-    Impute.nocb(data; dims=1, context=Context())
+    Impute.nocb(data; dims=1)
 
 Iterates backwards through the `data` and fills missing data with the next existing
 observation. See [LOCF](@ref) for details.
 
 # Example
 ```jldoctest
-julia> using DataFrames; using Impute: Impute, Context
+julia> using DataFrames; using Impute: Impute
 
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
@@ -276,7 +275,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia> Impute.nocb(df; context=Context(; limit=1.0))
+julia> Impute.nocb(df)
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
 │     │ Float64  │ Float64  │
@@ -290,7 +289,7 @@ julia> Impute.nocb(df; context=Context(; limit=1.0))
 """ nocb
 
 @doc """
-    Impute.srs(data; rng=Random.GLOBAL_RNG, context=Context())
+    Impute.srs(data; rng=Random.GLOBAL_RNG)
 
 Simple Random Sampling (SRS) imputation is a method for imputing both continuous and
 categorical variables. Furthermore, it completes imputation while preserving the
@@ -298,7 +297,7 @@ distributional properties of the variables (e.g., mean, standard deviation).
 
 # Example
 ```jldoctest
-julia> using DataFrames; using Random; using Impute: Impute, Context
+julia> using DataFrames; using Random; using Impute: Impute
 
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrames.DataFrame
@@ -311,7 +310,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia> Impute.srs(df; rng=MersenneTwister(1234), context=Context(; limit=1.0))
+julia> Impute.srs(df; rng=MersenneTwister(1234))
 5×2 DataFrame
 │ Row │ a        │ b        │
 │     │ Float64  │ Float64  │

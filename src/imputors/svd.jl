@@ -11,7 +11,6 @@ over low-rank SVD approximations.
 * `maxiter::Int`: Maximum number of iterations if convergence is not achieved (default: 100)
 * `limits::Unoin{Tuple{Float64, Float64}, Nothing}`: Bound the possible approximation values (default: nothing)
 * `verbose::Bool`: Whether to display convergence progress (default: true)
-* `context::Context`: Missing data context settings (default: Context())
 
 # References
 * Troyanskaya, Olga, et al. "Missing value estimation methods for DNA microarrays." Bioinformatics 17.6 (2001): 520-525.
@@ -23,13 +22,12 @@ struct SVD <: Imputor
     maxiter::Int
     limits::Union{Tuple{Float64, Float64}, Nothing}
     verbose::Bool
-    context::AbstractContext
 end
 
 function SVD(;
-    init=Fill(), rank=nothing, tol=1e-10, maxiter=100, limits=nothing, verbose=true, context=Context()
+    init=Fill(), rank=nothing, tol=1e-10, maxiter=100, limits=nothing, verbose=true
 )
-    SVD(init, rank, tol, maxiter, limits, verbose, context)
+    SVD(init, rank, tol, maxiter, limits, verbose)
 end
 
 function impute!(data::AbstractMatrix{<:Union{T, Missing}}, imp::SVD) where T<:Real
@@ -38,7 +36,6 @@ function impute!(data::AbstractMatrix{<:Union{T, Missing}}, imp::SVD) where T<:R
     S = zeros(T, min(n, p))
     X = zeros(T, n, p)
 
-    ctx = imp.context
     # Get our before and after views of our missing and non-missing data
     mmask = ismissing.(data)
     omask = .!mmask
