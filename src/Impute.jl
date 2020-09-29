@@ -21,7 +21,7 @@ TODO List:
 - [X] Drop Context
 - [X] Introduce a separate Threshold type and `assert` function
 - [X] Update old tests cases to use new type
-- [ ] Add deprecations for old `context` calls
+- [X] Add deprecations for old `context` calls
 - [ ] Generalize the dimensionality behaviour using a `dims` keyword similar to the stats functions
   https://github.com/JuliaLang/Statistics.jl/blob/master/src/Statistics.jl#L164
 - [ ] Drop in-place calls
@@ -75,6 +75,10 @@ function Base.:(==)(a::T, b::T) where T <: Imputor
     return result
 end
 
+const global assertion_methods = (
+    threshold = Threshold,
+)
+
 const global imputation_methods = (
     drop = DropObs,
     dropobs = DropObs,
@@ -90,6 +94,11 @@ const global imputation_methods = (
 )
 
 include("deprecated.jl")
+
+for (f, v) in pairs(assertion_methods)
+    typename = nameof(v)
+    @eval $f(data; kwargs...) = assert(data, $typename(; kwargs...))
+end
 
 for (f, v) in pairs(imputation_methods)
     typename = nameof(v)

@@ -30,7 +30,8 @@ using Impute:
     impute,
     impute!,
     interp,
-    chain
+    chain,
+    threshold
 
 function add_missings(X, ratio=0.1)
     result = Matrix{Union{Float64, Missing}}(X)
@@ -508,13 +509,13 @@ end
 
     @testset "Assertions" begin
         @testset "Base" begin
-            t = Threshold(0.1)
+            t = Threshold(; ratio=0.1)
             @test_throws AssertionError assert(a, t)
             @test_throws AssertionError assert(m, t)
             @test_throws AssertionError assert(aa, t)
             @test_throws AssertionError assert(table, t)
 
-            t = Threshold(0.8)
+            t = Threshold(; ratio=0.8)
             # Use isequal because we expect the results to contain missings
             @test isequal(assert(a, t), a)
             @test isequal(assert(m, t), m)
@@ -525,21 +526,20 @@ end
         @testset "Weighted" begin
             # If we use an exponentially weighted context then we won't pass the limit
             # because missing earlier observations is less important than later ones.
-            t = Threshold(0.8; weights=eweights(20, 0.3))
+            t = Threshold(; ratio=0.8, weights=eweights(20, 0.3))
             @test isequal(assert(a, t), a)
             @test isequal(assert(table, t), table)
 
-            t = Threshold(0.8; weights=eweights(5, 0.3))
-            @test isequal(assert(m, t), m)
-            @test isequal(assert(aa, t), aa)
+            @test isequal(threshold(m; ratio=0.8, weights=eweights(5, 0.3)), m)
+            @test isequal(threshold(m; ratio=0.8, weights=eweights(5, 0.3)), aa)
 
             # If we reverse the weights such that earlier observations are more important
             # then our previous limit of 0.2 won't be enough to succeed.
-            t = Threshold(0.1; weights=reverse!(eweights(20, 0.3)))
+            t = Threshold(; ratio=0.1, weights=reverse!(eweights(20, 0.3)))
             @test_throws AssertionError assert(a, t)
             @test_throws AssertionError assert(table, t)
 
-            t = Threshold(0.1; weights=reverse!(eweights(5, 0.3)))
+            t = Threshold(; ratio=0.1, weights=reverse!(eweights(5, 0.3)))
             @test_throws AssertionError assert(m, t)
             @test_throws AssertionError assert(aa, t)
 

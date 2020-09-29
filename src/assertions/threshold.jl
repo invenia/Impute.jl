@@ -10,7 +10,7 @@ struct Threshold <: Assertion
     weights::Union{AbstractVector, Nothing}
 end
 
-Threshold(ratio::Float64; weights=nothing) = Threshold(ratio, weights)
+Threshold(; ratio=0.1, weights=nothing) = Threshold(ratio, weights)
 
 function assert(data::AbstractVector{Union{T, Missing}}, t::Threshold) where T
     if t.weights === nothing
