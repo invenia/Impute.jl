@@ -114,10 +114,10 @@ function test_matrix(tester::ImputorTester)
         @testset "Transpose" begin
             m_ = collect(m')
             result_ = collect(result')
-            @test isequal(tester.f(m_; dims=2, tester.kwargs...), result_)
+            @test isequal(tester.f(m_; dims=:rows, tester.kwargs...), result_)
 
             if !(tester.imp in (DropVars, DropObs, SRS))
-                @test isequal(tester.f!(m_; dims=2, tester.kwargs...), result_)
+                @test isequal(tester.f!(m_; dims=:rows, tester.kwargs...), result_)
             end
         end
 

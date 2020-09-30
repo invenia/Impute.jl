@@ -33,7 +33,7 @@ function impute(data::Vector{<:NamedTuple}, imp::DropObs)
     return filter(r -> all(!ismissing, propertyvalues(r)), data)
 end
 
-function impute(data::AbstractMatrix, imp::DropObs; dims=1)
+function impute(data::AbstractMatrix{Union{T, Missing}}, imp::DropObs; dims=1) where T
     return filterobs(obs -> all(!ismissing, obs), data; dims=dims)
 end
 
@@ -79,7 +79,7 @@ function impute!(data::Vector{<:NamedTuple}, imp::DropVars)
     return materializer(data)(impute(Tables.columns(data), imp))
 end
 
-function impute(data::AbstractMatrix, imp::DropVars; dims=1)
+function impute(data::AbstractMatrix{Union{T, Missing}}, imp::DropVars; dims=1) where T
     return filtervars(data; dims=dims) do vars
         all(!ismissing, vars)
     end
@@ -99,5 +99,9 @@ function impute(table, imp::DropVars)
 end
 
 # Add impute! methods to override the default behaviour in imputors.jl
-impute!(data::AbstractMatrix, imp::Union{DropObs, DropVars}) = impute(data, imp)
+function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::Union{DropObs, DropVars}) where T
+    data = impute(data, imp)
+    return data
+end
+
 impute!(data, imp::Union{DropObs, DropVars}) = impute(data, imp)

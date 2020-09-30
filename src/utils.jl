@@ -1,6 +1,8 @@
 # A couple utility methods to avoid messing up var and obs dimensions
-obsdim(dims) = dims
-vardim(dims) = dims == 1 ? 2 : 1
+obsdim(dims::Int) = dims
+vardim(dims::Int) = dims == 1 ? 2 : 1
+obsdim(dims::Symbol) = dims === :row ? 1 : 2
+vardim(dims::Symbol) = dims === :col ? 2 : 1
 
 function obswise(data::AbstractMatrix; dims=1)
     return (selectdim(data, obsdim(dims), i) for i in axes(data, obsdim(dims)))
