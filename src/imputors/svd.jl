@@ -30,7 +30,7 @@ function SVD(;
     SVD(init, rank, tol, maxiter, limits, verbose)
 end
 
-function impute!(data::AbstractMatrix{<:Union{T, Missing}}, imp::SVD) where T<:Real
+function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::SVD; dims=nothing) where T<:Real
     n, p = size(data)
     k = imp.rank === nothing ? 0 : min(imp.rank, p-1)
     S = zeros(T, min(n, p))
@@ -46,11 +46,11 @@ function impute!(data::AbstractMatrix{<:Union{T, Missing}}, imp::SVD) where T<:R
     oX = X[omask]
 
     # Fill in the original data
-    impute!(data, imp.init)
+    impute!(data, imp.init; dims=dims)
 
     C = sum(abs2, mdata - mX) / sum(abs2, mdata)
     err = mean(abs.(odata - oX))
-    @info("Before: Diff=$(sum(mdata - mX)), MAE=$err, convergence=$C, normsq=$(sum(abs2, mdata)), $(mX[1])")
+    @debug("Before: Diff=$(sum(mdata - mX)), MAE=$err, convergence=$C, normsq=$(sum(abs2, mdata)), $(mX[1])")
 
     for i in 1:imp.maxiter
         if imp.rank === nothing
@@ -79,7 +79,7 @@ function impute!(data::AbstractMatrix{<:Union{T, Missing}}, imp::SVD) where T<:R
         # Print the error between reconstruction and observed inputs
         if imp.verbose
             err = mean(abs.(odata - oX))
-            @info("Iteration $i: Diff=$(sum(mdata - mX)), MAE=$err, MSS=$(sum(abs2, mdata)), convergence=$C")
+            @debug("Iteration $i: Diff=$(sum(mdata - mX)), MAE=$err, MSS=$(sum(abs2, mdata)), convergence=$C")
         end
 
         # Update missing values
@@ -91,4 +91,8 @@ function impute!(data::AbstractMatrix{<:Union{T, Missing}}, imp::SVD) where T<:R
     end
 
     return data
+end
+
+function impute(data::AbstractMatrix{Union{T, Missing}}, imp::SVD) where T<:Real
+    return impute!(trycopy(data), imp)
 end

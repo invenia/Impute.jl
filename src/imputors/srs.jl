@@ -37,8 +37,8 @@ julia> impute(M, SRS(; rng=MersenneTwister(1234)); dims=2)
 """
 SRS(; rng=Random.GLOBAL_RNG) = SRS(rng)
 
-function impute!(data::AbstractVector, imp::SRS)
-    obs_values = Impute.dropobs(data)
+function _impute!(data::AbstractArray{Union{T, Missing}}, imp::SRS) where T
+    obs_values = collect(skipmissing(data))
     if !isempty(obs_values)
         for i in eachindex(data)
             if ismissing(data[i])

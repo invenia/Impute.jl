@@ -31,9 +31,9 @@ end
 # TODO: Switch to using Base.@kwdef on 1.1
 Fill(; value=mean) = Fill(value)
 
-function _impute!(data::AbstractVector, imp::Fill)
+function _impute!(data::AbstractArray{Union{T, Missing}}, imp::Fill) where T
     fill_val = if isa(imp.value, Function)
-        available = Impute.drop(data)
+        available = skipmissing(data)
 
         if isempty(available)
             @debug "Cannot apply fill function $(imp.value) as all values are missing"

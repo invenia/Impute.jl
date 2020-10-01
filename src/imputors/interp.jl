@@ -26,9 +26,7 @@ julia> impute(M, Interpolate(); dims=2)
 """
 struct Interpolate <: Imputor end
 
-_impute!(data::AbstractVector{Missing}, imp::Interpolate) = data
-
-function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) where T
+function _impute!(data::AbstractArray{<:Union{T, Missing}}, imp::Interpolate) where T
     i = findfirst(!ismissing, data) + 1
     i < lastindex(data) || @debug "Cannot interpolate points when all values are missing"
 

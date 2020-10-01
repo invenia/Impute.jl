@@ -29,7 +29,7 @@ julia> impute(M, LOCF(); dims=2)
 """
 struct LOCF <: Imputor end
 
-function _impute!(data::AbstractVector, imp::LOCF)
+function _impute!(data::AbstractVector{Union{T, Missing}}, imp::LOCF) where T
     start_idx = findfirst(!ismissing, data)
     if start_idx === nothing
         @debug "Cannot carry forward points when all values are missing"

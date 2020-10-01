@@ -28,45 +28,66 @@ function KNN(; k=1, threshold=0.5, dist=Euclidean())
     KNN(k + 1, threshold, dist)
 end
 
-function impute!(data::AbstractMatrix{<:Union{T, Missing}}, imp::KNN) where T<:Real
-    # Get mask array first (order of )
-    mmask = ismissing.(transpose(data))
+function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::KNN; dims=nothing) where T<:Real
+    if dims === nothing
+        Base.depwarn(
+            "Imputing on matrices will require specifying `dims=2` in a future release, " *
+            "to maintain the current behaviour.",
+            :impute!
+        )
+        dims = 2
+    elseif dims === :rows
+        dims = 1
+    elseif dims === :cols
+        dims = 2
+    end
+
+    # KDTree expects data of the form dims x n
+    X = dims == 1 ? data : transpose(data)
+
+    # Get mask array first
+    mmask = ismissing.(X)
 
     # fill missing value as mean value
-    impute!(data, Fill(; value=mean))
+    impute!(X, Fill(; value=mean); dims=:rows)
 
-    # then, transpose to D x N for KDTree
-    transposed = transpose(disallowmissing(data))
+    # Disallow `missings` for NearestNeighbors
+    X = disallowmissing(X)
 
-    kdtree = KDTree(transposed, imp.dist)
-    idxs, dists = NearestNeighbors.knn(kdtree, transposed, imp.k, true)
+    kdtree = KDTree(X, imp.dist)
+    idxs, dists = NearestNeighbors.knn(kdtree, X, imp.k, true)
 
-    idxes = CartesianIndices(transposed)
+    idxes = CartesianIndices(X)
     fallback_threshold = imp.k * imp.threshold
 
-    for I in CartesianIndices(transposed)
+    for I in CartesianIndices(X)
         if mmask[I] == 1
             w = 1.0 ./ dists[I[2]]
             ws = sum(w[2:end])
-            missing_neighbors = ismissing.(transposed[:, idxs[I[2]]][:, 2:end])
+            # Shouldn't ismissing.(X[...][...]) be replaced with mmask[...][...]?
+            # If so then I think the test might need updating cause the "Data match" section
+            # seems to fallback on the mean imputation consistently
+            neighbors = mapslices(
+                iszero ∘ sum,
+                ismissing.(X[:, idxs[I[2]]][:, 2:end]);
+                dims=1
+            )
 
             # exclude missing value itself because distance would be zero
-            if isnan(ws) || isinf(ws) || iszero(ws)
-                # if distance is zero or not a number, keep mean imputation
-                transposed[I] = transposed[I]
-            elseif count(!iszero, mapslices(sum, missing_neighbors, dims=1)) >
-                fallback_threshold
-                # If too many neighbors are also missing, fallback to mean imputation
-                # get column and check how many neighbors are also missing
-                transposed[I] = transposed[I]
-            else
+            # If too many neighbors are also missing, fallback to mean imputation
+            # get column and check how many neighbors are also missing
+            if isfinite(ws) && !iszero(ws) && count(neighbors) > fallback_threshold
                 # Inverse distance weighting
-                wt = w .* transposed[I[1], idxs[I[2]]]
-                transposed[I] = sum(wt[2:end]) / ws
+                wt = w .* X[I[1], idxs[I[2]]]
+                X[I] = sum(wt[2:end]) / ws
             end
         end
     end
 
     # for type stability
-    allowmissing(transposed')
+    return allowmissing(dims == 2 ? X' : X)
+end
+
+function impute(data::AbstractMatrix{Union{T, Missing}}, imp::KNN) where T<:Real
+    return impute!(trycopy(data), imp)
 end

@@ -72,11 +72,7 @@ function test_vector(tester::ImputorTester)
             @testset "All missing" begin
                 # Test having only missing data
                 c = fill(missing, 10)
-                if tester.imp != Impute.DropObs
-                    @test isequal(impute(c, tester.imp(; tester.kwargs...)), c)
-                else
-                    @test impute(c, tester.imp(; tester.kwargs...)) == empty(c)
-                end
+                @test isequal(impute(c, tester.imp(; tester.kwargs...)), c)
             end
         end
     end
@@ -88,7 +84,7 @@ function test_matrix(tester::ImputorTester)
         a[[2, 3, 7]] .= missing
         m = collect(reshape(a, 5, 4))
 
-        result = impute(m, tester.imp(; tester.kwargs...))
+        result = impute(m, tester.imp(; tester.kwargs...); dims=:cols)
 
         @testset "Base" begin
             # Test that we have fewer missing values
@@ -97,14 +93,14 @@ function test_matrix(tester::ImputorTester)
             @test eltype(result) <: eltype(m)
 
             # Test that functional form behaves the same way
-            @test result == tester.f(m; tester.kwargs...)
+            @test result == tester.f(m; dims=:cols, tester.kwargs...)
         end
 
         @testset "In-place" begin
             # Test that the in-place function return the new results and logs whether it
             # successfully did it in-place
             m2 = deepcopy(m)
-            m2_ = tester.f!(m2; tester.kwargs...)
+            m2_ = tester.f!(m2; dims=:cols, tester.kwargs...)
             @test m2_ == result
             if m2 != result
                 @warn "$(tester.f!) did not mutate input data of type Matrix"
@@ -116,7 +112,7 @@ function test_matrix(tester::ImputorTester)
             result_ = collect(result')
             @test isequal(tester.f(m_; dims=:rows, tester.kwargs...), result_)
 
-            if !(tester.imp in (DropVars, DropObs, SRS))
+            if tester.imp != SRS
                 @test isequal(tester.f!(m_; dims=:rows, tester.kwargs...), result_)
             end
         end
@@ -124,19 +120,13 @@ function test_matrix(tester::ImputorTester)
         @testset "No missing" begin
             # Test having no missing data
             b = collect(reshape(allowmissing(1.0:1.0:20.0), 5, 4))
-            @test impute(b, tester.imp(; tester.kwargs...)) == b
+            @test impute(b, tester.imp(; tester.kwargs...); dims=:cols) == b
         end
 
         @testset "All missing" begin
             # Test having only missing data
-            c = fill(missing, 5, 2)
-            if tester.imp == DropObs
-                @test impute(c, tester.imp(; tester.kwargs...)) == Matrix{Missing}(missing, 0, 2)
-            elseif tester.imp == DropVars
-                @test impute(c, tester.imp(; tester.kwargs...)) == Matrix{Missing}(missing, 5, 0)
-            else
-                @test isequal(impute(c, tester.imp(; tester.kwargs...)), c)
-            end
+            c = missings(5, 2)
+            @test isequal(impute(c, tester.imp(; tester.kwargs...); dims=:cols), c)
         end
     end
 end
@@ -187,14 +177,7 @@ function test_dataframe(tester::ImputorTester)
                 :sin => fill(missing, 10),
                 :cos => fill(missing, 10),
             )
-            if tester.imp == DropObs
-                @test impute(c, tester.imp(; tester.kwargs...)) == DataFrame()
-            elseif tester.imp == DropVars
-                # https://github.com/JuliaData/Tables.jl/issues/117
-                @test impute(c, tester.imp(; tester.kwargs...)) == DataFrame()
-            else
-                @test isequal(impute(c, tester.imp(; tester.kwargs...)), c)
-            end
+            @test isequal(impute(c, tester.imp(; tester.kwargs...)), c)
         end
     end
 end
@@ -220,13 +203,7 @@ function test_groupby(tester::ImputorTester)
             result = mapreduce(tester.f, vcat, groupby(df, [:hod, :obj]))
             @test !isequal(df, result)
 
-            if tester.imp == DropObs
-                # If we've dropped some observations then we should get back
-                # all, but the 4 missing observations per 24 hods and 8 objs.
-                @test size(result) == (24 * 8 * 16, 3)
-            else
-                @test size(result) == size(df)
-            end
+            @test size(result) == size(df)
 
             # Test that we successfully imputed something.
             # We expect LOCF and NOCB to leave `missing`s at the start and end of each
@@ -250,7 +227,7 @@ function test_axisarray(tester::ImputorTester)
             Axis{:time}(DateTime(2017, 6, 5, 5):Hour(1):DateTime(2017, 6, 5, 9)),
             Axis{:id}(1:4)
         )
-        result = impute(aa, tester.imp(; tester.kwargs...))
+        result = impute(aa, tester.imp(; tester.kwargs...); dims=:cols)
 
         @testset "Base" begin
             # Test that we have fewer missing values
@@ -259,14 +236,14 @@ function test_axisarray(tester::ImputorTester)
             @test eltype(result) <: eltype(aa)
 
             # Test that functional form behaves the same way
-            @test result == tester.f(aa; tester.kwargs...)
+            @test result == tester.f(aa; tester.kwargs..., dims=:cols)
         end
 
         @testset "In-place" begin
             # Test that the in-place function return the new results and logs whether it
             # successfully did it in-place
             aa2 = deepcopy(aa)
-            aa2_ = tester.f!(aa2; tester.kwargs...)
+            aa2_ = tester.f!(aa2; tester.kwargs..., dims=:cols)
             @test aa2_ == result
             if aa2 != result
                 @warn "$(tester.f!) did not mutate input data of type AxisArray"
@@ -330,7 +307,7 @@ function test_rowtable(tester::ImputorTester)
         end
 
         @testset "In-place" begin
-            # Test that the in-place function return the new results and logs whether it
+            # Test that the in-place function returns the new results and logs whether it
             # successfully did it in-place
             rowtab2 = deepcopy(rowtab)
             rowtab2_ = tester.f!(rowtab2; tester.kwargs...)

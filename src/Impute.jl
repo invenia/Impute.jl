@@ -22,11 +22,11 @@ TODO List:
 - [X] Introduce a separate Threshold type and `assert` function
 - [X] Update old tests cases to use new type
 - [X] Add deprecations for old `context` calls
-- [ ] Generalize the dimensionality behaviour using a `dims` keyword similar to the stats functions
+- [X] Generalize the dimensionality behaviour using a `dims` keyword similar to the stats functions
   https://github.com/JuliaLang/Statistics.jl/blob/master/src/Statistics.jl#L164
 - [ ] Drop in-place calls
-- [ ] Base imputors should dispatch on `impute(AbstractArray{Union{T, Missing}}, imp)`
-- [ ] Replace `dropobs` and `dropvars` with `Impute.drop` and a `dims` keyword
+- [X] Base imputors should dispatch on `impute(AbstractArray{Union{T, Missing}}, imp)`
+- [X] Replace `dropobs` and `dropvars` with `Impute.drop` and a `dims` keyword
 - [ ] Make `Chain` not an imputor and have it work on `Assertions` and `Imputors`
 - [ ] Add function for checking if a methods support some input data?
 =#
@@ -47,7 +47,8 @@ Base.showerror(io::IO, err::ImputeError) = println(io, "ImputeError: $(err.msg)"
 include("utils.jl")
 include("assertions.jl")
 include("imputors.jl")
-include("functional.jl")
+include("filter.jl")
 include("deprecated.jl")
+include("functional.jl")
 
 end  # module

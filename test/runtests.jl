@@ -24,8 +24,10 @@ using Impute:
     LOCF,
     NOCB,
     SRS,
+    Filter,
     Threshold,
     ImputeError,
+    apply,
     assert,
     impute,
     impute!,
@@ -88,181 +90,8 @@ end
     table.sin[[2, 3, 7, 12, 19]] .= missing
 
     @testset "Equality" begin
-        @testset "$T" for T in (DropObs, DropVars, Interpolate, Fill, LOCF, NOCB, SRS)
+        @testset "$T" for T in (Interpolate, Fill, LOCF, NOCB, SRS)
             @test T() == T()
-        end
-    end
-
-    @testset "Drop" begin
-        @testset "DropObs" begin
-            @testset "Vector" begin
-                result = impute(a, DropObs())
-                expected = deleteat!(deepcopy(a), [2, 3, 7])
-
-                @test result == expected
-                @test result == Impute.dropobs(a)
-
-                a2 = deepcopy(a)
-                Impute.dropobs!(a2)
-                @test a2 == expected
-            end
-
-            @testset "Matrix" begin
-                result = impute(m, DropObs())
-                expected = m[[1, 4, 5], :]
-
-                @test isequal(result, expected)
-                @test isequal(result, Impute.dropobs(m))
-                @test isequal(collect(result'), Impute.dropobs(collect(m'); dims=2))
-
-                m_ = Impute.dropobs!(m)
-                # The mutating test is broken because we need to making a copy of
-                # the original matrix
-                @test_broken isequal(m, expected)
-                @test isequal(m_, expected)
-            end
-
-            @testset "Tables" begin
-                @testset "DataFrame" begin
-                    df = deepcopy(table)
-                    result = impute(df, DropObs())
-                    expected = dropmissing(df)
-
-                    @test isequal(result, expected)
-                    @test isequal(result, Impute.dropobs(df))
-
-                    df_ = Impute.dropobs!(df)
-                    # The mutating test is broken because we need to making a copy of
-                    # the original table
-                    @test_broken isequal(df, expected)
-                    @test isequal(df_, expected)
-                end
-
-                @testset "Column Table" begin
-                    coltab = Tables.columntable(table)
-
-                    result = impute(coltab, DropObs())
-                    expected = Tables.columntable(dropmissing(table))
-
-                    @test isequal(result, expected)
-                    @test isequal(result, Impute.dropobs(coltab))
-
-                    coltab_ = Impute.dropobs!(coltab)
-                    # The mutating test is broken because we need to making a copy of
-                    # the original table
-                    @test_broken isequal(coltab, expected)
-                    @test isequal(coltab_, expected)
-                end
-
-                @testset "Row Table" begin
-                    rowtab = Tables.rowtable(table)
-                    result = impute(rowtab, DropObs())
-                    expected = Tables.rowtable(dropmissing(table))
-
-                    @show dropmissing(table)
-                    @test isequal(result, expected)
-                    @test isequal(result, Impute.dropobs(rowtab))
-
-                    rowtab_ = Impute.dropobs!(rowtab)
-                    # The mutating test is broken because we need to making a copy of
-                    # the original table
-                    # @test_broken isequal(rowtab, expected)
-                    @test isequal(rowtab_, expected)
-                end
-            end
-
-            @testset "AxisArray" begin
-                result = impute(aa, DropObs())
-                expected = aa[[1, 4, 5], :]
-
-                @test isequal(result, expected)
-                @test isequal(result, Impute.dropobs(aa))
-
-                aa_ = Impute.dropobs!(aa)
-                # The mutating test is broken because we need to making a copy of
-                # the original matrix
-                @test_broken isequal(aa, expected)
-                @test isequal(aa_, expected)
-            end
-        end
-
-        @testset "DropVars" begin
-            @testset "Vector" begin
-                @test_throws MethodError Impute.dropvars(a)
-            end
-
-            @testset "Matrix" begin
-                result = impute(m, DropVars())
-                expected = copy(m)[:, 3:4]
-
-                @test isequal(result, expected)
-                @test isequal(result, Impute.dropvars(m))
-                @test isequal(collect(result'), Impute.dropvars(collect(m'); dims=2))
-
-                m_ = Impute.dropvars!(m)
-                # The mutating test is broken because we need to making a copy of
-                # the original matrix
-                @test_broken isequal(m, expected)
-                @test isequal(m_, expected)
-            end
-
-            @testset "Tables" begin
-                @testset "DataFrame" begin
-                    df = deepcopy(table)
-                    result = impute(df, DropVars())
-                    expected = select(df, :cos)
-
-                    @test isequal(result, expected)
-                    @test isequal(result, Impute.dropvars(df))
-
-                    Impute.dropvars!(df)
-                    # The mutating test is broken because we need to making a copy of
-                    # the original table
-                    @test_broken isequal(df, expected)
-                end
-
-                @testset "Column Table" begin
-                    coltab = Tables.columntable(table)
-
-                    result = impute(coltab, DropVars())
-                    expected = Tables.columntable(TableOperations.select(coltab, :cos))
-
-                    @test isequal(result, expected)
-                    @test isequal(result, Impute.dropvars(coltab))
-
-                    Impute.dropvars!(coltab)
-                    # The mutating test is broken because we need to making a copy of
-                    # the original table
-                    @test_broken isequal(coltab, expected)
-                end
-
-                @testset "Row Table" begin
-                    rowtab = Tables.rowtable(table)
-                    result = impute(rowtab, DropVars())
-                    expected = Tables.rowtable(TableOperations.select(rowtab, :cos))
-
-                    @test isequal(result, expected)
-                    @test isequal(result, Impute.dropvars(rowtab))
-
-                    Impute.dropvars!(rowtab)
-                    # The mutating test is broken because we need to making a copy of
-                    # the original table
-                    @test_broken isequal(rowtab, expected)
-                end
-            end
-            @testset "AxisArray" begin
-                result = impute(aa, DropVars())
-                expected = copy(aa)[:, 3:4]
-
-                @test isequal(result, expected)
-                @test isequal(result, Impute.dropvars(aa))
-
-                aa_ = Impute.dropvars!(aa)
-                # The mutating test is broken because we need to making a copy of
-                # the original matrix
-                @test_broken isequal(aa, expected)
-                @test isequal(aa_, expected)
-            end
         end
     end
 
@@ -314,15 +143,14 @@ end
         end
 
         @testset "Matrix" begin
-            expected = Matrix(Impute.dropobs(dataset("boot", "neuro")))
             data = Matrix(dataset("boot", "neuro"))
 
-            result = impute(data, Fill(; value=0.0))
+            result = impute(data, Fill(; value=0.0); dims=:cols)
             @test size(result) == size(data)
-            @test result == Impute.fill(data; value=0.0)
+            @test result == Impute.fill(data; value=0.0, dims=:cols)
 
             data2 = copy(data)
-            Impute.fill!(data2; value=0.0)
+            Impute.fill!(data2; value=0.0, dims=:cols)
             @test data2 == result
         end
     end
@@ -462,7 +290,9 @@ end
 
         @testset "Matrix" begin
             data = Matrix(orig)
-            result = Impute.interp(data) |> Impute.locf!() |> Impute.nocb!()
+            result = Impute.interp(data; dims=:cols) |>
+                Impute.locf!(; dims=:cols) |>
+                Impute.nocb!(; dims=:cols)
 
             @test size(result) == size(data)
             # Confirm that we don't have any more missing values
@@ -475,7 +305,9 @@ end
                 Axis{:row}(1:size(orig, 1)),
                 Axis{:V}(names(orig)),
             )
-            result = Impute.interp(data) |> Impute.locf!() |> Impute.nocb!()
+            result = Impute.interp(data; dims=:cols) |>
+                Impute.locf!(; dims=:cols) |>
+                Impute.nocb!(; dims=:cols)
 
             @test size(result) == size(data)
             # Confirm that we don't have any more missing values
@@ -484,7 +316,9 @@ end
 
         @testset "KeyedArray" begin
             data = KeyedArray(Matrix(orig); row=1:size(orig, 1), V=names(orig))
-            result = Impute.interp(data) |> Impute.locf!() |> Impute.nocb!()
+            result = Impute.interp(data; dims=:cols) |>
+                Impute.locf!(; dims=:cols) |>
+                Impute.nocb!(; dims=:cols)
 
             @test size(result) == size(data)
             # Confirm that we don't have any more missing values
@@ -548,30 +382,6 @@ end
         end
     end
 
-    @testset "Utils" begin
-        M = [1.0 2.0 3.0 4.0 5.0; 1.1 2.2 3.3 4.4 5.5]
-
-        @testset "obswise" begin
-            @test map(sum, Impute.obswise(M; dims=2)) == [2.1, 4.2, 6.3, 8.4, 10.5]
-            @test map(sum, Impute.obswise(M; dims=1)) == [15, 16.5]
-        end
-
-        @testset "varwise" begin
-            @test map(sum, Impute.varwise(M; dims=2)) == [15, 16.5]
-            @test map(sum, Impute.varwise(M; dims=1)) == [2.1, 4.2, 6.3, 8.4, 10.5]
-        end
-
-        @testset "filterobs" begin
-            @test Impute.filterobs(x -> sum(x) > 5.0, M; dims=2) == M[:, 3:5]
-            @test Impute.filterobs(x -> sum(x) > 15.0, M; dims=1) == M[[false, true], :]
-        end
-
-        @testset "filtervars" begin
-            @test Impute.filtervars(x -> sum(x) > 15.0, M; dims=2) == M[[false, true], :]
-            @test Impute.filtervars(x -> sum(x) > 5.0, M; dims=1) == M[:, 3:5]
-        end
-    end
-
     @testset "KNN" begin
         @testset "Iris" begin
             # Reference
@@ -588,8 +398,8 @@ end
                 knn_nrmsd, mean_nrmsd = 0.0, 0.0
 
                 for i = 1:num_tests
-                    knn_imputed = impute(copy(X), Impute.KNN(; k=2))
-                    mean_imputed = impute(copy(X), Fill(; value=mean))
+                    knn_imputed = impute(copy(X), Impute.KNN(; k=2); dims=:cols)
+                    mean_imputed = impute(copy(X), Fill(; value=mean); dims=:cols)
 
                     knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data, knn_imputed)) / i
                     mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data, mean_imputed)) / i
@@ -597,8 +407,8 @@ end
 
                 @test knn_nrmsd < mean_nrmsd
                 # test type stability
-                @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2)))
-                @test typeof(X) == typeof(impute(copy(X), Fill(; value=mean)))
+                @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2); dims=:cols))
+                @test typeof(X) == typeof(impute(copy(X), Fill(; value=mean); dims=:cols))
             end
 
             @testset "Iris - 0.25" begin
@@ -607,8 +417,8 @@ end
                 knn_nrmsd, mean_nrmsd = 0.0, 0.0
 
                 for i = 1:num_tests
-                    knn_imputed = impute(copy(X), Impute.KNN(; k=2))
-                    mean_imputed = impute(copy(X), Fill(; value=mean))
+                    knn_imputed = impute(copy(X), Impute.KNN(; k=2); dims=:cols)
+                    mean_imputed = impute(copy(X), Fill(; value=mean); dims=:cols)
 
                     knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data, knn_imputed)) / i
                     mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data, mean_imputed)) / i
@@ -616,8 +426,8 @@ end
 
                 @test knn_nrmsd < mean_nrmsd
                 # test type stability
-                @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2)))
-                @test typeof(X) == typeof(impute(copy(X), Fill(; value=mean)))
+                @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2); dims=:cols))
+                @test typeof(X) == typeof(impute(copy(X), Fill(; value=mean); dims=:cols))
             end
 
             @testset "Iris - 0.35" begin
@@ -626,8 +436,8 @@ end
                 knn_nrmsd, mean_nrmsd = 0.0, 0.0
 
                 for i = 1:num_tests
-                    knn_imputed = impute(copy(X), Impute.KNN(; k=2))
-                    mean_imputed = impute(copy(X), Fill(; value=mean))
+                    knn_imputed = impute(copy(X), Impute.KNN(; k=2); dims=:cols)
+                    mean_imputed = impute(copy(X), Fill(; value=mean); dims=:cols)
 
                     knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data, knn_imputed)) / i
                     mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data, mean_imputed)) / i
@@ -635,8 +445,8 @@ end
 
                 @test knn_nrmsd < mean_nrmsd
                 # test type stability
-                @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2)))
-                @test typeof(X) == typeof(impute(copy(X), Fill(; value=mean)))
+                @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2); dims=:cols))
+                @test typeof(X) == typeof(impute(copy(X), Fill(; value=mean); dims=:cols))
             end
         end
 
@@ -664,8 +474,8 @@ end
             knn_nrmsd, mean_nrmsd = 0.0, 0.0
 
             for i = 1:num_tests
-                knn_imputed = impute(copy(X), Impute.KNN(; k=2))
-                mean_imputed = impute(copy(X), Fill(; value=mean))
+                knn_imputed = impute(copy(X), Impute.KNN(; k=4); dims=:cols)
+                mean_imputed = impute(copy(X), Fill(; value=mean); dims=:cols)
 
                 knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data', knn_imputed)) / i
                 mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data', mean_imputed)) / i
@@ -673,15 +483,16 @@ end
 
             @test knn_nrmsd < mean_nrmsd
             # test type stability
-            @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2)))
-            @test typeof(X) == typeof(impute(copy(X), Fill(; value=mean)))
+            @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=4); dims=:cols))
+            @test typeof(X) == typeof(impute(copy(X), Fill(; value=mean); dims=:cols))
         end
     end
 
     include("deprecated.jl")
+    include("filter.jl")
     include("testutils.jl")
 
-    @testset "$T" for T in (DropObs, DropVars, Interpolate, Fill, LOCF, NOCB)
+    @testset "$T" for T in (Interpolate, Fill, LOCF, NOCB)
         test_all(ImputorTester(T))
     end
 

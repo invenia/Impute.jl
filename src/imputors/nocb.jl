@@ -30,7 +30,7 @@ julia> impute(M, NOCB(); dims=2)
 """
 struct NOCB <: Imputor end
 
-function _impute!(data::AbstractVector, imp::NOCB)
+function _impute!(data::AbstractVector{Union{T, Missing}}, imp::NOCB) where T
     end_idx = findlast(!ismissing, data)
     if end_idx === nothing
         @debug "Cannot carry backward points when all values are missing"

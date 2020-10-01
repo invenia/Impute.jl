@@ -77,10 +77,20 @@ for (f, v) in pairs(imputation_methods)
     end
 end
 
+# Provide a specific functional API for Impute.Filter.
+filter(data; kwargs...) = apply(data, Filter(); kwargs...)
+filter!(data; kwargs...) = apply!(data, Filter(); kwargs...)
+filter(; kwargs...) = data -> apply(data, Filter(); kwargs...)
+filte!(; kwargs...) = data -> apply!(data, Filter(); kwargs...)
+filter(f::Function, data; kwargs...) = apply(data, Filter(f); kwargs...)
+filter!(f::Function, data; kwargs...) = apply!(data, Filter(f); kwargs...)
+filter(f::Function; kwargs...) = data -> apply(data, Filter(f); kwargs...)
+filter!(f::Function; kwargs...) = data -> apply!(data, Filter(f); kwargs...)
+
 @doc """
     Impute.dropobs(data; dims=1)
 
-Removes missing observations from the `AbstractArray` or `Tables.table` provided.
+[Deprecated] Removes missing observations from the `AbstractArray` or `Tables.table` provided.
 See [DropObs](@ref) for details.
 
 # Example
@@ -112,7 +122,7 @@ julia> Impute.dropobs(df; dims=2)
 @doc """
     Impute.dropvars(data; dims=1)
 
-Finds variables with too many missing values in a `AbstractMatrix` or `Tables.table` and
+[Deprecated] Finds variables with too many missing values in a `AbstractMatrix` or `Tables.table` and
 removes them from the input data. See [DropVars](@ref) for details.
 
 # Example
@@ -142,6 +152,50 @@ julia> Impute.dropvars(df)
 │ 5   │ 5.5      │
 ```
 """ dropvars
+
+@doc """
+    Impute.filter([f,] data; dims)
+
+Filters values, rows, columns or slices of data that should be removed.
+The default function `f` will removing `missing`s, or any rows, columns or slices
+containing `missing`s.
+
+# Examples
+```jldoctest
+julia> using DataFrames; using Impute: Impute
+
+julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
+5×2 DataFrames.DataFrame
+│ Row │ a        │ b        │
+│     │ Float64  │ Float64  │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ missing  │ 3.3      │
+│ 4   │ missing  │ missing  │
+│ 5   │ 5.0      │ 5.5      │
+
+julia> Impute.filter(df; dims=:cols)
+5×1 DataFrames.DataFrame
+│ Row │ b        │
+│     │ Float64  │
+├─────┼──────────┤
+│ 1   │ 1.1      │
+│ 2   │ 2.2      │
+│ 3   │ 3.3      │
+│ 4   │ missing  │
+│ 5   │ 5.5      │
+
+julia> Impute.filter(df; dims=:rows)
+3×2 DataFrames.DataFrame
+│ Row │ a        │ b        │
+│     │ Float64  │ Float64  │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ 5.0      │ 5.5      │
+```
+""" filter
 
 @doc """
     Impute.interp(data; dims=1)
