@@ -160,3 +160,6 @@ function impute!(data::AbstractVector{Union{T, Missing}}, imp::Union{DropObs, Dr
 end
 
 impute!(data, imp::Union{DropObs, DropVars}) = impute(data, imp)
+
+@deprecate impute(data, C::Chain) run(data, C) false
+@deprecate impute!(data, C::Chain) run(data, C) false

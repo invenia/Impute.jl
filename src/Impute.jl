@@ -28,9 +28,10 @@ TODO List:
 - [ ] Drop in-place calls?
 - [X] Base imputors should dispatch on `impute(AbstractArray{Union{T, Missing}}, imp)`
 - [X] Replace `dropobs` and `dropvars` with `Impute.drop` and a `dims` keyword
-- [ ] Make `Chain` not an imputor and have it work on `Assertions` and `Imputors`
+- [X] Make `Chain` not an imputor and have it work on `Assertions` and `Imputors`
 - [ ] Add function for checking if a methods support some input data?
 - [ ] Add more tests for NamedDims and AxisKeys
+- [ ] Add walkthrough docs
 =#
 """
     ImputeError{T} <: Exception
@@ -50,6 +51,7 @@ include("utils.jl")
 include("assertions.jl")
 include("imputors.jl")
 include("filter.jl")
+include("chain.jl")
 include("deprecated.jl")
 include("functional.jl")
 

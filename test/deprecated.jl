@@ -216,6 +216,34 @@
         end
     end
 
+    @testset "Chain" begin
+        orig = dataset("boot", "neuro")
+
+        # Less effecient, but a chain should produce the same results as manual
+        # piping the functional outputs.
+        result = Impute.interp(orig) |> Impute.locf!() |> Impute.nocb!()
+
+        @test size(result) == size(orig)
+        # Confirm that we don't have any more missing values
+        @test all(!ismissing, Matrix(result))
+
+        # We can also use the Chain type with explicit Imputor types
+        result2 = impute(
+            orig,
+            Impute.Chain(
+                Impute.Interpolate(),
+                Impute.LOCF(),
+                Impute.NOCB()
+            ),
+        )
+
+        # Test creating a Chain via Imputor composition
+        C = Impute.Interpolate() ∘ Impute.LOCF() ∘ Impute.NOCB()
+        result3 = impute(orig, C)
+        @test result == result2
+        @test result == result3
+    end
+
     @testset "utils" begin
         M = [1.0 2.0 3.0 4.0 5.0; 1.1 2.2 3.3 4.4 5.5]
 
