@@ -136,20 +136,10 @@ end
 function impute!(
     data::M, imp::Imputor; dims=nothing, kwargs...
 )::M where M <: AbstractMatrix{Union{T, Missing}} where T
-    if dims === nothing
-        Base.depwarn(
-            "Imputing on matrices will require specifying `dims=2` in a future release, " *
-            "to maintain the current behaviour.",
-            :impute!
-        )
-        dims = 2
-    elseif dims === :rows
-        dims = 1
-    elseif dims === :cols
-        dims = 2
-    end
+    # We're calling our `dim` function to throw a depwarn if `dims === nothing`
+    d = dim(data, dims)
 
-    for x in eachslice(data; dims=dims)
+    for x in eachslice(data; dims=d)
         _impute!(x, imp; kwargs...)
     end
 

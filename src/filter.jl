@@ -12,46 +12,29 @@ end
 Filter() = Filter(_keep)
 
 _keep(x) = !ismissing(x)
-_keep(t::Tuple) = all(_keep, t)
-_keep(a::AbstractArray{Union{T, Missing}}) where {T} = all(_keep, a)
-_keep(pv::IterTools.PropertyValues) = all(_keep, pv)
+_keep(x::Union{Tuple, AbstractArray, IterTools.PropertyValues}) = all(_keep, x)
 
 apply!(data::Vector, f::Filter) = Base.filter!(f.func, data)
 function apply!(data::Vector{<:NamedTuple}, f::Filter; dims=:rows)
-    if dims == 1 || dims == :rows
-        return Base.filter!(r -> f.func(propertyvalues(r)), data)
-    else
-        throw(ArgumentError(
-            "In-place filtering of rowtables is only guaranteed for row filtering."
-        ))
-    end
+    d = dim(data, dims)
+    d == 1 || throw(ArgumentError("Rowtables only support in-place filtering rowwise."))
+    return Base.filter!(r -> f.func(propertyvalues(r)), data)
 end
 
 apply(data::Vector, f::Filter) = Base.filter(f.func, data)
 function apply(data::Vector{<:NamedTuple}, f::Filter; dims=:rows)
-    if dims == 1 || dims == :rows
+    d = dim(data, dims)
+    if d == 1
         return Base.filter(r -> f.func(propertyvalues(r)), data)
-    elseif dims == 2 || dims == :cols
-        return materializer(data)(apply(Tables.columns(data), f; dims=dims))
     else
-        throw(ArgumentError("Unknown `dims` value of $dims"))
+        return materializer(data)(apply(Tables.columns(data), f; dims=dims))
     end
 end
 
 function apply(data::AbstractArray{Union{T, Missing}}, f::Filter; dims) where T
-    # Support :rows and :cols for matrices
-    if isa(data, AbstractMatrix)
-        if dims == :rows
-            dims = 1
-        elseif dims == :cols
-            dims = 2
-        end
-    end
-
-    mask = map(f.func, eachslice(data; dims=dims))
-    # NOTE: We're currently assuming dims is an integer at this point, but we should
-    # also be able to support NamedDims.jl here once hasnames is provided.
-    idx = (i == dims ? mask : Colon() for i in 1:ndims(data))
+    d = dim(data, dims)
+    mask = map(f.func, eachslice(data; dims=d))
+    idx = (i == d ? mask : Colon() for i in 1:ndims(data))
     return data[idx...]
 end
 
@@ -60,15 +43,12 @@ apply(data::AbstractArray, f::Filter) = disallowmissing(data)
 function apply(table, f::Filter; dims)
     istable(table) || throw(MethodError(apply, (table, f)))
 
-    filtered = if dims == 1 || dims == :rows
-        rows = Tables.rows(table)
-
-        Iterators.filter(rows) do r
-            x = propertyvalues(r)
-            # @show x
-            return f.func(x)
+    d = dim(table, dims)
+    filtered = if d == 1
+        Iterators.filter(Tables.rows(table)) do r
+            f.func(propertyvalues(r))
         end
-    elseif dims == 2 || dims == :cols
+    else
         cols = Tables.columns(table)
 
         cnames = Iterators.filter(propertynames(cols)) do cname
@@ -76,8 +56,6 @@ function apply(table, f::Filter; dims)
         end
 
         TableOperations.select(table, cnames...)
-    else
-        throw(ArgumentError("Unknown `dims` value of $dims"))
     end
 
     return materializer(table)(filtered)

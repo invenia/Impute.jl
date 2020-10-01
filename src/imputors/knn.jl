@@ -29,27 +29,16 @@ function KNN(; k=1, threshold=0.5, dist=Euclidean())
 end
 
 function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::KNN; dims=nothing) where T<:Real
-    if dims === nothing
-        Base.depwarn(
-            "Imputing on matrices will require specifying `dims=2` in a future release, " *
-            "to maintain the current behaviour.",
-            :impute!
-        )
-        dims = 2
-    elseif dims === :rows
-        dims = 1
-    elseif dims === :cols
-        dims = 2
-    end
+    d = dim(data, dims)
 
     # KDTree expects data of the form dims x n
-    X = dims == 1 ? data : transpose(data)
+    X = d == 1 ? data : transpose(data)
 
     # Get mask array first
     mmask = ismissing.(X)
 
     # fill missing value as mean value
-    impute!(X, Fill(; value=mean); dims=:rows)
+    impute!(X, Fill(; value=mean); dims=1)
 
     # Disallow `missings` for NearestNeighbors
     X = disallowmissing(X)
@@ -85,7 +74,7 @@ function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::KNN; dims=nothing
     end
 
     # for type stability
-    return allowmissing(dims == 2 ? X' : X)
+    return allowmissing(d == 1 ? X : X')
 end
 
 function impute(data::AbstractMatrix{Union{T, Missing}}, imp::KNN) where T<:Real

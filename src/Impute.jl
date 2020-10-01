@@ -3,6 +3,7 @@ module Impute
 using Distances
 using IterTools
 using Missings
+using NamedDims
 using NearestNeighbors
 using Random
 using Statistics
@@ -24,11 +25,12 @@ TODO List:
 - [X] Add deprecations for old `context` calls
 - [X] Generalize the dimensionality behaviour using a `dims` keyword similar to the stats functions
   https://github.com/JuliaLang/Statistics.jl/blob/master/src/Statistics.jl#L164
-- [ ] Drop in-place calls
+- [ ] Drop in-place calls?
 - [X] Base imputors should dispatch on `impute(AbstractArray{Union{T, Missing}}, imp)`
 - [X] Replace `dropobs` and `dropvars` with `Impute.drop` and a `dims` keyword
 - [ ] Make `Chain` not an imputor and have it work on `Assertions` and `Imputors`
 - [ ] Add function for checking if a methods support some input data?
+- [ ] Add more tests for NamedDims and AxisKeys
 =#
 """
     ImputeError{T} <: Exception

@@ -22,8 +22,8 @@
 
     @testset "Default colwise" begin
         msg = string(
-            "Imputing on matrices will require specifying `dims=2` in a future ",
-            "release, to maintain the current behaviour."
+            "Imputing on matrices will require specifying `dims=2` or `dims=:cols` in a ",
+            "future release, to maintain the current behaviour."
         )
         @test_logs (:warn, msg) Impute.fill(m)
         @test_logs (:warn, msg) Impute.interp(m)

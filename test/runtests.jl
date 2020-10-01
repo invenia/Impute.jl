@@ -518,8 +518,8 @@ end
             # println(svd(data').S)
             X = add_missings(data')
 
-            svd_imputed = Impute.svd(X)
-            mean_imputed = Impute.fill(copy(X))
+            svd_imputed = Impute.svd(X; dims=:cols)
+            mean_imputed = Impute.fill(copy(X); dims=:cols)
 
             # With sufficient correlation between the variables and enough observation we
             # expect the svd imputation to perform severl times better than mean imputation.
@@ -532,8 +532,8 @@ end
             data = Matrix(dataset("Ecdat", "Electricity"))
             X = add_missings(data)
 
-            svd_imputed = Impute.svd(X)
-            mean_imputed = Impute.fill(copy(X))
+            svd_imputed = Impute.svd(X; dims=:cols)
+            mean_imputed = Impute.fill(copy(X); dims=:cols)
 
             # If we don't have enough variables then SVD imputation will probably perform
             # about as well as mean imputation.
@@ -545,8 +545,8 @@ end
             data = M * M'
             X = add_missings(data)
 
-            svd_imputed = Impute.svd(X)
-            mean_imputed = Impute.fill(copy(X))
+            svd_imputed = Impute.svd(X; dims=:cols)
+            mean_imputed = Impute.fill(copy(X); dims=:cols)
 
             # If most of the variance in the original data can't be explained by a small
             # subset of the eigen values in the svd decomposition then our low rank approximations
