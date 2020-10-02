@@ -35,6 +35,7 @@ const global imputation_methods = (
     locf = LOCF,
     nocb = NOCB,
     srs = SRS,
+    standardize = Standardize,
     svd = SVD,
     knn = KNN,
 )

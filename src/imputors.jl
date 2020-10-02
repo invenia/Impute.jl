@@ -230,6 +230,6 @@ function impute!(table::T, imp::Imputor; cols=nothing)::T where T
     return table
 end
 
-for file in ("locf.jl", "nocb.jl", "interp.jl", "fill.jl", "srs.jl", "svd.jl", "knn.jl")
+for file in ("fill.jl", "interp.jl", "knn.jl", "locf.jl", "nocb.jl", "srs.jl", "standardize.jl", "svd.jl")
     include(joinpath("imputors", file))
 end

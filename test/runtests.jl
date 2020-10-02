@@ -24,6 +24,7 @@ using Impute:
     LOCF,
     NOCB,
     SRS,
+    Standardize,
     Filter,
     Threshold,
     ImputeError,
@@ -367,6 +368,7 @@ end
 
     include("deprecated.jl")
     include("filter.jl")
+    include("imputors/standardize.jl")
     include("chain.jl")
     include("testutils.jl")
 
