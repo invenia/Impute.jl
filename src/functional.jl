@@ -21,6 +21,22 @@ function splitkwargs(::Type{T}, kwargs...) where T
     return (T(; kwdef...), rem)
 end
 
+# Specialcase kwargs constructor for substitute.
+# TODO: Add an imputor method that types should overwrite when necessary or have it fallback to `fieldnames`
+function splitkwargs(::Type{Substitute}, kwargs...)
+    rem = Dict(kwargs...)
+    kwdef = empty(rem)
+
+    for f in (:statistic, :robust, :weights)
+        if haskey(rem, f)
+            kwdef[f] = rem[f]
+            delete!(rem, f)
+        end
+    end
+
+    return (Substitute(; kwdef...), rem)
+end
+
 const global assertion_methods = (
     threshold = Threshold,
 )
@@ -34,8 +50,10 @@ const global imputation_methods = (
     fill = Fill,
     locf = LOCF,
     nocb = NOCB,
+    replace = Replace,
     srs = SRS,
     standardize = Standardize,
+    substitute = Substitute,
     svd = SVD,
     knn = KNN,
 )
@@ -82,7 +100,7 @@ end
 filter(data; kwargs...) = apply(data, Filter(); kwargs...)
 filter!(data; kwargs...) = apply!(data, Filter(); kwargs...)
 filter(; kwargs...) = data -> apply(data, Filter(); kwargs...)
-filte!(; kwargs...) = data -> apply!(data, Filter(); kwargs...)
+filter!(; kwargs...) = data -> apply!(data, Filter(); kwargs...)
 filter(f::Function, data; kwargs...) = apply(data, Filter(f); kwargs...)
 filter!(f::Function, data; kwargs...) = apply!(data, Filter(f); kwargs...)
 filter(f::Function; kwargs...) = data -> apply(data, Filter(f); kwargs...)

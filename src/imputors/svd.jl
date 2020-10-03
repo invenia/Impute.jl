@@ -5,7 +5,7 @@ Imputes the missing values in a matrix using an expectation maximization (EM) al
 over low-rank SVD approximations.
 
 # Keyword Arguments
-* `init::Imputor`: initialization method for missing values (default: Fill())
+* `init::Imputor`: initialization method for missing values (default: Substitute())
 * `rank::Union{Int, Nothing}`: rank of the SVD approximation (default: nothing meaning start and 0 and increase)
 * `tol::Float64`: convergence tolerance (default: 1e-10)
 * `maxiter::Int`: Maximum number of iterations if convergence is not achieved (default: 100)
@@ -16,7 +16,7 @@ over low-rank SVD approximations.
 * Troyanskaya, Olga, et al. "Missing value estimation methods for DNA microarrays." Bioinformatics 17.6 (2001): 520-525.
 """
 struct SVD <: Imputor
-    init::Fill
+    init::Imputor
     rank::Union{Int, Nothing}
     tol::Float64
     maxiter::Int
@@ -25,7 +25,7 @@ struct SVD <: Imputor
 end
 
 function SVD(;
-    init=Fill(), rank=nothing, tol=1e-10, maxiter=100, limits=nothing, verbose=true
+    init=Substitute(), rank=nothing, tol=1e-10, maxiter=100, limits=nothing, verbose=true
 )
     SVD(init, rank, tol, maxiter, limits, verbose)
 end

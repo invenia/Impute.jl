@@ -25,11 +25,47 @@
             "Imputing on matrices will require specifying `dims=2` or `dims=:cols` in a ",
             "future release, to maintain the current behaviour."
         )
-        @test_logs (:warn, msg) Impute.fill(m)
         @test_logs (:warn, msg) Impute.interp(m)
         @test_logs (:warn, msg) Impute.locf(m)
         @test_logs (:warn, msg) Impute.nocb(m)
         @test_logs (:warn, msg) Impute.srs(m)
+    end
+
+    @testset "Fill" begin
+        @testset "Value" begin
+            fill_val = -1.0
+            result = @test_deprecated impute(a, Fill(; value=fill_val))
+            expected = copy(a)
+            expected[[2, 3, 7]] .= fill_val
+
+            @test result == expected
+            @test result == @test_deprecated Impute.fill(a; value=fill_val)
+        end
+
+        @testset "Mean" begin
+            result = @test_deprecated impute(a, Fill(; value=mean))
+            expected = copy(a)
+            expected[[2, 3, 7]] .= mean(a[mask])
+
+            @test result == expected
+            @test result == @test_deprecated Impute.fill(a; value=mean)
+
+            a2 = copy(a)
+            @test_deprecated Impute.fill!(a2)
+            @test a2 == result
+        end
+
+        @testset "Matrix" begin
+            data = Matrix(dataset("boot", "neuro"))
+
+            result = @test_deprecated impute(data, Fill(; value=0.0); dims=:cols)
+            @test size(result) == size(data)
+            @test result == @test_deprecated Impute.fill(data; value=0.0, dims=:cols)
+
+            data2 = copy(data)
+            @test_deprecated Impute.fill!(data2; value=0.0, dims=:cols)
+            @test data2 == result
+        end
     end
 
     @testset "Drop" begin

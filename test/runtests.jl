@@ -23,8 +23,10 @@ using Impute:
     Fill,
     LOCF,
     NOCB,
+    Replace,
     SRS,
     Standardize,
+    Substitute,
     Filter,
     Threshold,
     ImputeError,
@@ -92,7 +94,7 @@ end
     table.sin[[2, 3, 7, 12, 19]] .= missing
 
     @testset "Equality" begin
-        @testset "$T" for T in (Interpolate, Fill, LOCF, NOCB, SRS)
+        @testset "$T" for T in (Interpolate, LOCF, NOCB, SRS)
             @test T() == T()
         end
     end
@@ -118,43 +120,6 @@ end
         result = interp(b)
         @test ismissing(result[1])
         @test ismissing(result[20])
-    end
-
-    @testset "Fill" begin
-        @testset "Value" begin
-            fill_val = -1.0
-            result = impute(a, Fill(; value=fill_val))
-            expected = copy(a)
-            expected[[2, 3, 7]] .= fill_val
-
-            @test result == expected
-            @test result == Impute.fill(a; value=fill_val)
-        end
-
-        @testset "Mean" begin
-            result = impute(a, Fill(; value=mean))
-            expected = copy(a)
-            expected[[2, 3, 7]] .= mean(a[mask])
-
-            @test result == expected
-            @test result == Impute.fill(a; value=mean)
-
-            a2 = copy(a)
-            Impute.fill!(a2)
-            @test a2 == result
-        end
-
-        @testset "Matrix" begin
-            data = Matrix(dataset("boot", "neuro"))
-
-            result = impute(data, Fill(; value=0.0); dims=:cols)
-            @test size(result) == size(data)
-            @test result == Impute.fill(data; value=0.0, dims=:cols)
-
-            data2 = copy(data)
-            Impute.fill!(data2; value=0.0, dims=:cols)
-            @test data2 == result
-        end
     end
 
     @testset "LOCF" begin
@@ -277,7 +242,7 @@ end
 
                 for i = 1:num_tests
                     knn_imputed = impute(copy(X), Impute.KNN(; k=2); dims=:cols)
-                    mean_imputed = impute(copy(X), Fill(; value=mean); dims=:cols)
+                    mean_imputed = impute(copy(X), Substitute(); dims=:cols)
 
                     knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data, knn_imputed)) / i
                     mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data, mean_imputed)) / i
@@ -286,7 +251,7 @@ end
                 @test knn_nrmsd < mean_nrmsd
                 # test type stability
                 @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2); dims=:cols))
-                @test typeof(X) == typeof(impute(copy(X), Fill(; value=mean); dims=:cols))
+                @test typeof(X) == typeof(impute(copy(X), Substitute(); dims=:cols))
             end
 
             @testset "Iris - 0.25" begin
@@ -296,7 +261,7 @@ end
 
                 for i = 1:num_tests
                     knn_imputed = impute(copy(X), Impute.KNN(; k=2); dims=:cols)
-                    mean_imputed = impute(copy(X), Fill(; value=mean); dims=:cols)
+                    mean_imputed = impute(copy(X), Substitute(); dims=:cols)
 
                     knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data, knn_imputed)) / i
                     mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data, mean_imputed)) / i
@@ -305,7 +270,7 @@ end
                 @test knn_nrmsd < mean_nrmsd
                 # test type stability
                 @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2); dims=:cols))
-                @test typeof(X) == typeof(impute(copy(X), Fill(; value=mean); dims=:cols))
+                @test typeof(X) == typeof(impute(copy(X), Substitute(); dims=:cols))
             end
 
             @testset "Iris - 0.35" begin
@@ -315,7 +280,7 @@ end
 
                 for i = 1:num_tests
                     knn_imputed = impute(copy(X), Impute.KNN(; k=2); dims=:cols)
-                    mean_imputed = impute(copy(X), Fill(; value=mean); dims=:cols)
+                    mean_imputed = impute(copy(X), Substitute(); dims=:cols)
 
                     knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data, knn_imputed)) / i
                     mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data, mean_imputed)) / i
@@ -324,7 +289,7 @@ end
                 @test knn_nrmsd < mean_nrmsd
                 # test type stability
                 @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2); dims=:cols))
-                @test typeof(X) == typeof(impute(copy(X), Fill(; value=mean); dims=:cols))
+                @test typeof(X) == typeof(impute(copy(X), Substitute(); dims=:cols))
             end
         end
 
@@ -353,7 +318,7 @@ end
 
             for i = 1:num_tests
                 knn_imputed = impute(copy(X), Impute.KNN(; k=4); dims=:cols)
-                mean_imputed = impute(copy(X), Fill(; value=mean); dims=:cols)
+                mean_imputed = impute(copy(X), Substitute(); dims=:cols)
 
                 knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data', knn_imputed)) / i
                 mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data', mean_imputed)) / i
@@ -362,17 +327,19 @@ end
             @test knn_nrmsd < mean_nrmsd
             # test type stability
             @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=4); dims=:cols))
-            @test typeof(X) == typeof(impute(copy(X), Fill(; value=mean); dims=:cols))
+            @test typeof(X) == typeof(impute(copy(X), Substitute(); dims=:cols))
         end
     end
 
+    include("testutils.jl")
     include("deprecated.jl")
     include("filter.jl")
+    include("imputors/replace.jl")
     include("imputors/standardize.jl")
+    include("imputors/substitute.jl")
     include("chain.jl")
-    include("testutils.jl")
 
-    @testset "$T" for T in (Interpolate, Fill, LOCF, NOCB)
+    @testset "$T" for T in (Interpolate, LOCF, NOCB)
         test_all(ImputorTester(T))
     end
 

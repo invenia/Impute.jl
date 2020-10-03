@@ -38,7 +38,7 @@ function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::KNN; dims=nothing
     mmask = ismissing.(X)
 
     # fill missing value as mean value
-    impute!(X, Fill(; value=mean); dims=1)
+    impute!(X, Substitute(); dims=1)
 
     # Disallow `missings` for NearestNeighbors
     X = disallowmissing(X)

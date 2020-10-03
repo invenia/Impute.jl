@@ -8,6 +8,73 @@ Base.@deprecate_binding(
 Base.@deprecate Context(; limit=1.0, kwargs...) Threshold(limit) false
 Base.@deprecate WeightedContext(wv; limit=1.0, kwargs...) Threshold(limit; weights=wv) false
 
+"""
+    Fill(; value=mean)
+
+Fills in the missing data with a specific value.
+The current implementation is univariate, so each variable in a table or matrix will
+be handled independently.
+
+[Deprecated] Use Impute.Replace for constants or Impute.Substitue for median/mode substitution.
+
+# Keyword Arguments
+* `value::Any`: A scalar or a function that returns a scalar if
+  passed the data with missing data removed (e.g, `mean`)
+
+# Example
+```jldoctest
+julia> using Impute: Fill, impute
+
+julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
+2×5 Array{Union{Missing, Float64},2}:
+ 1.0  2.0   missing  missing  5.0
+ 1.1  2.2  3.3       missing  5.5
+
+julia> impute(M, Fill(); dims=2)
+2×5 Array{Union{Missing, Float64},2}:
+ 1.0  2.0  2.66667  2.66667  5.0
+ 1.1  2.2  3.3      3.025    5.5
+```
+"""
+struct Fill{T} <: Imputor
+    value::T
+
+    function Fill(value::T) where T
+        Base.depwarn(
+            "Impute.Fill is deprecated in favour of Impute.Replace for constants and " *
+            "Impute.Substitute for calculating summary statistics over non-missing data.",
+            :Fill
+        )
+        return new{T}(value)
+    end
+end
+
+# TODO: Switch to using Base.@kwdef on 1.1
+Fill(; value=mean) = Fill(value)
+
+function _impute!(data::AbstractArray{Union{T, Missing}}, imp::Fill) where T
+    fill_val = if isa(imp.value, Function)
+        available = skipmissing(data)
+
+        if isempty(available)
+            @debug "Cannot apply fill function $(imp.value) as all values are missing"
+            return data
+        else
+            imp.value(available)
+        end
+    else
+        imp.value
+    end
+
+    for i in eachindex(data)
+        if ismissing(data[i])
+            data[i] = fill_val
+        end
+    end
+
+    return data
+end
+
 # A couple utility methods to avoid messing up var and obs dimensions
 # NOTE: We aren't deprecating these as they were always internal function that weren't
 # intended for public use.

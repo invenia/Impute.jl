@@ -1,5 +1,5 @@
 """
-    Standardize(; values=(NaN, Nothing))
+    Standardize(; values)
 
 Standardize (or replace) various missing data values with `missing`.
 This is useful for downstream imputation methods that assume missing data is represented by
@@ -35,7 +35,7 @@ Standardize(; values::Tuple) = Standardize(values)
 function _impute!(data::AbstractArray{Union{T, Missing}}, imp::Standardize) where T
     # Reduce the possible set of values to those that could actually be found in the data
     # Useful, if we declare a `Replace` imputor that should be applied to multiple datasets.
-    replace!(
+    Base.replace!(
         data,
         (v => missing for v in Base.filter(v -> isa(v, T), imp.values))...
     )
