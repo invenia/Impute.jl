@@ -54,6 +54,10 @@
                 @test isequal(impute(c, tester.imp(; tester.kwargs...); dims=:cols), c)
             end
         end
+        # Internal `svd` call isn't supported by these type, but maybe they should be?
+        # test_axisarray(tester)
+        # test_nameddimsarray(tester)
+        # test_keyedarray(tester)
     end
 
     # Test a case where we expect SVD to perform well (e.g., many variables, )

@@ -4,6 +4,9 @@
         test_hashing(tester)
         test_equality(tester)
         test_matrix(tester)
+        test_axisarray(tester)
+        test_nameddimsarray(tester)
+        test_keyedarray(tester)
     end
     @testset "Iris" begin
         # Reference

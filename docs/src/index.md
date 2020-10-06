@@ -36,7 +36,7 @@ Our first instinct might be to drop all observations, but this leaves us too few
 rows to work with:
 
 ```@repl quickstart
-Impute.drop(df)
+Impute.filter(df; dims=:rows)
 ```
 
 We could try imputing the values with linear interpolation, but that still leaves missing

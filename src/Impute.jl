@@ -15,8 +15,6 @@ using Base.Iterators
 using LinearAlgebra
 using LinearAlgebra: Diagonal
 
-import Base.Iterators: drop
-
 #=
 TODO List:
 - [X] Drop Context
@@ -25,27 +23,14 @@ TODO List:
 - [X] Add deprecations for old `context` calls
 - [X] Generalize the dimensionality behaviour using a `dims` keyword similar to the stats functions
   https://github.com/JuliaLang/Statistics.jl/blob/master/src/Statistics.jl#L164
-- [ ] Drop in-place calls?
+- [X] ~Drop in-place calls?~
 - [X] Base imputors should dispatch on `impute(AbstractArray{Union{T, Missing}}, imp)`
 - [X] Replace `dropobs` and `dropvars` with `Impute.drop` and a `dims` keyword
 - [X] Make `Chain` not an imputor and have it work on `Assertions` and `Imputors`
-- [ ] Add function for checking if a methods support some input data?
-- [ ] Add more tests for NamedDims and AxisKeys
+- [X] ~Add function for checking if a methods support some input data?~
+- [X] Add more tests for NamedDims and AxisKeys
 - [ ] Add walkthrough docs
 =#
-"""
-    ImputeError{T} <: Exception
-
-Is thrown by `impute` methods when the limit of imputable values has been exceeded.
-
-# Fields
-* msg::T - the message to print.
-"""
-struct ImputeError{T} <: Exception
-    msg::T
-end
-
-Base.showerror(io::IO, err::ImputeError) = println(io, "ImputeError: $(err.msg)")
 
 include("utils.jl")
 include("assertions.jl")

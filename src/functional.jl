@@ -42,7 +42,6 @@ const global assertion_methods = (
 )
 
 const global imputation_methods = (
-    drop = DropObs,
     dropobs = DropObs,
     dropvars = DropVars,
     interp = Interpolate,

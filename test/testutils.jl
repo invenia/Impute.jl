@@ -57,6 +57,8 @@ function test_all(tester::ImputorTester)
     test_dataframe(tester)
     test_groupby(tester)
     test_axisarray(tester)
+    test_nameddimsarray(tester)
+    test_keyedarray(tester)
     test_columntable(tester)
     test_rowtable(tester)
 end
@@ -286,6 +288,78 @@ function test_axisarray(tester::ImputorTester)
             @test aa2_ == result
             if aa2 != result
                 @warn "$(tester.f!) did not mutate input data of type AxisArray"
+            end
+        end
+    end
+end
+
+function test_nameddimsarray(tester::ImputorTester)
+    @testset "NamedDimsArray" begin
+        a = allowmissing(1.0:1.0:20.0)
+        a[[2, 3, 7]] .= missing
+        m = collect(reshape(a, 5, 4))
+        nda = NamedDimsArray(deepcopy(m), (:time, :id))
+        result = impute(nda, tester.imp(; tester.kwargs...); dims=:id)
+
+        @testset "Base" begin
+            # Test that we have fewer missing values
+            @test count(ismissing, result) < count(ismissing, nda)
+            @test isa(result, NamedDimsArray)
+            @test eltype(result) <: eltype(nda)
+
+            # Test that functional form behaves the same way
+            @test result == tester.f(nda; tester.kwargs..., dims=:id)
+
+            # Test using cols still works
+            @test result == tester.f(nda; tester.kwargs..., dims=:cols)
+        end
+
+        @testset "In-place" begin
+            # Test that the in-place function return the new results and logs whether it
+            # successfully did it in-place
+            nda2 = deepcopy(nda)
+            nda2_ = tester.f!(nda2; tester.kwargs..., dims=:cols)
+            @test nda2_ == result
+            if nda2 != result
+                @info "$(tester.f!) did not mutate input data of type NamedDimsArray"
+            end
+        end
+    end
+end
+
+function test_keyedarray(tester::ImputorTester)
+    @testset "KeyedArray" begin
+        a = allowmissing(1.0:1.0:20.0)
+        a[[2, 3, 7]] .= missing
+        m = collect(reshape(a, 5, 4))
+        ka = KeyedArray(
+            deepcopy(m);
+            time=DateTime(2017, 6, 5, 5):Hour(1):DateTime(2017, 6, 5, 9),
+            id=1:4,
+        )
+        result = impute(ka, tester.imp(; tester.kwargs...); dims=:id)
+
+        @testset "Base" begin
+            # Test that we have fewer missing values
+            @test count(ismissing, result) < count(ismissing, ka)
+            @test isa(result, KeyedArray)
+            @test eltype(result) <: eltype(ka)
+
+            # Test that functional form behaves the same way
+            @test result == tester.f(ka; tester.kwargs..., dims=:id)
+
+            # Test using cols still works
+            @test result == tester.f(ka; tester.kwargs..., dims=:cols)
+        end
+
+        @testset "In-place" begin
+            # Test that the in-place function return the new results and logs whether it
+            # successfully did it in-place
+            ka2 = deepcopy(ka)
+            ka2_ = tester.f!(ka2; tester.kwargs..., dims=:cols)
+            @test ka2_ == result
+            if ka2 != result
+                @info "$(tester.f!) did not mutate input data of type KeyedArray"
             end
         end
     end

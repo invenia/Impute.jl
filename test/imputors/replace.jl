@@ -14,6 +14,8 @@
         # groupby test also fail because it tries to call an empty constructor
         # test_groupby(tester)
         test_axisarray(tester)
+        test_nameddimsarray(tester)
+        test_keyedarray(tester)
         test_columntable(tester)
         test_rowtable(tester)
     end

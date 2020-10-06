@@ -6,9 +6,11 @@
         test_vector(tester)
         test_matrix(tester)
         test_dataframe(tester)
-        # Groupby behaviour is inconsistent for testing
+        # Behaviour is inconsistent for testing because of `rand` calls
         # test_groupby(tester)
-        test_axisarray(tester)
+        # test_axisarray(tester)
+        # test_nameddimsarray(tester)
+        # test_keyedarray(tester)
         test_columntable(tester)
         test_rowtable(tester)
     end
