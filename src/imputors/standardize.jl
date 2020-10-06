@@ -14,15 +14,15 @@ Warning: In-place methods are only applicable for datasets which already `allowm
 ```jldoctest
 julia> using Impute: Standardize, impute
 
-julia> M = [1.0 2.0 nothing NaN 5.0; 1.1 2.2 3.3 nothing 5.5]
-2×5 Array{Union{Nothing, Float64},2}:
- 1.0  2.0   nothing  NaN  5.0
- 1.1  2.2  3.3       nothing  5.5
+julia> M = [1.0 2.0 -9999.0 NaN 5.0; 1.1 2.2 3.3 0.0 5.5]
+2×5 Array{Float64,2}:
+ 1.0  2.0  -9999.0  NaN    5.0
+ 1.1  2.2      3.3    0.0  5.5
 
-julia> impute(M, Standardize(; values=(NaN, Nothing)); dims=2)
+julia> impute(M, Standardize(; values=(NaN, -9999.0, 0.0)))
 2×5 Array{Union{Missing, Float64},2}:
- 1.0  2.0  missing  missing  5.0
- 1.1  2.2  3.3      missing    5.5
+ 1.0  2.0   missing  missing  5.0
+ 1.1  2.2  3.3       missing  5.5
 ```
 """
 struct Standardize <: Imputor

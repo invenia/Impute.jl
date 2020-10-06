@@ -4,6 +4,7 @@ using Combinatorics
 using DataFrames
 using Dates
 using Distances
+using Documenter
 using LinearAlgebra
 using RDatasets
 using Random
@@ -332,6 +333,7 @@ end
     end
 
     include("testutils.jl")
+    include("utils.jl")
     include("deprecated.jl")
     include("filter.jl")
     include("imputors/replace.jl")
@@ -401,4 +403,8 @@ end
             @test nrmsd(svd_imputed, data) > nrmsd(mean_imputed, data) * 0.9
         end
     end
+
+    # Start running doctests before we wrap up technical changes and work
+    # on more documentation
+    doctest(Impute)
 end

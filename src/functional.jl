@@ -113,7 +113,7 @@ filter!(f::Function; kwargs...) = data -> apply!(data, Filter(f); kwargs...)
 See [DropObs](@ref) for details.
 
 # Example
-```
+```julia-repl
 julia> using DataFrames; using Impute: Impute
 
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
@@ -141,17 +141,17 @@ julia> Impute.dropobs(df; dims=2)
 @doc """
     Impute.dropvars(data; dims=1)
 
-[Deprecated] Finds variables with too many missing values in a `AbstractMatrix` or `Tables.table` and
+[Deprecated] Finds variables with missing values in a `AbstractMatrix` or `Tables.table` and
 removes them from the input data. See [DropVars](@ref) for details.
 
 # Example
-```jldoctest
+```julia-repl
 julia> using DataFrames; using Impute: Impute
 
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
-5×2 DataFrames.DataFrame
+5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
+│     │ Float64? │ Float64? │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -160,15 +160,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 5   │ 5.0      │ 5.5      │
 
 julia> Impute.dropvars(df)
-5×1 DataFrames.DataFrame
-│ Row │ b        │
-│     │ Float64  │
-├─────┼──────────┤
-│ 1   │ 1.1      │
-│ 2   │ 2.2      │
-│ 3   │ 3.3      │
-│ 4   │ missing  │
-│ 5   │ 5.5      │
+0×0 DataFrame
 ```
 """ dropvars
 
@@ -183,10 +175,11 @@ containing `missing`s.
 ```jldoctest
 julia> using DataFrames; using Impute: Impute
 
+
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
-5×2 DataFrames.DataFrame
+5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
+│     │ Float64? │ Float64? │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -195,24 +188,16 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 5   │ 5.0      │ 5.5      │
 
 julia> Impute.filter(df; dims=:cols)
-5×1 DataFrames.DataFrame
-│ Row │ b        │
-│     │ Float64  │
-├─────┼──────────┤
-│ 1   │ 1.1      │
-│ 2   │ 2.2      │
-│ 3   │ 3.3      │
-│ 4   │ missing  │
-│ 5   │ 5.5      │
+0×0 DataFrame
 
 julia> Impute.filter(df; dims=:rows)
-3×2 DataFrames.DataFrame
-│ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
-├─────┼──────────┼──────────┤
-│ 1   │ 1.0      │ 1.1      │
-│ 2   │ 2.0      │ 2.2      │
-│ 3   │ 5.0      │ 5.5      │
+3×2 DataFrame
+│ Row │ a       │ b       │
+│     │ Float64 │ Float64 │
+├─────┼─────────┼─────────┤
+│ 1   │ 1.0     │ 1.1     │
+│ 2   │ 2.0     │ 2.2     │
+│ 3   │ 5.0     │ 5.5     │
 ```
 """ filter
 
@@ -227,9 +212,9 @@ See [Interpolate](@ref) for details.
 julia> using DataFrames; using Impute: Impute
 
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
-5×2 DataFrames.DataFrame
+5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
+│     │ Float64? │ Float64? │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -238,9 +223,9 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 5   │ 5.0      │ 5.5      │
 
 julia> Impute.interp(df)
-5×2 DataFrames.DataFrame
+5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
+│     │ Float64? │ Float64? │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -256,13 +241,13 @@ julia> Impute.interp(df)
 Fills in the missing data with a specific value. See [Fill](@ref) for details.
 
 # Example
-```jldoctest
+```julia-repl
 julia> using DataFrames; using Impute: Impute
 
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
-5×2 DataFrames.DataFrame
+5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
+│     │ Float64? │ Float64? │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -271,9 +256,9 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 5   │ 5.0      │ 5.5      │
 
 julia> Impute.fill(df; value=-1.0)
-5×2 DataFrames.DataFrame
+5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
+│     │ Float64? │ Float64? │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -294,9 +279,9 @@ observation. See [LOCF](@ref) for details.
 julia> using DataFrames; using Impute: Impute
 
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
-5×2 DataFrames.DataFrame
+5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
+│     │ Float64? │ Float64? │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -305,9 +290,9 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 5   │ 5.0      │ 5.5      │
 
 julia> Impute.locf(df)
-5×2 DataFrames.DataFrame
+5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
+│     │ Float64? │ Float64? │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -328,9 +313,9 @@ observation. See [LOCF](@ref) for details.
 julia> using DataFrames; using Impute: Impute
 
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
-5×2 DataFrames.DataFrame
+5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
+│     │ Float64? │ Float64? │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -339,9 +324,9 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 5   │ 5.0      │ 5.5      │
 
 julia> Impute.nocb(df)
-5×2 DataFrames.DataFrame
+5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
+│     │ Float64? │ Float64? │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -359,13 +344,13 @@ categorical variables. Furthermore, it completes imputation while preserving the
 distributional properties of the variables (e.g., mean, standard deviation).
 
 # Example
-```jldoctest
+```julia-repl
 julia> using DataFrames; using Random; using Impute: Impute
 
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
-5×2 DataFrames.DataFrame
+5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
+│     │ Float64? │ Float64? │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -376,12 +361,12 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 julia> Impute.srs(df; rng=MersenneTwister(1234))
 5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
+│     │ Float64? │ Float64? │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
 │ 3   │ 1.0      │ 3.3      │
-│ 4   │ 5.0      │ 3.3      │
+│ 4   │ 2.0      │ 3.3      │
 │ 5   │ 5.0      │ 5.5      │
 ```
 """ srs

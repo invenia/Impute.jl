@@ -26,10 +26,17 @@ Compose new chains with the composition operator
 # Example
 
 ```jldoctest
-julia> using Impute: impute, Interpolate, NOCB, LOCF
+julia> using Impute: Impute, Interpolate, NOCB, LOCF
 
-julia> imp = Interpolate() ∘ NOCB() ∘ LOCF()
-Impute.Chain(Impute.Imputor[Interpolate(2), NOCB(2), LOCF(2)])
+julia> M = [missing 2.0 missing missing 5.0; 1.1 2.2 missing 4.4 missing]
+2×5 Array{Union{Missing, Float64},2}:
+  missing  2.0  missing   missing  5.0
+ 1.1       2.2  missing  4.4        missing
+
+julia> Impute.run(M, Interpolate() ∘ NOCB() ∘ LOCF(); dims=:rows)
+2×5 Array{Union{Missing, Float64},2}:
+ 2.0  2.0  3.0  4.0  5.0
+ 1.1  2.2  3.3  4.4  4.4
 ```
 """
 Base.:(∘)(a::Transform, b::Transform) = Chain(Transform[a, b])

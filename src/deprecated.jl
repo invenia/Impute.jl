@@ -1,4 +1,6 @@
 # Introduced in 0.6
+# NOTE: Deprecated Imputor docstrings use julia-repl rather than jldoctest since depwarn
+# output isn't consistent across installs.
 Base.@deprecate_binding(
     AbstractContext,
     Assertion,
@@ -22,7 +24,7 @@ be handled independently.
   passed the data with missing data removed (e.g, `mean`)
 
 # Example
-```jldoctest
+```julia-repl
 julia> using Impute: Fill, impute
 
 julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
@@ -30,7 +32,7 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(M, Fill(); dims=2)
+julia> impute(M, Fill(); dims=:rows)
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0  2.66667  2.66667  5.0
  1.1  2.2  3.3      3.025    5.5
@@ -106,18 +108,22 @@ end
 provided.
 
 # Example
-```jldoctest
+```julia-repl
 julia> using Impute: DropObs, impute
 
-julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
-2×5 Array{Union{Missing, Float64},2}:
- 1.0  2.0   missing  missing  5.0
- 1.1  2.2  3.3       missing  5.5
+julia> M = [1.0 1.1; 2.0 2.2; missing 3.3; missing missing; 5.0 5.5]
+5×2 Array{Union{Missing, Float64},2}:
+ 1.0       1.1
+ 2.0       2.2
+  missing  3.3
+  missing   missing
+ 5.0       5.5
 
-julia> impute(M, DropObs(); dims=2)
-2×3 Array{Union{Missing, Float64},2}:
- 1.0  2.0  5.0
- 1.1  2.2  5.5
+julia> impute(M, DropObs())
+3×2 Array{Union{Missing, Float64},2}:
+ 1.0  1.1
+ 2.0  2.2
+ 5.0  5.5
 ```
 """
 struct DropObs <: Imputor
@@ -170,7 +176,7 @@ end
 `Tables.table` and removes them from the input data.
 
 # Examples
-```jldoctest
+```julia-repl
 julia> using Impute: DropVars, impute
 
 julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
@@ -178,9 +184,10 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(M, DropVars(); dims=2)
-1×5 Array{Union{Missing, Float64},2}:
- 1.1  2.2  3.3  missing  5.5
+julia> impute(M, DropVars())
+2×3 Array{Union{Missing, Float64},2}:
+ 1.0  2.0  5.0
+ 1.1  2.2  5.5
 ```
 """
 struct DropVars <: Imputor

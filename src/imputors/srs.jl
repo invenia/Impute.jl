@@ -3,6 +3,8 @@ struct SRS <: Imputor
 end
 
 
+# Docstring below uses julia-repl cause the rng may give different result on different
+# versions of julia.
 """
     SRS(; rng=Random.GLOBAL_RNG)
 
@@ -21,7 +23,7 @@ for both categorical and continuous data.
 * `rng::AbstractRNG`: A random number generator to use for observation selection
 
 # Example
-```jldoctest
+```julia-repl
 julia> using Random; using Impute: SRS, impute
 
 julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
@@ -29,9 +31,9 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(M, SRS(; rng=MersenneTwister(1234)); dims=2)
+julia> impute(M, SRS(; rng=MersenneTwister(1234)); dims=:rows)
 2×5 Array{Union{Missing, Float64},2}:
- 1.0  2.0  1.0  5.0  5.0
+ 1.0  2.0  1.0  2.0  5.0
  1.1  2.2  3.3  3.3  5.5
 ```
 """

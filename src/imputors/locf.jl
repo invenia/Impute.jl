@@ -21,7 +21,7 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(M, LOCF(); dims=2)
+julia> impute(M, LOCF(); dims=:rows)
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0  2.0  2.0  5.0
  1.1  2.2  3.3  3.3  5.5

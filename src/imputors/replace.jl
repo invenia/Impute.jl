@@ -14,7 +14,7 @@ If the input data is of a different type then the no replacement will be perform
 julia> using Impute: Replace, impute
 
 julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
-2×5 Array{Union{Nothing, Float64},2}:
+2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
