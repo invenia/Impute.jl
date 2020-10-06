@@ -1,4 +1,36 @@
 
+function add_missings(X, ratio=0.1)
+    result = Matrix{Union{Float64, Missing}}(X)
+
+    for i in 1:floor(Int, length(X) * ratio)
+        result[rand(1:length(X))] = missing
+    end
+
+    return result
+end
+
+function add_missings_single(X, ratio=0.1)
+    result = Matrix{Union{Float64, Missing}}(X)
+
+    randcols = 1:floor(Int, size(X, 2) * ratio)
+    for col in randcols
+        result[rand(1:size(X, 1)), col] = missing
+    end
+
+    return result
+end
+
+# A sequential RNG for consistent testing across julia versions
+mutable struct SequentialRNG <: AbstractRNG
+    idx::Int
+end
+SequentialRNG(; start_idx=1) = SequentialRNG(start_idx)
+
+function Base.rand(srng::SequentialRNG, x::Vector)
+    srng.idx = srng.idx < length(x) ? srng.idx + 1 : 1
+    return x[srng.idx]
+end
+
 struct ImputorTester{I<:Imputor}
     imp::Type{I}
     f::Function
@@ -18,6 +50,7 @@ function ImputorTester(imp::Type{<:Imputor}; kwargs...)
 end
 
 function test_all(tester::ImputorTester)
+    test_hashing(tester)
     test_equality(tester)
     test_vector(tester)
     test_matrix(tester)
@@ -26,6 +59,12 @@ function test_all(tester::ImputorTester)
     test_axisarray(tester)
     test_columntable(tester)
     test_rowtable(tester)
+end
+
+function test_hashing(tester::ImputorTester)
+    @testset "Hashing" begin
+        @test hash(tester.imp()) == hash(tester.imp())
+    end
 end
 
 function test_equality(tester::ImputorTester)

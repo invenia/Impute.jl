@@ -93,6 +93,10 @@ function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::SVD; dims=nothing
     return data
 end
 
-function impute(data::AbstractMatrix{Union{T, Missing}}, imp::SVD) where T<:Real
-    return impute!(trycopy(data), imp)
+impute!(data::AbstractMatrix{Missing}, imp::SVD; kwargs...) = data
+
+function impute(data::AbstractMatrix{Union{T, Missing}}, imp::SVD; kwargs...) where T<:Real
+    return impute!(trycopy(data), imp; kwargs...)
 end
+
+impute(data::AbstractMatrix{Missing}, imp::SVD; kwargs...) = trycopy(data)

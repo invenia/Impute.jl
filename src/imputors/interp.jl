@@ -28,7 +28,6 @@ struct Interpolate <: Imputor end
 
 function _impute!(data::AbstractArray{<:Union{T, Missing}}, imp::Interpolate) where T
     i = findfirst(!ismissing, data) + 1
-    i < lastindex(data) || @debug "Cannot interpolate points when all values are missing"
 
     while i < lastindex(data)
         if ismissing(data[i])
