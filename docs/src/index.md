@@ -1,8 +1,8 @@
 # Impute
 
 ```@setup quickstart
-using DataFrames, RDatasets, Impute
-df = dataset("boot", "neuro")
+using DataFrames, Impute
+df = Impute.dataset("test/table/neuro") |> DataFrame
 ```
 
 [![stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://invenia.github.io/Impute.jl/stable/)
@@ -23,13 +23,13 @@ julia> using Pkg; Pkg.add("Impute")
 Let's start by loading our dependencies:
 
 ```@repl
-using DataFrames, RDatasets, Impute
+using DataFrames, Impute
 ```
 
 We'll also want some test data containing `missing`s to work with:
 
 ```@repl quickstart
-df = dataset("boot", "neuro")
+df = Impute.dataset("test/table/neuro") |> DataFrame
 ```
 
 Our first instinct might be to drop all observations, but this leaves us too few

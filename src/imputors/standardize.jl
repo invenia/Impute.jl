@@ -29,7 +29,7 @@ struct Standardize <: Imputor
     values::Tuple
 end
 
-Standardize(; values::Tuple) = Standardize(values)
+Standardize(; values) = isa(values, Tuple) ? Standardize(values) : Standardize(tuple(values))
 
 # Primary definition just calls `replace!`
 function _impute!(data::AbstractArray{Union{T, Missing}}, imp::Standardize) where T

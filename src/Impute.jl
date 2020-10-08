@@ -1,5 +1,8 @@
 module Impute
 
+using BSON
+using CSV
+using DataDeps
 using Distances
 using IterTools
 using Missings
@@ -39,5 +42,8 @@ include("filter.jl")
 include("chain.jl")
 include("deprecated.jl")
 include("functional.jl")
+include("data.jl")
+
+__init__() = register_datadep()
 
 end  # module

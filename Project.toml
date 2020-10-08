@@ -4,6 +4,9 @@ authors = ["Invenia Technical Computing"]
 version = "0.6.0"
 
 [deps]
+BSON = "fbb218c0-5317-5bc6-957e-2ee96dd4b1f0"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+DataDeps = "124859b0-ceae-595e-8997-d05f6a7a8dfe"
 Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
 IterTools = "c8e1da08-722c-5040-9ed9-7db0dc04731e"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
@@ -18,6 +21,9 @@ Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 
 [compat]
 AxisKeys = "0.1"
+BSON = "0.2"
+CSV = "0.6, 0.7"
+DataDeps = "0.7"
 Distances = "0.8, 0.9"
 IterTools = "1.2, 1.3"
 Missings = "0.4"
@@ -36,8 +42,7 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
-RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["AxisArrays", "AxisKeys", "Combinatorics", "DataFrames", "Dates", "Distances", "Documenter", "RDatasets", "Test"]
+test = ["AxisArrays", "AxisKeys", "Combinatorics", "DataFrames", "Dates", "Distances", "Documenter", "Test"]

@@ -42,8 +42,8 @@
         @test isequal(assert(a, t), a)
         @test isequal(assert(table, t), table)
 
-        @test isequal(threshold(m; ratio=0.8, weights=eweights(5, 0.3)), m)
-        @test isequal(threshold(m; ratio=0.8, weights=eweights(5, 0.3)), aa)
+        @test isequal(threshold(m; ratio=0.8, weights=eweights(5, 0.3), dims=:cols), m)
+        @test isequal(threshold(m; ratio=0.8, weights=eweights(5, 0.3), dims=:cols), aa)
 
         # If we reverse the weights such that earlier observations are more important
         # then our previous limit of 0.2 won't be enough to succeed.
@@ -52,10 +52,10 @@
         @test_throws AssertionError assert(table, t)
 
         t = Threshold(; ratio=0.1, weights=reverse!(eweights(5, 0.3)))
-        @test_throws AssertionError assert(m, t)
-        @test_throws AssertionError assert(aa, t)
+        @test_throws AssertionError assert(m, t; dims=:cols)
+        @test_throws AssertionError assert(aa, t; dims=:cols)
 
         @test_throws DimensionMismatch assert(a[1:10], t)
-        @test_throws DimensionMismatch assert(m[1:3, :], t)
+        @test_throws DimensionMismatch assert(m[1:3, :], t; dims=:cols)
     end
 end

@@ -12,7 +12,7 @@
         # Reference
         # P. Schimitt, et. al
         # A comparison of six methods for missing data imputation
-        iris = dataset("datasets", "iris")
+        iris = Impute.dataset("test/table/iris") |> DataFrame
         iris2 = filter(row -> row[:Species] == "versicolor" || row[:Species] == "virginica", iris)
         data = Array(iris2[:, [:SepalLength, :SepalWidth, :PetalLength, :PetalWidth]])
         num_tests = 100

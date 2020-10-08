@@ -56,7 +56,7 @@
         end
 
         @testset "Matrix" begin
-            data = Matrix(dataset("boot", "neuro"))
+            data = Matrix(Impute.dataset("test/table/neuro") |> DataFrame)
 
             result = @test_deprecated impute(data, Fill(; value=0.0); dims=:cols)
             @test size(result) == size(data)
@@ -253,7 +253,7 @@
     end
 
     @testset "Chain" begin
-        orig = dataset("boot", "neuro")
+        orig = Impute.dataset("test/table/neuro") |> DataFrame
 
         # Less effecient, but a chain should produce the same results as manual
         # piping the functional outputs.

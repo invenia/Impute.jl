@@ -1,5 +1,5 @@
 """
-    SVD <: Imputor
+    SVD(; kwargs...)
 
 Imputes the missing values in a matrix using an expectation maximization (EM) algorithm
 over low-rank SVD approximations.

@@ -1,5 +1,5 @@
 @testset "Chaining and Piping" begin
-    orig = dataset("boot", "neuro")
+    orig = Impute.dataset("test/table/neuro") |> DataFrame
 
     @testset "DataFrame" begin
         # Less effecient, but a chain should produce the same results as manual

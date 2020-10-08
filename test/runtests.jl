@@ -6,7 +6,6 @@ using Dates
 using Distances
 using Documenter
 using LinearAlgebra
-using RDatasets
 using Random
 using Statistics
 using StatsBase

@@ -3,6 +3,8 @@ language: julia
 os:
   - linux
   - osx
+env:
+  - DATADEPS_ALWAYS_ACCEPT=true
 julia:
   # 1.0 should also work, but Pkg.test hit some chmod issues on 1.0 in docker containers
   - 1.3

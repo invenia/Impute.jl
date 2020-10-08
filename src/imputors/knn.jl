@@ -1,5 +1,5 @@
 """
-    KNN <: Imputor
+    KNN(; kwargs...)
 
 Imputation using k-Nearest Neighbor algorithm.
 
@@ -7,18 +7,17 @@ Imputation using k-Nearest Neighbor algorithm.
 * `k::Int`: number of nearest neighbors
 * `dist::MinkowskiMetric`: distance metric suppports by `NearestNeighbors.jl` (Euclidean, Chebyshev, Minkowski and Cityblock)
 * `threshold::AbsstractFloat`: thershold for missing neighbors
-* `on_complete::Function`: a function to run when imputation is complete
 
 # Reference
 * Troyanskaya, Olga, et al. "Missing value estimation methods for DNA microarrays." Bioinformatics 17.6 (2001): 520-525.
 """
-# TODO : Support Categorical Distance (NearestNeighbors.jl support needed)
 struct KNN{M} <: Imputor where M <: NearestNeighbors.MinkowskiMetric
     k::Int
     threshold::AbstractFloat
     dist::M
 end
 
+# TODO : Support Categorical Distance (NearestNeighbors.jl support needed)
 function KNN(; k=1, threshold=0.5, dist=Euclidean())
     k < 1 && throw(ArgumentError("The number of nearset neighbors should be greater than 0"))
 

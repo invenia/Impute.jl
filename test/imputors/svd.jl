@@ -92,7 +92,7 @@
     # Test a case where we know SVD imputation won't perform well
     # (e.g., only a few variables, only )
     @testset "Data mismatch - too few variables" begin
-        data = Matrix(dataset("Ecdat", "Electricity"))
+        data = Tables.matrix(Impute.dataset("test/table/electricity"))
         X = add_missings(data)
 
         svd_imputed = Impute.svd(X; dims=:cols)

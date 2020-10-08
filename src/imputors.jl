@@ -90,12 +90,11 @@ Optionally, you can specify the dimension to impute along.
 * `data::AbstractArray{Union{T, Missing}}`: the data to be impute along dimensions `dims`
 * `imp::Imputor`: the Imputor method to use
 
-# Keyword Arguemnts
-* `dims=:`: The dimension to impute along (defaults to a deprecated 2 for matrices).
-  `:rows` and `:cols` are also supported for matrices.
+# Keyword Arguments
+* `dims=:`: The dimension to impute along. `:rows` and `:cols` are also supported for matrices.
 
 # Returns
-* `AbstractArrayu{Union{T, Missing}}`: the input `data` with values imputed
+* `AbstractArray{Union{T, Missing}}`: the input `data` with values imputed
 
 # NOTES
 1. Matrices have a deprecated `dims=2` special case as `dims=:` is a breaking change
@@ -103,6 +102,7 @@ Optionally, you can specify the dimension to impute along.
 3. `eachslice` is used internally which requires Julia 1.1
 
 # Example
+```jldoctest
 julia> using Impute: Interpolate, impute!
 
 julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
@@ -119,6 +119,7 @@ julia> M
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0  3.0  4.0  5.0
  1.1  2.2  3.3  4.4  5.5
+```
 """
 function impute!(
     data::A, imp::Imputor; dims=:, kwargs...
@@ -136,6 +137,7 @@ end
 function impute!(
     data::M, imp::Imputor; dims=nothing, kwargs...
 )::M where M <: AbstractMatrix{Union{T, Missing}} where T
+    dims === Colon() && return _impute!(data, imp; kwargs...)
     # We're calling our `dim` function to throw a depwarn if `dims === nothing`
     d = dim(data, dims)
 
@@ -190,12 +192,13 @@ if this is not the desired behaviour custom imputor methods should overload this
 * the input `data` with values imputed
 
 # Example
-``jldoctest
+```jldoctest
 julia> using DataFrames; using Impute: Interpolate, impute
+
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
+│     │ Float64? │ Float64? │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -206,13 +209,14 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 julia> impute(df, Interpolate())
 5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
+│     │ Float64? │ Float64? │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
 │ 3   │ 3.0      │ 3.3      │
 │ 4   │ 4.0      │ 4.4      │
 │ 5   │ 5.0      │ 5.5      │
+```
 """
 function impute!(table::T, imp::Imputor; cols=nothing)::T where T
     # TODO: We could probably handle iterators of tables here

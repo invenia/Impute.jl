@@ -1,10 +1,14 @@
 [deps]
+AxisKeys = "94b1ba4f-4ee9-5380-92f1-94cde586c3c5"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Distances = "b4f34e82-e78d-54a5-968a-f98e89d6e8f7"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 Impute = "f7bf1975-0170-51b9-8c5f-a992d46b9575"
-RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
+Missings = "e1d29d7a-bbdc-5cf2-9ac0-f12de2c33e28"
+NamedDims = "356022a1-0364-5f58-8944-0da4b18d706f"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
-DataFrames = ">= 0.16"
+DataFrames = ">= 0.21"
 Documenter = "~0.22"
-RDatasets = ">= 0.6.2"
