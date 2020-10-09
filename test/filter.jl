@@ -160,4 +160,24 @@
             @test isequal(collect(result'), Impute.filter(collect(aa'); dims=:rows))
         end
     end
+
+    @testset "functional" begin
+        expected = deleteat!(deepcopy(a), [2, 3, 7])
+
+        @test a |> Impute.filter() == expected
+        @test a |> Impute.filter(!ismissing) == expected
+        @test Impute.filter(!ismissing, a) == expected
+
+        b = deepcopy(a)
+        @test b |> Impute.filter!() == expected
+        @test b == expected
+
+        b = deepcopy(a)
+        @test b |> Impute.filter!(!ismissing) == expected
+        @test b == expected
+
+        b = deepcopy(a)
+        @test Impute.filter!(!ismissing, b) == expected
+        @test b == expected
+    end
 end

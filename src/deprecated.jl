@@ -228,11 +228,6 @@ function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::Union{DropObs, Dr
     return data
 end
 
-function impute!(data::AbstractVector{Union{T, Missing}}, imp::Union{DropObs, DropVars}) where T
-    data = impute(data, imp)
-    return data
-end
-
 impute!(data, imp::Union{DropObs, DropVars}) = impute(data, imp)
 
 @deprecate impute(data, C::Chain) run(data, C) false

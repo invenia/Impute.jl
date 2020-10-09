@@ -54,6 +54,7 @@ function test_all(tester::ImputorTester)
     test_equality(tester)
     test_vector(tester)
     test_matrix(tester)
+    test_cube(tester)
     test_dataframe(tester)
     test_groupby(tester)
     test_axisarray(tester)
@@ -168,6 +169,53 @@ function test_matrix(tester::ImputorTester)
             # Test having only missing data
             c = missings(5, 2)
             @test isequal(impute(c, tester.imp(; tester.kwargs...); dims=:cols), c)
+            c_ = impute!(deepcopy(c), tester.imp(; tester.kwargs...); dims=:cols)
+            @test isequal(c_, c)
+        end
+    end
+end
+
+function test_cube(tester::ImputorTester)
+    @testset "Cube" begin
+        a = allowmissing(1.0:1.0:60.0)
+        a[[2, 7, 18, 23, 34, 41, 55, 59, 60]] .= missing
+        C = collect(reshape(a, 5, 4, 3))
+
+        result = impute(C, tester.imp(; tester.kwargs...); dims=3)
+
+        @testset "Base" begin
+            # Test that we have fewer missing values
+            @test count(ismissing, result) < count(ismissing, C)
+            @test isa(result, Array{Union{Float64, Missing}, 3})
+            @test eltype(result) <: eltype(C)
+
+            # Test that functional form behaves the same way
+            @test result == tester.f(C; dims=3, tester.kwargs...)
+        end
+
+        @testset "In-place" begin
+            # Test that the in-place function return the new results and logs whether it
+            # successfully did it in-place
+            C2 = deepcopy(C)
+            C2_ = tester.f!(C2; dims=3, tester.kwargs...)
+            @test C2_ == result
+            if C2 != result
+                @warn "$(tester.f!) did not mutate input data of type Matrix"
+            end
+        end
+
+        @testset "No missing" begin
+            # Test having no missing data
+            B = collect(reshape(allowmissing(1.0:1.0:60.0), 5, 4, 3))
+            @test impute(B, tester.imp(; tester.kwargs...); dims=3) == B
+        end
+
+        @testset "All missing" begin
+            # Test having only missing data
+            M = missings(5, 4, 3)
+            @test isequal(impute(M, tester.imp(; tester.kwargs...); dims=3), M)
+            M_ = impute!(deepcopy(M), tester.imp(; tester.kwargs...); dims=3)
+            @test isequal(M_, M)
         end
     end
 end

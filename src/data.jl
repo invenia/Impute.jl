@@ -19,7 +19,7 @@ function datasets()
     end
 
     # Return just the root path with the data dep path part removed
-    return [first(t)[length(dep)+1:end] for t in selected]
+    return [first(t)[length(dep)+2:end] for t in selected]
 end
 
 function dataset(name)

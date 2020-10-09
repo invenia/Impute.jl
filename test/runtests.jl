@@ -1,5 +1,6 @@
 using AxisArrays
 using AxisKeys
+using CSV
 using Combinatorics
 using DataFrames
 using Dates
@@ -46,6 +47,7 @@ using Impute:
 
     include("assertions.jl")
     include("chain.jl")
+    include("data.jl")
     include("deprecated.jl")
     include("filter.jl")
     include("imputors/interp.jl")

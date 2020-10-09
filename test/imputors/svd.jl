@@ -52,6 +52,8 @@
                 # Test having only missing data
                 c = missings(5, 2)
                 @test isequal(impute(c, tester.imp(; tester.kwargs...); dims=:cols), c)
+                c_ = tester.f!(deepcopy(c); dims=:cols)
+                @test isequal(c_, c)
             end
         end
         # Internal `svd` call isn't supported by these type, but maybe they should be?

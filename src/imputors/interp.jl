@@ -26,7 +26,8 @@ julia> impute(M, Interpolate(); dims=:rows)
 """
 struct Interpolate <: Imputor end
 
-function _impute!(data::AbstractArray{<:Union{T, Missing}}, imp::Interpolate) where T
+function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) where T
+    @assert !all(ismissing, data)
     i = findfirst(!ismissing, data) + 1
 
     while i < lastindex(data)

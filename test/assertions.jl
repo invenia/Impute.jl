@@ -58,4 +58,14 @@
         @test_throws DimensionMismatch assert(a[1:10], t)
         @test_throws DimensionMismatch assert(m[1:3, :], t; dims=:cols)
     end
+
+    @testset "functional" begin
+        @test_throws AssertionError Impute.threshold(a; ratio=0.1)
+        @test_throws AssertionError a |> Impute.threshold(; ratio=0.1)
+
+        t = Threshold(; ratio=0.8)
+        # Use isequal because we expect the results to contain missings
+        @test isequal(Impute.threshold(a; ratio=0.8), a)
+        @test isequal(a |> Impute.threshold(; ratio=0.8), a)
+    end
 end

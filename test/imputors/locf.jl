@@ -1,6 +1,28 @@
 @testset "LOCF" begin
     @testset "Default" begin
-        test_all(ImputorTester(LOCF))
+        tester = ImputorTester(LOCF)
+
+        test_hashing(tester)
+        test_equality(tester)
+        test_vector(tester)
+        test_matrix(tester)
+        # test_cube(tester)
+        test_dataframe(tester)
+        test_groupby(tester)
+        test_axisarray(tester)
+        test_nameddimsarray(tester)
+        test_keyedarray(tester)
+        test_columntable(tester)
+        test_rowtable(tester)
+
+        @testset "Cube" begin
+            a = allowmissing(1.0:1.0:60.0)
+            a[[2, 7, 18, 23, 34, 41, 55, 59, 60]] .= missing
+            C = collect(reshape(a, 5, 4, 3))
+
+            # Cube tests are expected to fail
+            @test_throws MethodError impute(C, tester.imp(; tester.kwargs...); dims=3)
+        end
     end
 
     @testset "Floats" begin

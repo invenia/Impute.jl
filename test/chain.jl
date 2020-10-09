@@ -1,4 +1,5 @@
 @testset "Chaining and Piping" begin
+    # TODO: Add tests at each section to double check that orig hasn't been overwritten.
     orig = Impute.dataset("test/table/neuro") |> DataFrame
 
     @testset "DataFrame" begin
@@ -120,6 +121,20 @@
 
         @test size(result) == size(data)
         # Confirm that we don't have any more missing values
+        @test all(!ismissing, result)
+    end
+
+    @testset "Multi-type" begin
+        data = Impute.dataset("test/table/neuro") |> Tables.matrix
+        @test any(ismissing, data)
+        # Filter out colunns with more than 400 missing values, Fill with 0, and check that
+        # everything was replaced
+        C = Impute.Filter(c -> count(ismissing, c) < 400) ∘ Impute.Replace(; values=0.0) ∘ Impute.Threshold()
+
+        result = Impute.run(data, C; dims=:cols)
+        @test size(result, 1) == size(data, 1)
+        # We should have filtered out 1 column
+        @test size(result, 2) < size(data, 2)
         @test all(!ismissing, result)
     end
 end

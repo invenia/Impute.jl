@@ -31,13 +31,9 @@ julia> impute(M, NOCB(); dims=:rows)
 struct NOCB <: Imputor end
 
 function _impute!(data::AbstractVector{Union{T, Missing}}, imp::NOCB) where T
-    end_idx = findlast(!ismissing, data)
-    if end_idx === nothing
-        @debug "Cannot carry backward points when all values are missing"
-        return data
-    end
+    @assert !all(ismissing, data)
+    end_idx = findlast(!ismissing, data) - 1
 
-    end_idx -= 1
     for i in end_idx:-1:firstindex(data)
         if ismissing(data[i])
             data[i] = data[i+1]
