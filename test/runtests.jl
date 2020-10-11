@@ -33,6 +33,7 @@ using Impute:
     SVD,
     Filter,
     Threshold,
+    ThresholdError,
     apply,
     assert,
     impute,

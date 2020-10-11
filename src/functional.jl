@@ -110,7 +110,7 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 5   │ 5.0      │ 5.5      │
 
 julia> Impute.threshold(df)
-ERROR: AssertionError: Ratio of missing values exceeded 0.1 (0.4).
+ERROR: ThresholdError: Ratio of missing values exceeded 0.1 (0.4).
 Stacktrace:
 ...
 

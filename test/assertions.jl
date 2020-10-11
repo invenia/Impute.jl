@@ -22,10 +22,10 @@
 
     @testset "Base" begin
         t = Threshold(; ratio=0.1)
-        @test_throws AssertionError assert(a, t)
-        @test_throws AssertionError assert(m, t)
-        @test_throws AssertionError assert(aa, t)
-        @test_throws AssertionError assert(table, t)
+        @test_throws ThresholdError assert(a, t)
+        @test_throws ThresholdError assert(m, t)
+        @test_throws ThresholdError assert(aa, t)
+        @test_throws ThresholdError assert(table, t)
 
         t = Threshold(; ratio=0.8)
         # Use isequal because we expect the results to contain missings
@@ -48,19 +48,19 @@
         # If we reverse the weights such that earlier observations are more important
         # then our previous limit of 0.2 won't be enough to succeed.
         t = Threshold(; ratio=0.1, weights=reverse!(eweights(20, 0.3)))
-        @test_throws AssertionError assert(a, t)
-        @test_throws AssertionError assert(table, t)
+        @test_throws ThresholdError assert(a, t)
+        @test_throws ThresholdError assert(table, t)
 
         t = Threshold(; ratio=0.1, weights=reverse!(eweights(5, 0.3)))
-        @test_throws AssertionError assert(m, t; dims=:cols)
-        @test_throws AssertionError assert(aa, t; dims=:cols)
+        @test_throws ThresholdError assert(m, t; dims=:cols)
+        @test_throws ThresholdError assert(aa, t; dims=:cols)
 
         @test_throws DimensionMismatch assert(a[1:10], t)
         @test_throws DimensionMismatch assert(m[1:3, :], t; dims=:cols)
     end
 
     @testset "functional" begin
-        @test_throws AssertionError Impute.threshold(a; ratio=0.1)
+        @test_throws ThresholdError Impute.threshold(a; ratio=0.1)
         # Use isequal because we expect the results to contain missings
         @test isequal(Impute.threshold(a; ratio=0.8), a)
     end

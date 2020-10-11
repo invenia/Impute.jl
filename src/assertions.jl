@@ -10,7 +10,7 @@ abstract type Assertion end
 """
     assert(data::AbstractArray, a::Assertion; dims=:)
 
-If the assertion `a` fails then an `AssertionError` is thrown, otherwise the `data`
+If the assertion `a` fails then an `ThresholdError` is thrown, otherwise the `data`
 provided is returned without mutation. See [`Assertion`](@ref) for the minimum internal
 `_assert` call requirements.
 
@@ -25,19 +25,20 @@ provided is returned without mutation. See [`Assertion`](@ref) for the minimum i
 * the input `data` if no error is thrown.
 
 # Throws
-* An `AssertionError` when any column doesn't pass the test
+* An error when the test fails
 
 ```jldoctest
-julia> using Test; using Impute: Threshold, assert
+julia> using Test; using Impute: Threshold, ThresholdError, assert
 
 julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> @test_throws AssertionError assert(M, Threshold())
+julia> @test_throws ThresholdError assert(M, Threshold())
 Test Passed
-      Thrown: AssertionError
+      Thrown: ThresholdError
+```
 """
 function assert(data::AbstractArray, a::Assertion; dims=:, kwargs...)
     dims === Colon() && return _assert(data, a; kwargs...)
@@ -67,11 +68,11 @@ the minimum internal `_assert` call requirements.
 * the input `data` if no error is thrown.
 
 # Throws
-* An `AssertionError` when any column doesn't pass the test
+* An error when any column doesn't pass the test
 
 # Example
 ```jldoctest
-julia> using DataFrames, Test; using Impute: Threshold, assert
+julia> using DataFrames, Test; using Impute: Threshold, ThresholdError, assert
 
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrame
@@ -84,9 +85,9 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia> @test_throws AssertionError assert(df, Threshold())
+julia> @test_throws ThresholdError assert(df, Threshold())
 Test Passed
-      Thrown: AssertionError
+      Thrown: ThresholdError
 ```
 """
 function assert(table, a::Assertion; cols=nothing, kwargs...)
