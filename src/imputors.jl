@@ -3,7 +3,7 @@
 
 An imputor stores information about imputing values in `AbstractArray`s and `Tables.table`s.
 New imputation methods are expected to subtype `Imputor` and, at minimum,
-implement the `_impute!(imp::<MyImputor>, data::AbstractVector)` method.
+implement the `_impute!(data::AbstractArrays, imp::<MyImputor>)` method.
 
 While fallback `impute` and `impute!` methods are provided to extend your `_impute!` methods to
 n-dimensional arrays and tables, you can always override these methods to change the
