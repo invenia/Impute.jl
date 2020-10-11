@@ -1,9 +1,9 @@
 function register_datadep()
     register(
         DataDep(
-            "impute-v0.1.0",
+            "impute-v1.0.0",
             "Datasets for testing and demonstrating Impute.jl",
-            "https://invenia-public-datasets.s3.amazonaws.com/Impute/v0.1.0/datasets.tar.gz",
+            "https://invenia-public-datasets.s3.amazonaws.com/Impute/v1.0.0/datasets.tar.gz",
             "938b3705752eb73141476a2abc7a36cfdaba9ec45f99f0796f44e0870e006e1c",
             post_fetch_method=unpack,
         )
@@ -11,7 +11,7 @@ function register_datadep()
 end
 
 function datasets()
-    dep = datadep"impute-v0.1.0/data/"
+    dep = datadep"impute-v1.0.0/data/"
 
     # Only select paths containing a data.x file
     selected = Iterators.filter(walkdir(dep)) do (root, dirs, files)
@@ -23,7 +23,7 @@ function datasets()
 end
 
 function dataset(name)
-    dep = @datadep_str joinpath("impute-v0.1.0/data", name)
+    dep = @datadep_str joinpath("impute-v1.0.0/data", name)
     files = readdir(dep)
     idx = findfirst(f -> first(splitext(f)) == "data", files)
     idx === nothing && throw(ArguementError("No data file found for $name."))

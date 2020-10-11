@@ -54,7 +54,6 @@ function Substitute(;
             mask = .!ismissing.(data)
             items = disallowmissing(data[mask])
             wv = weights[mask]
-            # @show items robust wv
             defaultstats(items, robust, wv)
         end
     end

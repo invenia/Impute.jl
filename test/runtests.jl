@@ -18,6 +18,7 @@ using Impute
 using Impute:
     Impute,
     Imputor,
+    Chain,
     DropObs,
     DropVars,
     Interpolate,
@@ -37,7 +38,6 @@ using Impute:
     impute,
     impute!,
     interp,
-    chain,
     run,
     threshold
 

@@ -5,7 +5,7 @@ Standardize (or replace) various missing data values with `missing`.
 This is useful for downstream imputation methods that assume missing data is represented by
 a `missing`.
 
-Warning: In-place methods are only applicable for datasets which already `allowmissing`.
+!!! In-place methods are only applicable for datasets which already `allowmissing`.
 
 # Keyword Arguments
 * `value::Tuple`: A tuple of values that should be considered `missing`
@@ -25,20 +25,20 @@ julia> impute(M, Standardize(; values=(NaN, -9999.0, 0.0)))
  1.1  2.2  3.3       missing  5.5
 ```
 """
-struct Standardize <: Imputor
-    values::Tuple
+struct Standardize{T<:Tuple} <: Imputor
+    values::T
 end
 
-Standardize(; values) = isa(values, Tuple) ? Standardize(values) : Standardize(tuple(values))
+function Standardize(; values)
+    T = isa(values, Tuple) ? values : tuple(values)
+    return Standardize{typeof(T)}(T)
+end
 
 # Primary definition just calls `replace!`
 function _impute!(data::AbstractArray{Union{T, Missing}}, imp::Standardize) where T
     # Reduce the possible set of values to those that could actually be found in the data
     # Useful, if we declare a `Replace` imputor that should be applied to multiple datasets.
-    Base.replace!(
-        data,
-        (v => missing for v in Base.filter(v -> isa(v, T), imp.values))...
-    )
+    Base.replace!(data, (v => missing for v in imp.values if v isa T)...)
 end
 
 # Most of the time the in-place methods won't work because we need to change the
@@ -78,7 +78,3 @@ _impute!(data::AbstractArray{Missing}, imp::Standardize) = data
 function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::Standardize) where {T}
     return _impute!(data, imp)
 end
-
-# Just throw a method error for mutation of tables as the operation would
-# otherwise be undefined depending on the table type.
-# impute!(table, imp::Standardize) = throw(MethodError(impute!, (table, imp)))

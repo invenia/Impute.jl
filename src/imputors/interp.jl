@@ -5,7 +5,7 @@ Performs linear interpolation between the nearest values in an vector.
 The current implementation is univariate, so each variable in a table or matrix will
 be handled independently.
 
-WARNING: Missing values at the head or tail of the array cannot be interpolated if there
+!!! Missing values at the head or tail of the array cannot be interpolated if there
 are no existing values on both sides. As a result, this method does not guarantee
 that all missing values will be imputed.
 

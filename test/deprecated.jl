@@ -257,14 +257,14 @@
 
         # Less effecient, but a chain should produce the same results as manual
         # piping the functional outputs.
-        result = Impute.interp(orig) |> Impute.locf!() |> Impute.nocb!()
+        result = Impute.interp(orig) |> Impute.locf! |> Impute.nocb!
 
         @test size(result) == size(orig)
         # Confirm that we don't have any more missing values
         @test all(!ismissing, Matrix(result))
 
         # We can also use the Chain type with explicit Imputor types
-        result2 = impute(
+        result2 = @test_deprecated impute(
             orig,
             Impute.Chain(
                 Impute.Interpolate(),
@@ -275,7 +275,7 @@
 
         # Test creating a Chain via Imputor composition
         C = Impute.Interpolate() ∘ Impute.LOCF() ∘ Impute.NOCB()
-        result3 = impute(orig, C)
+        result3 = @test_deprecated impute(orig, C)
         @test result == result2
         @test result == result3
     end

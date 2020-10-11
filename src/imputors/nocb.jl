@@ -7,7 +7,7 @@ missing data with the next existing observation.
 See also:
 - [LOCF](@ref): Last Observation Carried Forward
 
-WARNING: missing elements at the tail of the array may not be imputed if there is no
+!!! Missing elements at the tail of the array may not be imputed if there is no
 existing observation to carry backward. As a result, this method does not guarantee
 that all missing values will be imputed.
 

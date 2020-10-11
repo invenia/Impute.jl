@@ -1,5 +1,5 @@
-struct SRS <: Imputor
-    rng::AbstractRNG
+struct SRS{R<:AbstractRNG} <: Imputor
+    rng::R
 end
 
 

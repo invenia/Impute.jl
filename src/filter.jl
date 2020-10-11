@@ -5,8 +5,8 @@ Uses a function `f` to identify values, rows, columns or slices of data that sho
 removed during an `apply` call. The default function `f` will removing `missing`s, or any
 rows, columns or slices containing `missing`s.
 """
-struct Filter
-    func::Function
+struct Filter{F<:Function}
+    func::F
 end
 
 Filter() = Filter(_keep)
@@ -34,8 +34,9 @@ end
 function apply(data::AbstractArray{Union{T, Missing}}, f::Filter; dims) where T
     d = dim(data, dims)
     mask = map(f.func, eachslice(data; dims=d))
-    idx = (i == d ? mask : Colon() for i in 1:ndims(data))
-    return data[idx...]
+    # use selectdim to reduce along dimension d using our mask, but call collect
+    # because we don't want to return a view
+    return collect(selectdim(data, d, mask))
 end
 
 apply(data::AbstractArray, f::Filter) = disallowmissing(data)

@@ -11,14 +11,15 @@ abstract type Assertion end
     assert(data::AbstractArray, a::Assertion; dims=:)
 
 If the assertion `a` fails then an `AssertionError` is thrown, otherwise the `data`
-provided is returned without mutation.
+provided is returned without mutation. See [`Assertion`](@ref) for the minimum internal
+`_assert` call requirements.
 
 # Arguments
 * `data::AbstractArray`: the data to be impute along dimensions `dims`
 * `a::Assertion`: the assertion to apply
 
 # Keywords
-* `dims`: The dimension to apply the assertion along (default is `:`)
+* `dims`: The dimension to apply the `_assert` along (default is `:`)
 
 # Returns
 * the input `data` if no error is thrown.
@@ -38,12 +39,12 @@ julia> @test_throws AssertionError assert(M, Threshold())
 Test Passed
       Thrown: AssertionError
 """
-function assert(data::AbstractArray, a::Assertion; dims=:)
-    dims === Colon() && return _assert(data, a)
+function assert(data::AbstractArray, a::Assertion; dims=:, kwargs...)
+    dims === Colon() && return _assert(data, a; kwargs...)
     d = Impute.dim(data, dims)
 
     for d in eachslice(data; dims=d)
-        _assert(d, a)
+        _assert(d, a; kwargs...)
     end
     return data
 end
@@ -52,7 +53,8 @@ end
     assert(table, a::Assertion; cols=nothing)
 
 Applies the assertion `a` to the `table` 1 column at a time; if this is not the desired
-behaviour custom `assert` methods should overload this method.
+behaviour custom `assert` methods should overload this method. See [`Assertion`](@ref) for
+the minimum internal `_assert` call requirements.
 
 # Arguments
 * `table`: the data to impute
@@ -87,13 +89,13 @@ Test Passed
       Thrown: AssertionError
 ```
 """
-function assert(table, a::Assertion; cols=nothing)
+function assert(table, a::Assertion; cols=nothing, kwargs...)
     istable(table) || throw(MethodError(assert, (table, a)))
     columntable = Tables.columns(table)
 
     cnames = cols === nothing ? propertynames(columntable) : cols
     for cname in cnames
-        _assert(getproperty(columntable, cname), a)
+        _assert(getproperty(columntable, cname), a; kwargs...)
     end
 
     return table

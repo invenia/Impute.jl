@@ -1,15 +1,6 @@
 # Introduced in 0.6
 # NOTE: Deprecated Imputor docstrings use julia-repl rather than jldoctest since depwarn
 # output isn't consistent across installs.
-Base.@deprecate_binding(
-    AbstractContext,
-    Assertion,
-    false,
-    "Imputation contexts have been replaced with independent Impute.Assertion types.",
-)
-Base.@deprecate Context(; limit=1.0, kwargs...) Threshold(limit) false
-Base.@deprecate WeightedContext(wv; limit=1.0, kwargs...) Threshold(limit; weights=wv) false
-
 """
     Fill(; value=mean)
 
@@ -17,7 +8,7 @@ Fills in the missing data with a specific value.
 The current implementation is univariate, so each variable in a table or matrix will
 be handled independently.
 
-[Deprecated] Use Impute.Replace for constants or Impute.Substitue for median/mode substitution.
+!!! Use Impute.Replace for constants or Impute.Substitue for median/mode substitution.
 
 # Keyword Arguments
 * `value::Any`: A scalar or a function that returns a scalar if
@@ -81,7 +72,7 @@ end
 # NOTE: We aren't deprecating these as they were always internal function that weren't
 # intended for public use.
 obsdim(dims::Int) = dims
-vardim(dims::Int) = dims == 1 ? 2 : 1
+vardim(dims::Int) = dims == 1 ? 2 : 1  # dims is obsdims, so we want the other one.
 
 function obswise(data::AbstractMatrix; dims=1)
     return (selectdim(data, obsdim(dims), i) for i in axes(data, obsdim(dims)))
@@ -104,8 +95,10 @@ end
 """
     DropObs()
 
-[Deprecated] Removes missing observations from the `AbstractArray` or `Tables.table`
+Removes missing observations from the `AbstractArray` or `Tables.table`
 provided.
+
+!!! Use `Impute.filter` instead
 
 # Example
 ```julia-repl
@@ -154,7 +147,7 @@ function impute(data::AbstractMatrix{Union{T, Missing}}, imp::DropObs; dims=1) w
 end
 
 function impute(table, imp::DropObs)
-    @assert istable(table)
+    istable(table) || throw(MethodError(impute, (table, imp)))
     rows = Tables.rows(table)
 
     # Unfortunately, we'll need to construct a new table
@@ -172,8 +165,10 @@ end
     DropVars()
 
 
-[Deprecated] Finds variables with too many missing values in a `AbstractMatrix` or
+Finds variables with too many missing values in a `AbstractMatrix` or
 `Tables.table` and removes them from the input data.
+
+!!! Use `Impute.filter` instead
 
 # Examples
 ```julia-repl
@@ -194,7 +189,7 @@ struct DropVars <: Imputor
     function DropVars()
         Base.depwarn(
             "Impute.DropVars is deprecated in favour of the more general Impute.Filter.",
-            :DropObs
+            :DropVars
         )
         return new()
     end
@@ -230,5 +225,5 @@ end
 
 impute!(data, imp::Union{DropObs, DropVars}) = impute(data, imp)
 
-@deprecate impute(data, C::Chain) run(data, C) false
-@deprecate impute!(data, C::Chain) run(data, C) false
+@deprecate impute(data, C::Chain) C(data) false
+@deprecate impute!(data, C::Chain) C(data) false

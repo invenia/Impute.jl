@@ -61,11 +61,7 @@
 
     @testset "functional" begin
         @test_throws AssertionError Impute.threshold(a; ratio=0.1)
-        @test_throws AssertionError a |> Impute.threshold(; ratio=0.1)
-
-        t = Threshold(; ratio=0.8)
         # Use isequal because we expect the results to contain missings
         @test isequal(Impute.threshold(a; ratio=0.8), a)
-        @test isequal(a |> Impute.threshold(; ratio=0.8), a)
     end
 end

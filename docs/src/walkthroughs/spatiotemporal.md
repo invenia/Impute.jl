@@ -1,4 +1,4 @@
-# Spatiotemporal Datasets
+# Spatiotemporal Panel Datasets
 
 We often also need to missing data in spatiotemporal data.
 For this example, we'll use daily temperature values from major cities around the world.

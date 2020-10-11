@@ -1,20 +1,19 @@
 # Generate a functional interface from the Assertion and Imputor types.
 """
-    splitkwargs(::Type{T}, kwargs...) where T -> (imp, rem)
+    _splitkwargs(::Type{T}, kwargs...) where T -> (imp, rem)
 
 Takes a type with kwargs and returns the constructed type and the
 unused kwargs which should be passed to the `impute!` call.
 
 NOTE: This is only intended to be used internally
 """
-function splitkwargs(::Type{T}, kwargs...) where T
+function _splitkwargs(::Type{T}, kwargs...) where T
     rem = Dict(kwargs...)
     kwdef = empty(rem)
 
     for f in fieldnames(T)
         if haskey(rem, f)
-            kwdef[f] = rem[f]
-            delete!(rem, f)
+            kwdef[f] = pop!(rem, f)
         end
     end
 
@@ -23,14 +22,13 @@ end
 
 # Specialcase kwargs constructor for substitute.
 # TODO: Add an imputor method that types should overwrite when necessary or have it fallback to `fieldnames`
-function splitkwargs(::Type{Substitute}, kwargs...)
+function _splitkwargs(::Type{Substitute}, kwargs...)
     rem = Dict(kwargs...)
     kwdef = empty(rem)
 
     for f in (:statistic, :robust, :weights)
         if haskey(rem, f)
-            kwdef[f] = rem[f]
-            delete!(rem, f)
+            kwdef[f] = pop!(rem, f)
         end
     end
 
@@ -57,53 +55,39 @@ const global imputation_methods = (
     knn = KNN,
 )
 
-for (f, v) in pairs(assertion_methods)
-    typename = nameof(v)
+for (func, type) in pairs(assertion_methods)
+    typename = nameof(type)
     @eval begin
-        function $f(data; kwargs...)
-            a, rem = splitkwargs($typename, kwargs...)
+        function $func(data; kwargs...)
+            a, rem = _splitkwargs($typename, kwargs...)
             return assert(data, a; rem...)
-        end
-        function $f(; kwargs...)
-            a, rem = splitkwargs($typename, kwargs...)
-            return data -> assert(data, a; rem...)
         end
     end
 end
 
-for (f, v) in pairs(imputation_methods)
-    typename = nameof(v)
-    f! = Symbol(f, :!)
+for (func, type) in pairs(imputation_methods)
+    typename = nameof(type)
+    func! = Symbol(func, :!)
 
     @eval begin
-        function $f(data; kwargs...)
-            imp, rem = splitkwargs($typename, kwargs...)
+        function $func(data; kwargs...)
+            imp, rem = _splitkwargs($typename, kwargs...)
             return impute(data, imp; rem...)
         end
-        function $f!(data; kwargs...)
-            imp, rem = splitkwargs($typename, kwargs...)
+        function $func!(data; kwargs...)
+            imp, rem = _splitkwargs($typename, kwargs...)
             return impute!(data, imp; rem...)
         end
-        function $f(; kwargs...)
-            imp, rem = splitkwargs($typename, kwargs...)
-            return data -> impute(data, imp; rem...)
-        end
-        function $f!(; kwargs...)
-            imp, rem = splitkwargs($typename, kwargs...)
-            return data -> impute!(data, imp; rem...)
-        end
+        @deprecate $func(; kwargs...) data -> $func(data; kwargs...) false
+        @deprecate $func!(; kwargs...) data -> $func!(data; kwargs...) false
     end
 end
 
 # Provide a specific functional API for Impute.Filter.
 filter(data; kwargs...) = apply(data, Filter(); kwargs...)
 filter!(data; kwargs...) = apply!(data, Filter(); kwargs...)
-filter(; kwargs...) = data -> apply(data, Filter(); kwargs...)
-filter!(; kwargs...) = data -> apply!(data, Filter(); kwargs...)
 filter(f::Function, data; kwargs...) = apply(data, Filter(f); kwargs...)
 filter!(f::Function, data; kwargs...) = apply!(data, Filter(f); kwargs...)
-filter(f::Function; kwargs...) = data -> apply(data, Filter(f); kwargs...)
-filter!(f::Function; kwargs...) = data -> apply!(data, Filter(f); kwargs...)
 
 @doc """
     Impute.threshold(data; ratio=0.1, weights=nothing, kwargs...)
@@ -147,8 +131,10 @@ threshold
 @doc """
     Impute.dropobs(data; dims=1)
 
-[Deprecated] Removes missing observations from the `AbstractArray` or `Tables.table` provided.
+Removes missing observations from the `AbstractArray` or `Tables.table` provided.
 See [DropObs](@ref) for details.
+
+!!! Use `Impute.filter(data; dims=1)` instead.
 
 # Example
 ```julia-repl
@@ -179,8 +165,10 @@ julia> Impute.dropobs(df; dims=2)
 @doc """
     Impute.dropvars(data; dims=1)
 
-[Deprecated] Finds variables with missing values in a `AbstractMatrix` or `Tables.table` and
+Finds variables with missing values in a `AbstractMatrix` or `Tables.table` and
 removes them from the input data. See [DropVars](@ref) for details.
+
+!!! Use `Impute.filter(data; dims=2)` instead.
 
 # Example
 ```julia-repl
@@ -276,7 +264,9 @@ julia> Impute.interp(df)
 @doc """
     Impute.fill(data; value=mean, dims=1)
 
-[Deprecated] Fills in the missing data with a specific value. See [Fill](@ref) for details.
+Fills in the missing data with a specific value. See [Fill](@ref) for details.
+
+!!! Use `Impute.replace` for constants or `Impute.substitue` for median/mode substitution.
 
 # Example
 ```julia-repl
