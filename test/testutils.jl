@@ -1,4 +1,36 @@
 
+function add_missings(X, ratio=0.1)
+    result = Matrix{Union{Float64, Missing}}(X)
+
+    for i in 1:floor(Int, length(X) * ratio)
+        result[rand(1:length(X))] = missing
+    end
+
+    return result
+end
+
+function add_missings_single(X, ratio=0.1)
+    result = Matrix{Union{Float64, Missing}}(X)
+
+    randcols = 1:floor(Int, size(X, 2) * ratio)
+    for col in randcols
+        result[rand(1:size(X, 1)), col] = missing
+    end
+
+    return result
+end
+
+# A sequential RNG for consistent testing across julia versions
+mutable struct SequentialRNG <: AbstractRNG
+    idx::Int
+end
+SequentialRNG(; start_idx=1) = SequentialRNG(start_idx)
+
+function Base.rand(srng::SequentialRNG, x::Vector)
+    srng.idx = srng.idx < length(x) ? srng.idx + 1 : 1
+    return x[srng.idx]
+end
+
 struct ImputorTester{I<:Imputor}
     imp::Type{I}
     f::Function
@@ -13,22 +45,29 @@ function ImputorTester(imp::Type{<:Imputor}; kwargs...)
         imp,
         getfield(Impute, Symbol(fname)),
         getfield(Impute, Symbol(fname * "!")),
-        merge(
-            NamedTuple{keys(kwargs)}(values(kwargs)),
-            (context = Context(; limit=1.0),),
-        ),
+        NamedTuple{keys(kwargs)}(values(kwargs)),
     )
 end
 
 function test_all(tester::ImputorTester)
+    test_hashing(tester)
     test_equality(tester)
     test_vector(tester)
     test_matrix(tester)
+    test_cube(tester)
     test_dataframe(tester)
     test_groupby(tester)
     test_axisarray(tester)
+    test_nameddimsarray(tester)
+    test_keyedarray(tester)
     test_columntable(tester)
     test_rowtable(tester)
+end
+
+function test_hashing(tester::ImputorTester)
+    @testset "Hashing" begin
+        @test hash(tester.imp()) == hash(tester.imp())
+    end
 end
 
 function test_equality(tester::ImputorTester)
@@ -75,19 +114,7 @@ function test_vector(tester::ImputorTester)
             @testset "All missing" begin
                 # Test having only missing data
                 c = fill(missing, 10)
-                if tester.imp != Impute.DropObs
-                    @test isequal(impute(c, tester.imp(; tester.kwargs...)), c)
-                else
-                    @test impute(c, tester.imp(; tester.kwargs...)) == empty(c)
-                end
-            end
-
-            @testset "Too many missing values" begin
-                # Test Context error condition
-                c = fill(missing, 10)
-                kwargs = merge(tester.kwargs, (context = Context(; limit=0.1),))
-                @test_throws ImputeError impute(c, tester.imp(; kwargs...))
-                @test_throws ImputeError tester.f(c; kwargs...)
+                @test isequal(impute(c, tester.imp(; tester.kwargs...)), c)
             end
         end
     end
@@ -99,7 +126,7 @@ function test_matrix(tester::ImputorTester)
         a[[2, 3, 7]] .= missing
         m = collect(reshape(a, 5, 4))
 
-        result = impute(m, tester.imp(; tester.kwargs...))
+        result = impute(m, tester.imp(; tester.kwargs...); dims=:cols)
 
         @testset "Base" begin
             # Test that we have fewer missing values
@@ -108,14 +135,14 @@ function test_matrix(tester::ImputorTester)
             @test eltype(result) <: eltype(m)
 
             # Test that functional form behaves the same way
-            @test result == tester.f(m; tester.kwargs...)
+            @test result == tester.f(m; dims=:cols, tester.kwargs...)
         end
 
         @testset "In-place" begin
             # Test that the in-place function return the new results and logs whether it
             # successfully did it in-place
             m2 = deepcopy(m)
-            m2_ = tester.f!(m2; tester.kwargs...)
+            m2_ = tester.f!(m2; dims=:cols, tester.kwargs...)
             @test m2_ == result
             if m2 != result
                 @warn "$(tester.f!) did not mutate input data of type Matrix"
@@ -125,37 +152,70 @@ function test_matrix(tester::ImputorTester)
         @testset "Transpose" begin
             m_ = collect(m')
             result_ = collect(result')
-            @test isequal(tester.f(m_; dims=2, tester.kwargs...), result_)
+            @test isequal(tester.f(m_; dims=:rows, tester.kwargs...), result_)
 
-            if !(tester.imp in (DropVars, DropObs, SRS))
-                @test isequal(tester.f!(m_; dims=2, tester.kwargs...), result_)
+            if tester.imp != SRS
+                @test isequal(tester.f!(m_; dims=:rows, tester.kwargs...), result_)
             end
         end
 
         @testset "No missing" begin
             # Test having no missing data
             b = collect(reshape(allowmissing(1.0:1.0:20.0), 5, 4))
-            @test impute(b, tester.imp(; tester.kwargs...)) == b
+            @test impute(b, tester.imp(; tester.kwargs...); dims=:cols) == b
         end
 
         @testset "All missing" begin
             # Test having only missing data
-            c = fill(missing, 5, 2)
-            if tester.imp == DropObs
-                @test impute(c, tester.imp(; tester.kwargs...)) == Matrix{Missing}(missing, 0, 2)
-            elseif tester.imp == DropVars
-                @test impute(c, tester.imp(; tester.kwargs...)) == Matrix{Missing}(missing, 5, 0)
-            else
-                @test isequal(impute(c, tester.imp(; tester.kwargs...)), c)
+            c = missings(5, 2)
+            @test isequal(impute(c, tester.imp(; tester.kwargs...); dims=:cols), c)
+            c_ = impute!(deepcopy(c), tester.imp(; tester.kwargs...); dims=:cols)
+            @test isequal(c_, c)
+        end
+    end
+end
+
+function test_cube(tester::ImputorTester)
+    @testset "Cube" begin
+        a = allowmissing(1.0:1.0:60.0)
+        a[[2, 7, 18, 23, 34, 41, 55, 59, 60]] .= missing
+        C = collect(reshape(a, 5, 4, 3))
+
+        result = impute(C, tester.imp(; tester.kwargs...); dims=3)
+
+        @testset "Base" begin
+            # Test that we have fewer missing values
+            @test count(ismissing, result) < count(ismissing, C)
+            @test isa(result, Array{Union{Float64, Missing}, 3})
+            @test eltype(result) <: eltype(C)
+
+            # Test that functional form behaves the same way
+            @test result == tester.f(C; dims=3, tester.kwargs...)
+        end
+
+        @testset "In-place" begin
+            # Test that the in-place function return the new results and logs whether it
+            # successfully did it in-place
+            C2 = deepcopy(C)
+            C2_ = tester.f!(C2; dims=3, tester.kwargs...)
+            @test C2_ == result
+            if C2 != result
+                @warn "$(tester.f!) did not mutate input data of type Matrix"
             end
         end
 
-        @testset "Too many missing values" begin
-            # Test Context error condition
-            c = fill(missing, 5, 2)
-            kwargs = merge(tester.kwargs, (context = Context(; limit=0.1),))
-            @test_throws ImputeError impute(c, tester.imp(; kwargs...))
-            @test_throws ImputeError tester.f(c; kwargs...)
+        @testset "No missing" begin
+            # Test having no missing data
+            B = collect(reshape(allowmissing(1.0:1.0:60.0), 5, 4, 3))
+            @test impute(B, tester.imp(; tester.kwargs...); dims=3) == B
+        end
+
+        @testset "All missing" begin
+            # Test having only missing data
+            M = missings(5, 4, 3)
+            @test isequal(impute(M, tester.imp(; tester.kwargs...); dims=3), M)
+            M_ = impute!(deepcopy(M), tester.imp(; tester.kwargs...); dims=3)
+            @test isequal(M_, M)
         end
     end
 end
@@ -206,25 +266,7 @@ function test_dataframe(tester::ImputorTester)
                 :sin => fill(missing, 10),
                 :cos => fill(missing, 10),
             )
-            if tester.imp == DropObs
-                @test impute(c, tester.imp(; tester.kwargs...)) == DataFrame()
-            elseif tester.imp == DropVars
-                # https://github.com/JuliaData/Tables.jl/issues/117
-                @test impute(c, tester.imp(; tester.kwargs...)) == DataFrame()
-            else
-                @test isequal(impute(c, tester.imp(; tester.kwargs...)), c)
-            end
-        end
-
-        @testset "Too many missing values" begin
-            # Test Context error condition
-            c = DataFrame(
-                :sin => fill(missing, 10),
-                :cos => fill(missing, 10),
-            )
-            kwargs = merge(tester.kwargs, (context = Context(; limit=0.1),))
-            @test_throws ImputeError impute(c, tester.imp(; kwargs...))
-            @test_throws ImputeError tester.f(c; kwargs...)
+            @test isequal(impute(c, tester.imp(; tester.kwargs...)), c)
         end
     end
 end
@@ -250,13 +292,7 @@ function test_groupby(tester::ImputorTester)
             result = mapreduce(tester.f, vcat, groupby(df, [:hod, :obj]))
             @test !isequal(df, result)
 
-            if tester.imp == DropObs
-                # If we've dropped some observations then we should get back
-                # all, but the 4 missing observations per 24 hods and 8 objs.
-                @test size(result) == (24 * 8 * 16, 3)
-            else
-                @test size(result) == size(df)
-            end
+            @test size(result) == size(df)
 
             # Test that we successfully imputed something.
             # We expect LOCF and NOCB to leave `missing`s at the start and end of each
@@ -280,7 +316,7 @@ function test_axisarray(tester::ImputorTester)
             Axis{:time}(DateTime(2017, 6, 5, 5):Hour(1):DateTime(2017, 6, 5, 9)),
             Axis{:id}(1:4)
         )
-        result = impute(aa, tester.imp(; tester.kwargs...))
+        result = impute(aa, tester.imp(; tester.kwargs...); dims=:cols)
 
         @testset "Base" begin
             # Test that we have fewer missing values
@@ -289,17 +325,89 @@ function test_axisarray(tester::ImputorTester)
             @test eltype(result) <: eltype(aa)
 
             # Test that functional form behaves the same way
-            @test result == tester.f(aa; tester.kwargs...)
+            @test result == tester.f(aa; tester.kwargs..., dims=:cols)
         end
 
         @testset "In-place" begin
             # Test that the in-place function return the new results and logs whether it
             # successfully did it in-place
             aa2 = deepcopy(aa)
-            aa2_ = tester.f!(aa2; tester.kwargs...)
+            aa2_ = tester.f!(aa2; tester.kwargs..., dims=:cols)
             @test aa2_ == result
             if aa2 != result
                 @warn "$(tester.f!) did not mutate input data of type AxisArray"
+            end
+        end
+    end
+end
+
+function test_nameddimsarray(tester::ImputorTester)
+    @testset "NamedDimsArray" begin
+        a = allowmissing(1.0:1.0:20.0)
+        a[[2, 3, 7]] .= missing
+        m = collect(reshape(a, 5, 4))
+        nda = NamedDimsArray(deepcopy(m), (:time, :id))
+        result = impute(nda, tester.imp(; tester.kwargs...); dims=:id)
+
+        @testset "Base" begin
+            # Test that we have fewer missing values
+            @test count(ismissing, result) < count(ismissing, nda)
+            @test isa(result, NamedDimsArray)
+            @test eltype(result) <: eltype(nda)
+
+            # Test that functional form behaves the same way
+            @test result == tester.f(nda; tester.kwargs..., dims=:id)
+
+            # Test using cols still works
+            @test result == tester.f(nda; tester.kwargs..., dims=:cols)
+        end
+
+        @testset "In-place" begin
+            # Test that the in-place function return the new results and logs whether it
+            # successfully did it in-place
+            nda2 = deepcopy(nda)
+            nda2_ = tester.f!(nda2; tester.kwargs..., dims=:cols)
+            @test nda2_ == result
+            if nda2 != result
+                @info "$(tester.f!) did not mutate input data of type NamedDimsArray"
+            end
+        end
+    end
+end
+
+function test_keyedarray(tester::ImputorTester)
+    @testset "KeyedArray" begin
+        a = allowmissing(1.0:1.0:20.0)
+        a[[2, 3, 7]] .= missing
+        m = collect(reshape(a, 5, 4))
+        ka = KeyedArray(
+            deepcopy(m);
+            time=DateTime(2017, 6, 5, 5):Hour(1):DateTime(2017, 6, 5, 9),
+            id=1:4,
+        )
+        result = impute(ka, tester.imp(; tester.kwargs...); dims=:id)
+
+        @testset "Base" begin
+            # Test that we have fewer missing values
+            @test count(ismissing, result) < count(ismissing, ka)
+            @test isa(result, KeyedArray)
+            @test eltype(result) <: eltype(ka)
+
+            # Test that functional form behaves the same way
+            @test result == tester.f(ka; tester.kwargs..., dims=:id)
+
+            # Test using cols still works
+            @test result == tester.f(ka; tester.kwargs..., dims=:cols)
+        end
+
+        @testset "In-place" begin
+            # Test that the in-place function return the new results and logs whether it
+            # successfully did it in-place
+            ka2 = deepcopy(ka)
+            ka2_ = tester.f!(ka2; tester.kwargs..., dims=:cols)
+            @test ka2_ == result
+            if ka2 != result
+                @info "$(tester.f!) did not mutate input data of type KeyedArray"
             end
         end
     end
@@ -360,7 +468,7 @@ function test_rowtable(tester::ImputorTester)
         end
 
         @testset "In-place" begin
-            # Test that the in-place function return the new results and logs whether it
+            # Test that the in-place function returns the new results and logs whether it
             # successfully did it in-place
             rowtab2 = deepcopy(rowtab)
             rowtab2_ = tester.f!(rowtab2; tester.kwargs...)

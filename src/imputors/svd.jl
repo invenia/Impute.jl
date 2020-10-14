@@ -1,44 +1,41 @@
 """
-    SVD <: Imputor
+    SVD(; kwargs...)
 
 Imputes the missing values in a matrix using an expectation maximization (EM) algorithm
 over low-rank SVD approximations.
 
 # Keyword Arguments
-* `init::Imputor`: initialization method for missing values (default: Fill())
+* `init::Imputor`: initialization method for missing values (default: Substitute())
 * `rank::Union{Int, Nothing}`: rank of the SVD approximation (default: nothing meaning start and 0 and increase)
 * `tol::Float64`: convergence tolerance (default: 1e-10)
 * `maxiter::Int`: Maximum number of iterations if convergence is not achieved (default: 100)
 * `limits::Unoin{Tuple{Float64, Float64}, Nothing}`: Bound the possible approximation values (default: nothing)
 * `verbose::Bool`: Whether to display convergence progress (default: true)
-* `context::Context`: Missing data context settings (default: Context())
 
 # References
 * Troyanskaya, Olga, et al. "Missing value estimation methods for DNA microarrays." Bioinformatics 17.6 (2001): 520-525.
 """
 struct SVD <: Imputor
-    init::Fill
+    init::Imputor
     rank::Union{Int, Nothing}
     tol::Float64
     maxiter::Int
     limits::Union{Tuple{Float64, Float64}, Nothing}
     verbose::Bool
-    context::AbstractContext
 end
 
 function SVD(;
-    init=Fill(), rank=nothing, tol=1e-10, maxiter=100, limits=nothing, verbose=true, context=Context()
+    init=Substitute(), rank=nothing, tol=1e-10, maxiter=100, limits=nothing, verbose=true
 )
-    SVD(init, rank, tol, maxiter, limits, verbose, context)
+    SVD(init, rank, tol, maxiter, limits, verbose)
 end
 
-function impute!(data::AbstractMatrix{<:Union{T, Missing}}, imp::SVD) where T<:Real
+function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::SVD; dims=nothing) where T<:Real
     n, p = size(data)
     k = imp.rank === nothing ? 0 : min(imp.rank, p-1)
     S = zeros(T, min(n, p))
     X = zeros(T, n, p)
 
-    ctx = imp.context
     # Get our before and after views of our missing and non-missing data
     mmask = ismissing.(data)
     omask = .!mmask
@@ -49,11 +46,11 @@ function impute!(data::AbstractMatrix{<:Union{T, Missing}}, imp::SVD) where T<:R
     oX = X[omask]
 
     # Fill in the original data
-    impute!(data, imp.init)
+    impute!(data, imp.init; dims=dims)
 
     C = sum(abs2, mdata - mX) / sum(abs2, mdata)
     err = mean(abs.(odata - oX))
-    @info("Before: Diff=$(sum(mdata - mX)), MAE=$err, convergence=$C, normsq=$(sum(abs2, mdata)), $(mX[1])")
+    @debug("Before", Diff=sum(mdata - mX), MAE=err, convergence=C, normsq=sum(abs2, mdata), mX[1])
 
     for i in 1:imp.maxiter
         if imp.rank === nothing
@@ -82,16 +79,22 @@ function impute!(data::AbstractMatrix{<:Union{T, Missing}}, imp::SVD) where T<:R
         # Print the error between reconstruction and observed inputs
         if imp.verbose
             err = mean(abs.(odata - oX))
-            @info("Iteration $i: Diff=$(sum(mdata - mX)), MAE=$err, MSS=$(sum(abs2, mdata)), convergence=$C")
+            @debug("Iteration", i, Diff=sum(mdata - mX), MAE=err, MSS=sum(abs2, mdata), convergence=C)
         end
 
         # Update missing values
         data[mmask] .= X[mmask]
 
-        if isfinite(C) && C < imp.tol
-            break
-        end
+        isfinite(C) && C < imp.tol && break
     end
 
     return data
 end
+
+impute!(data::AbstractMatrix{Missing}, imp::SVD; kwargs...) = data
+
+function impute(data::AbstractMatrix{Union{T, Missing}}, imp::SVD; kwargs...) where T<:Real
+    return impute!(trycopy(data), imp; kwargs...)
+end
+
+impute(data::AbstractMatrix{Missing}, imp::SVD; kwargs...) = trycopy(data)

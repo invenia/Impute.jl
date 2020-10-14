@@ -1,44 +1,70 @@
+# Imputors
+
 ```@autodocs
 Modules = [Impute]
 Pages = ["imputors.jl"]
 Order = [:module, :constant, :type, :function]
 ```
 
-# Drop
+## Standardize
 ```@autodocs
 Modules = [Impute]
-Pages = ["drop.jl"]
+Pages = ["standardize.jl"]
 Order = [:module, :constant, :type, :function]
 ```
-# Fill
+
+## Replace
 ```@autodocs
 Modules = [Impute]
-Pages = ["fill.jl"]
+Pages = ["replace.jl"]
 Order = [:module, :constant, :type, :function]
 ```
-# Interpolate
+
+## Substitute
+```@autodocs
+Modules = [Impute]
+Pages = ["substitute.jl"]
+Order = [:module, :constant, :type, :function]
+```
+
+## Simple Random Sample (SRS)
+```@autodocs
+Modules = [Impute]
+Pages = ["srs.jl"]
+Order = [:module, :constant, :type, :function]
+```
+
+## Interpolate
 ```@autodocs
 Modules = [Impute]
 Pages = ["interp.jl"]
 Order = [:module, :constant, :type, :function]
 ```
-# Last Observation Carried Forward (LOCF)
+
+## Last Observation Carried Forward (LOCF)
 ```@autodocs
 Modules = [Impute]
 Pages = ["locf.jl"]
 Order = [:module, :constant, :type, :function]
 ```
 
-# Next Observation Carried Backward (NOCB)
+## Next Observation Carried Backward (NOCB)
 ```@autodocs
 Modules = [Impute]
 Pages = ["nocb.jl"]
 Order = [:module, :constant, :type, :function]
 ```
 
-# Chain
+## K-Nearest Neighbors (KNN)
 ```@autodocs
 Modules = [Impute]
-Pages = ["chain.jl"]
+Pages = ["knn.jl"]
+Order = [:module, :constant, :type, :function]
+```
+
+## SVD
+```@autodocs
+Modules = [Impute]
+Pages = ["svd.jl"]
 Order = [:module, :constant, :type, :function]
 ```

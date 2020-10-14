@@ -14,13 +14,13 @@ julia> using Pkg; Pkg.add("Impute")
 ## Quickstart
 Let's start by loading our dependencies:
 ```julia
-julia> using DataFrames, RDatasets, Impute
+julia> using DataFrames, Impute
 ```
 
 We'll also want some test data containing missings to work with:
 
 ```julia
-julia> df = dataset("boot", "neuro")
+julia> df = Impute.dataset("test/table/neuro") |> DataFrame
 469×6 DataFrames.DataFrame
 │ Row │ V1       │ V2       │ V3      │ V4       │ V5       │ V6       │
 │     │ Float64⍰ │ Float64⍰ │ Float64 │ Float64⍰ │ Float64⍰ │ Float64⍰ │
@@ -46,7 +46,7 @@ julia> df = dataset("boot", "neuro")
 Our first instinct might be to drop all observations, but this leaves us too few rows to work with:
 
 ```julia
-julia> Impute.drop(df)
+julia> Impute.filter(df; dims=:rows)
 4×6 DataFrames.DataFrame
 │ Row │ V1      │ V2      │ V3      │ V4      │ V5      │ V6      │
 │     │ Float64 │ Float64 │ Float64 │ Float64 │ Float64 │ Float64 │

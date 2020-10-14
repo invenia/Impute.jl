@@ -2,123 +2,181 @@
     Imputor
 
 An imputor stores information about imputing values in `AbstractArray`s and `Tables.table`s.
-New imputation methods are expected to sutype `Imputor` and, at minimum,
-implement the `impute!(imp::<MyImputor>, data::AbstractVector)` method.
+New imputation methods are expected to subtype `Imputor` and, at minimum,
+implement the `_impute!(data::AbstractArrays, imp::<MyImputor>)` method.
+
+While fallback `impute` and `impute!` methods are provided to extend your `_impute!` methods to
+n-dimensional arrays and tables, you can always override these methods to change the
+behaviour as necessary.
 """
 abstract type Imputor end
 
-# A couple utility methods to avoid messing up var and obs dimensions
-obsdim(dims) = dims
-vardim(dims) = dims == 1 ? 2 : 1
-
-function obswise(data::AbstractMatrix; dims=1)
-    return (selectdim(data, obsdim(dims), i) for i in axes(data, obsdim(dims)))
-end
-
-function varwise(data::AbstractMatrix; dims=2)
-    return (selectdim(data, vardim(dims), i) for i in axes(data, vardim(dims)))
-end
-
-function filterobs(f::Function, data::AbstractMatrix; dims=1)
-    mask = [f(x) for x in obswise(data; dims=dims)]
-    return dims == 1 ? data[mask, :] : data[:, mask]
-end
-
-function filtervars(f::Function, data::AbstractMatrix; dims=2)
-    mask = [f(x) for x in varwise(data; dims=dims)]
-    return dims == 1 ? data[:, mask] : data[mask, :]
-end
-
-"""
-    splitkwargs(::Type{T}, kwargs...) where T <: Imputor -> (imp, rem)
-
-Takes an Imputor type with kwargs and returns the constructed imputor and the
-unused kwargs which should be passed to the `impute!` call.
-
-NOTE: This is used by utility methods with construct and imputor and call impute in 1 call.
-"""
-function splitkwargs(::Type{T}, kwargs...) where T <: Imputor
-    rem = Dict(kwargs...)
-    kwdef = empty(rem)
+#=
+These default methods are required because @auto_hash_equals doesn't
+play nice with Base.@kwdef
+=#
+function Base.hash(imp::T, h::UInt) where T <: Imputor
+    h = hash(Symbol(T), h)
 
     for f in fieldnames(T)
-        if haskey(rem, f)
-            kwdef[f] = rem[f]
-            delete!(rem, f)
+        h = hash(getfield(imp, f), h)
+    end
+
+    return h
+end
+
+function Base.:(==)(a::T, b::T) where T <: Imputor
+    result = true
+
+    for f in fieldnames(T)
+        if !isequal(getfield(a, f), getfield(b, f))
+            result = false
+            break
         end
     end
 
-    return (T(; kwdef...), rem)
-end
-
-# Some utility methods for constructing imputors and imputing data in 1 call.
-# NOTE: This is only intended for internal use and is not part of the public API.
-function _impute(data, t::Type{T}, kwargs...) where T <: Imputor
-    imp, rem = splitkwargs(t, kwargs...)
-    return impute(data, imp; rem...)
-end
-
-function _impute!(data, t::Type{T}, kwargs...) where T <: Imputor
-    imp, rem = splitkwargs(t, kwargs...)
-    return impute!(data, imp; rem...)
+    return result
 end
 
 """
-    impute(data, imp::Imputor; kwargs...)
+    impute(data::T, imp; kwargs...) -> T
 
 Returns a new copy of the `data` with the missing data imputed by the imputor `imp`.
-
-# Keywords
-* `dims`: The dimension to impute along (e.g., observations dim)
-"""
-function impute(data, imp::Imputor; kwargs...)
-    # Call `deepcopy` because we can trust that it's available for all types.
-    return impute!(deepcopy(data), imp; kwargs...)
-end
-
-# Generic fallback for methods that have only defined _impute(v, imp; kwargs...)
-impute!(data::AbstractVector, imp::Imputor; kwargs...) = _impute!(data, imp; kwargs...)
-
-"""
-    impute!(data::AbstractMatrix, imp::Imputor; kwargs...)
-
-Impute the data in a matrix by imputing the values one variable at a time;
-if this is not the desired behaviour custom imputor methods should overload this method.
+For matrices and tables, data is imputed one variable/column at a time.
+If this is not the desired behaviour then you should overload this method or specify a different `dims` value.
 
 # Arguments
-* `data::AbstractMatrix`: the data to impute
+* `data`: the data to be impute
 * `imp::Imputor`: the Imputor method to use
 
-# Keywords
-* `dims`: The dimension to impute along (e.g., observations dim)
-
 # Returns
-* `AbstractMatrix`: the input `data` with values imputed
+* the input `data` with values imputed
 
 # Example
 ```jldoctest
-julia> using Impute: Interpolate, Context, impute
+julia> using Impute: Interpolate, impute
+
+julia> v = [1.0, 2.0, missing, missing, 5.0]
+5-element Array{Union{Missing, Float64},1}:
+ 1.0
+ 2.0
+  missing
+  missing
+ 5.0
+
+julia> impute(v, Interpolate())
+5-element Array{Union{Missing, Float64},1}:
+ 1.0
+ 2.0
+ 3.0
+ 4.0
+ 5.0
+```
+"""
+function impute(data, imp::Imputor; kwargs...)
+    # NOTE: We don't use a return type declaration here because `trycopy` isn't guaranteed
+    # to return the same type passed in. For example, subarrays and subdataframes will
+    # return a regular array or dataframe.
+    return impute!(trycopy(data), imp; kwargs...)
+end
+
+"""
+    impute!(data::A, imp; dims=:, kwargs...) -> A
+
+Impute the `missing` values in the array `data` using the imputor `imp`.
+Optionally, you can specify the dimension to impute along.
+
+# Arguments
+* `data::AbstractArray{Union{T, Missing}}`: the data to be impute along dimensions `dims`
+* `imp::Imputor`: the Imputor method to use
+
+# Keyword Arguments
+* `dims=:`: The dimension to impute along. `:rows` and `:cols` are also supported for matrices.
+
+# Returns
+* `AbstractArray{Union{T, Missing}}`: the input `data` with values imputed
+
+# NOTES
+1. Matrices have a deprecated `dims=2` special case as `dims=:` is a breaking change
+2. Mutation isn't guaranteed for all array types, hence we return the result
+3. `eachslice` is used internally which requires Julia 1.1
+
+# Example
+```jldoctest
+julia> using Impute: Interpolate, impute!
 
 julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
-julia> impute(M, Interpolate(; context=Context(; limit=1.0)); dims=2)
+julia> impute!(M, Interpolate(); dims=1)
+2×5 Array{Union{Missing, Float64},2}:
+ 1.0  2.0  3.0  4.0  5.0
+ 1.1  2.2  3.3  4.4  5.5
+
+julia> M
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0  3.0  4.0  5.0
  1.1  2.2  3.3  4.4  5.5
 ```
 """
-function impute!(data::AbstractMatrix, imp::Imputor; dims=1)
-    for var in varwise(data; dims=dims)
-        impute!(var, imp)
+function impute!(
+    data::A, imp::Imputor; dims=:, kwargs...
+)::A where A <: AbstractArray{Union{T, Missing}} where T
+    dims === Colon() && return _impute!(data, imp; kwargs...)
+
+    for x in eachslice(data; dims=dims)
+        _impute!(x, imp; kwargs...)
     end
+
     return data
 end
 
+
+function impute!(
+    data::M, imp::Imputor; dims=nothing, kwargs...
+)::M where M <: AbstractMatrix{Union{T, Missing}} where T
+    dims === Colon() && return _impute!(data, imp; kwargs...)
+    # We're calling our `dim` function to throw a depwarn if `dims === nothing`
+    d = dim(data, dims)
+
+    for x in eachslice(data; dims=d)
+        _impute!(x, imp; kwargs...)
+    end
+
+    return data
+end
+
+impute!(data::AbstractMatrix{Missing}, imp::Imputor; kwargs...) = data
+
 """
-    impute!(table, imp::Imputor)
+    impute!(data::T, imp; kwargs...) -> T where T <: AbstractVector{<:NamedTuple}
+
+Special case rowtables which are arrays, but we want to fallback to the tables method.
+"""
+function impute!(data::T, imp::Imputor)::T where T <: AbstractVector{<:NamedTuple}
+    return materializer(data)(impute!(Tables.columns(data), imp))
+end
+
+"""
+    impute!(data::AbstractArray, imp) -> data
+
+
+Just returns the `data` when the array doesn't contain `missing`s
+"""
+impute!(data::AbstractArray, imp::Imputor; kwargs...) = disallowmissing(data)
+
+"""
+    impute!(data::AbstractArray{Missing}, imp) -> data
+
+Just return the `data` when the array only contains `missing`s
+"""
+impute!(data::AbstractArray{Missing}, imp::Imputor; kwargs...) = data
+
+
+"""
+    impute!(table, imp; cols=nothing) -> table
 
 Imputes the data in a table by imputing the values 1 column at a time;
 if this is not the desired behaviour custom imputor methods should overload this method.
@@ -127,16 +185,20 @@ if this is not the desired behaviour custom imputor methods should overload this
 * `imp::Imputor`: the Imputor method to use
 * `table`: the data to impute
 
+# Keyword Arguments
+* `cols`: The columns to impute along (default is to impute all columns)
+
 # Returns
 * the input `data` with values imputed
 
 # Example
-``jldoctest
-julia> using DataFrames; using Impute: Interpolate, Context, impute
+```jldoctest
+julia> using DataFrames; using Impute: Interpolate, impute
+
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
+│     │ Float64? │ Float64? │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
@@ -144,38 +206,46 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 4   │ missing  │ missing  │
 │ 5   │ 5.0      │ 5.5      │
 
-julia> impute(df, Interpolate(; context=Context(; limit=1.0)))
+julia> impute(df, Interpolate())
 5×2 DataFrame
 │ Row │ a        │ b        │
-│     │ Float64  │ Float64  │
+│     │ Float64? │ Float64? │
 ├─────┼──────────┼──────────┤
 │ 1   │ 1.0      │ 1.1      │
 │ 2   │ 2.0      │ 2.2      │
 │ 3   │ 3.0      │ 3.3      │
 │ 4   │ 4.0      │ 4.4      │
 │ 5   │ 5.0      │ 5.5      │
+```
 """
-function impute!(table, imp::Imputor)
+function impute!(table::T, imp::Imputor; cols=nothing)::T where T
+    # TODO: We could probably handle iterators of tables here
     istable(table) || throw(MethodError(impute!, (table, imp)))
 
     # Extract a columns iterator that we should be able to use to mutate the data.
     # NOTE: Mutation is not guaranteed for all table types, but it avoid copying the data
     columntable = Tables.columns(table)
 
-    for cname in propertynames(columntable)
+    cnames = cols === nothing ? propertynames(columntable) : cols
+    for cname in cnames
         impute!(getproperty(columntable, cname), imp)
     end
 
     return table
 end
 
-# Special case row tables
-# NOTE: This may introduce ambiguities for specific imputors that have defined a
-# `impute!(data, imp)`` method
-function impute!(data::Vector{<:NamedTuple}, imp::Imputor)
-    return materializer(data)(impute!(Tables.columns(data), imp))
-end
+files = [
+    "interp.jl",
+    "knn.jl",
+    "locf.jl",
+    "nocb.jl",
+    "replace.jl",
+    "srs.jl",
+    "standardize.jl",
+    "substitute.jl",
+    "svd.jl",
+]
 
-for file in ("drop.jl", "locf.jl", "nocb.jl", "interp.jl", "fill.jl", "chain.jl", "srs.jl", "svd.jl", "knn.jl")
+for file in files
     include(joinpath("imputors", file))
 end

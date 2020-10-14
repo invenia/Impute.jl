@@ -1,5 +1,5 @@
 """
-    KNN <: Imputor
+    KNN(; kwargs...)
 
 Imputation using k-Nearest Neighbor algorithm.
 
@@ -7,69 +7,79 @@ Imputation using k-Nearest Neighbor algorithm.
 * `k::Int`: number of nearest neighbors
 * `dist::MinkowskiMetric`: distance metric suppports by `NearestNeighbors.jl` (Euclidean, Chebyshev, Minkowski and Cityblock)
 * `threshold::AbsstractFloat`: thershold for missing neighbors
-* `on_complete::Function`: a function to run when imputation is complete
 
 # Reference
 * Troyanskaya, Olga, et al. "Missing value estimation methods for DNA microarrays." Bioinformatics 17.6 (2001): 520-525.
 """
-# TODO : Support Categorical Distance (NearestNeighbors.jl support needed)
 struct KNN{M} <: Imputor where M <: NearestNeighbors.MinkowskiMetric
     k::Int
     threshold::AbstractFloat
     dist::M
-    context::AbstractContext
 end
 
-function KNN(; k=1, threshold=0.5, dist=Euclidean(), context=Context())
+# TODO : Support Categorical Distance (NearestNeighbors.jl support needed)
+function KNN(; k=1, threshold=0.5, dist=Euclidean())
     k < 1 && throw(ArgumentError("The number of nearset neighbors should be greater than 0"))
 
     !(0 < threshold < 1) && throw(ArgumentError("Missing neighbors threshold should be within 0 to 1"))
 
     # to exclude missing value itself
-    KNN(k + 1, threshold, dist, context)
+    KNN(k + 1, threshold, dist)
 end
 
-function impute!(data::AbstractMatrix{<:Union{T, Missing}}, imp::KNN) where T<:Real
-    imp.context() do ctx
-        # Get mask array first (order of )
-        mmask = ismissing.(transpose(data))
+function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::KNN; dims=nothing) where T<:Real
+    d = dim(data, dims)
 
-        # fill missing value as mean value
-        impute!(data, Fill(; value=mean, context=ctx))
+    # KDTree expects data of the form dims x n
+    X = d == 1 ? data : transpose(data)
 
-        # then, transpose to D x N for KDTree
-        transposed = transpose(disallowmissing(data))
+    # Get mask array first
+    mmask = ismissing.(X)
 
-        kdtree = KDTree(transposed, imp.dist)
-        idxs, dists = NearestNeighbors.knn(kdtree, transposed, imp.k, true)
+    # fill missing value as mean value
+    impute!(X, Substitute(); dims=1)
 
-        idxes = CartesianIndices(transposed)
-        fallback_threshold = imp.k * imp.threshold
+    # Disallow `missings` for NearestNeighbors
+    X = disallowmissing(X)
 
-        for I in CartesianIndices(transposed)
-            if mmask[I] == 1
-                w = 1.0 ./ dists[I[2]]
-                ws = sum(w[2:end])
-                missing_neighbors = ismissing.(transposed[:, idxs[I[2]]][:, 2:end])
+    kdtree = KDTree(X, imp.dist)
+    idxs, dists = NearestNeighbors.knn(kdtree, X, imp.k, true)
 
-                # exclude missing value itself because distance would be zero
-                if isnan(ws) || isinf(ws) || iszero(ws)
-                    # if distance is zero or not a number, keep mean imputation
-                    transposed[I] = transposed[I]
-                elseif count(!iszero, mapslices(sum, missing_neighbors, dims=1)) >
-                    fallback_threshold
-                    # If too many neighbors are also missing, fallback to mean imputation
-                    # get column and check how many neighbors are also missing
-                    transposed[I] = transposed[I]
-                else
-                    # Inverse distance weighting
-                    wt = w .* transposed[I[1], idxs[I[2]]]
-                    transposed[I] = sum(wt[2:end]) / ws
-                end
+    idxes = CartesianIndices(X)
+    fallback_threshold = imp.k * imp.threshold
+
+    for I in CartesianIndices(X)
+        if mmask[I] == 1
+            w = 1.0 ./ dists[I[2]]
+            ws = sum(w[2:end])
+            # Shouldn't ismissing.(X[...][...]) be replaced with mmask[...][...]?
+            # If so then I think the test might need updating cause the "Data match" section
+            # seems to fallback on the mean imputation consistently
+            neighbors = mapslices(
+                iszero ∘ sum,
+                ismissing.(X[:, idxs[I[2]]][:, 2:end]);
+                dims=1
+            )
+
+            # exclude missing value itself because distance would be zero
+            # If too many neighbors are also missing, fallback to mean imputation
+            # get column and check how many neighbors are also missing
+            if isfinite(ws) && !iszero(ws) && count(neighbors) > fallback_threshold
+                # Inverse distance weighting
+                wt = w .* X[I[1], idxs[I[2]]]
+                X[I] = sum(wt[2:end]) / ws
             end
         end
-
-        # for type stability
-        allowmissing(transposed')
     end
+
+    # for type stability
+    return allowmissing(d == 1 ? X : X')
 end
+
+impute!(data::AbstractMatrix{Missing}, imp::KNN; kwargs...) = data
+
+function impute(data::AbstractMatrix{Union{T, Missing}}, imp::KNN; kwargs...) where T<:Real
+    return impute!(trycopy(data), imp; kwargs...)
+end
+
+impute(data::AbstractMatrix{Missing}, imp::KNN; kwargs...) = trycopy(data)

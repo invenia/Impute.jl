@@ -1,5 +1,6 @@
+# Filter
 ```@autodocs
 Modules = [Impute]
-Pages = ["context.jl"]
+Pages = ["filter.jl"]
 Order = [:module, :constant, :type, :function]
 ```
