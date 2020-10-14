@@ -27,6 +27,15 @@
         @test_throws ThresholdError assert(aa, t)
         @test_throws ThresholdError assert(table, t)
 
+        # Test showerror
+        msg = try
+            assert(a, t)
+        catch e
+            sprint(showerror, e)
+        end
+
+        @test msg == "ThresholdError: Ratio of missing values exceeded 0.1 (0.15)\n"
+
         t = Threshold(; ratio=0.8)
         # Use isequal because we expect the results to contain missings
         @test isequal(assert(a, t), a)

@@ -15,7 +15,7 @@ end
 function Base.showerror(io::IO, err::ThresholdError)
     println(
         io,
-        "ThresholdError: Ratio of missing values exceeded $(err.limit): $(err.value)",
+        "ThresholdError: Ratio of missing values exceeded $(err.limit) ($(err.value))",
     )
 end
 
