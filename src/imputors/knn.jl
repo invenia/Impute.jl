@@ -6,7 +6,7 @@ Imputation using k-Nearest Neighbor algorithm.
 # Keyword Arguments
 * `k::Int`: number of nearest neighbors
 * `dist::MinkowskiMetric`: distance metric suppports by `NearestNeighbors.jl` (Euclidean, Chebyshev, Minkowski and Cityblock)
-* `threshold::AbsstractFloat`: thershold for missing neighbors
+* `threshold::AbstractFloat`: threshold for missing neighbors
 
 # Reference
 * Troyanskaya, Olga, et al. "Missing value estimation methods for DNA microarrays." Bioinformatics 17.6 (2001): 520-525.
@@ -34,40 +34,50 @@ function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::KNN; dims=nothing
     X = d == 1 ? data : transpose(data)
 
     # Get mask array first
-    mmask = ismissing.(X)
+    Xmask = ismissing.(X)
 
-    # fill missing value as mean value
+    # Fill missing value as mean value
     impute!(X, Substitute(); dims=1)
 
     # Disallow `missings` for NearestNeighbors
     X = disallowmissing(X)
 
+    # Our search points are just observations containing `missing`s
+    points = X[:, vec(reduce(|, Xmask; dims=1))]
+
+    # Contruct our KDTree over the entire dataset
     kdtree = KDTree(X, imp.dist)
-    idxs, dists = NearestNeighbors.knn(kdtree, X, imp.k, true)
 
-    idxes = CartesianIndices(X)
-    fallback_threshold = imp.k * imp.threshold
+    # Query for neighbors to our missing observations
+    # NOTES:
+    # 1. It's generally faster to query for all points at once
+    # 2. We wanted the results sorted so that the first idx is our data points
+    #   location in the original dataset.
+    for (idx, dist) in zip(NearestNeighbors.knn(kdtree, points, imp.k, true)...)
+        # Our closest neighbor should always be our input data point (distance of zero)
+        @assert iszero(first(dist))
 
-    for I in CartesianIndices(X)
-        if mmask[I] == 1
-            w = 1.0 ./ dists[I[2]]
-            ws = sum(w[2:end])
-            # Shouldn't ismissing.(X[...][...]) be replaced with mmask[...][...]?
-            # If so then I think the test might need updating cause the "Data match" section
-            # seems to fallback on the mean imputation consistently
-            neighbors = mapslices(
-                iszero ∘ sum,
-                ismissing.(X[:, idxs[I[2]]][:, 2:end]);
-                dims=1
-            )
+        # Location of point to impute
+        j = first(idx)
 
-            # exclude missing value itself because distance would be zero
-            # If too many neighbors are also missing, fallback to mean imputation
-            # get column and check how many neighbors are also missing
-            if isfinite(ws) && !iszero(ws) && count(neighbors) > fallback_threshold
-                # Inverse distance weighting
-                wt = w .* X[I[1], idxs[I[2]]]
-                X[I] = sum(wt[2:end]) / ws
+        # Update each missing value in this point
+        for i in 1:size(points, 1)
+            # Skip non-missing elements
+            Xmask[i, j] || continue
+
+            # Grab our neighbor mask to excluding neighbor values that were also missing.
+            nmask = Xmask[i, idx]
+
+            # Skip if there are too many missing neighbor values
+            (count(nmask) / imp.k) > imp.threshold && continue
+
+            # Weight valid neighbors based on inverse distance
+            wv = weights(1.0 ./ dist[.!nmask])
+
+            # Only fill with the weighted mean of neighbors if the sum of the weights are
+            # non-zero and finite.
+            if isfinite(sum(wv)) && !iszero(sum(wv))
+                X[i, j] = mean(X[i, idx[.!nmask]], wv)
             end
         end
     end

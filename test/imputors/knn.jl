@@ -23,16 +23,17 @@
             knn_nrmsd, mean_nrmsd = 0.0, 0.0
 
             for i = 1:num_tests
-                knn_imputed = impute(copy(X), Impute.KNN(; k=2); dims=:cols)
+                knn_imputed = impute(copy(X), Impute.KNN(; k=3); dims=:cols)
                 mean_imputed = impute(copy(X), Substitute(); dims=:cols)
 
                 knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data, knn_imputed)) / i
                 mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data, mean_imputed)) / i
             end
 
+            @show knn_nrmsd mean_nrmsd
             @test knn_nrmsd < mean_nrmsd
             # test type stability
-            @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2); dims=:cols))
+            @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=3); dims=:cols))
             @test typeof(X) == typeof(impute(copy(X), Substitute(); dims=:cols))
         end
 
@@ -42,16 +43,17 @@
             knn_nrmsd, mean_nrmsd = 0.0, 0.0
 
             for i = 1:num_tests
-                knn_imputed = impute(copy(X), Impute.KNN(; k=2); dims=:cols)
+                knn_imputed = impute(copy(X), Impute.KNN(; k=3); dims=:cols)
                 mean_imputed = impute(copy(X), Substitute(); dims=:cols)
 
                 knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data, knn_imputed)) / i
                 mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data, mean_imputed)) / i
             end
 
+            @show knn_nrmsd mean_nrmsd
             @test knn_nrmsd < mean_nrmsd
             # test type stability
-            @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2); dims=:cols))
+            @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=3); dims=:cols))
             @test typeof(X) == typeof(impute(copy(X), Substitute(); dims=:cols))
         end
 
@@ -61,16 +63,17 @@
             knn_nrmsd, mean_nrmsd = 0.0, 0.0
 
             for i = 1:num_tests
-                knn_imputed = impute(copy(X), Impute.KNN(; k=2); dims=:cols)
+                knn_imputed = impute(copy(X), Impute.KNN(; k=3); dims=:cols)
                 mean_imputed = impute(copy(X), Substitute(); dims=:cols)
 
                 knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data, knn_imputed)) / i
                 mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data, mean_imputed)) / i
             end
 
+            @show knn_nrmsd mean_nrmsd
             @test knn_nrmsd < mean_nrmsd
             # test type stability
-            @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=2); dims=:cols))
+            @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=3); dims=:cols))
             @test typeof(X) == typeof(impute(copy(X), Substitute(); dims=:cols))
         end
     end
@@ -106,6 +109,7 @@
             mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data', mean_imputed)) / i
         end
 
+        @show knn_nrmsd mean_nrmsd
         @test knn_nrmsd < mean_nrmsd
         # test type stability
         @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=4); dims=:cols))
