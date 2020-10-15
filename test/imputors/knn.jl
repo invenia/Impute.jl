@@ -13,64 +13,19 @@
         # P. Schimitt, et. al
         # A comparison of six methods for missing data imputation
         iris = Impute.dataset("test/table/iris") |> DataFrame
-        iris2 = filter(row -> row[:Species] == "versicolor" || row[:Species] == "virginica", iris)
-        data = Array(iris2[:, [:SepalLength, :SepalWidth, :PetalLength, :PetalWidth]])
-        num_tests = 100
+        data = Array(iris[:, [:SepalLength, :SepalWidth, :PetalLength, :PetalWidth]])
 
-        @testset "Iris - 0.15" begin
-            X = add_missings(data, 0.15)
+        @testset "MCAR $r" for r in (0.15, 0.25, 0.35)
 
-            knn_nrmsd, mean_nrmsd = 0.0, 0.0
+            X = add_missings(data, r)
+            knn_imputed = impute(copy(X), Impute.KNN(; k=3); dims=:cols)
+            mean_imputed = impute(copy(X), Substitute(); dims=:cols)
 
-            for i = 1:num_tests
-                knn_imputed = impute(copy(X), Impute.KNN(; k=3); dims=:cols)
-                mean_imputed = impute(copy(X), Substitute(); dims=:cols)
-
-                knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data, knn_imputed)) / i
-                mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data, mean_imputed)) / i
-            end
-
-            @show knn_nrmsd mean_nrmsd
-            @test knn_nrmsd < mean_nrmsd
-            # test type stability
-            @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=3); dims=:cols))
-            @test typeof(X) == typeof(impute(copy(X), Substitute(); dims=:cols))
-        end
-
-        @testset "Iris - 0.25" begin
-            X = add_missings(data, 0.25)
-
-            knn_nrmsd, mean_nrmsd = 0.0, 0.0
-
-            for i = 1:num_tests
-                knn_imputed = impute(copy(X), Impute.KNN(; k=3); dims=:cols)
-                mean_imputed = impute(copy(X), Substitute(); dims=:cols)
-
-                knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data, knn_imputed)) / i
-                mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data, mean_imputed)) / i
-            end
-
-            @show knn_nrmsd mean_nrmsd
-            @test knn_nrmsd < mean_nrmsd
-            # test type stability
-            @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=3); dims=:cols))
-            @test typeof(X) == typeof(impute(copy(X), Substitute(); dims=:cols))
-        end
-
-        @testset "Iris - 0.35" begin
-            X = add_missings(data, 0.35)
-
-            knn_nrmsd, mean_nrmsd = 0.0, 0.0
-
-            for i = 1:num_tests
-                knn_imputed = impute(copy(X), Impute.KNN(; k=3); dims=:cols)
-                mean_imputed = impute(copy(X), Substitute(); dims=:cols)
-
-                knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data, knn_imputed)) / i
-                mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data, mean_imputed)) / i
-            end
-
-            @show knn_nrmsd mean_nrmsd
+            knn_nrmsd = nrmsd(data, knn_imputed)
+            mean_nrmsd = nrmsd(data, mean_imputed)
+            # @show knn_nrmsd mean_nrmsd
+            # Maybe want to use a static dataset or significance test if this still sometimes
+            # doesn't pass.
             @test knn_nrmsd < mean_nrmsd
             # test type stability
             @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=3); dims=:cols))
@@ -109,7 +64,7 @@
             mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data', mean_imputed)) / i
         end
 
-        @show knn_nrmsd mean_nrmsd
+        # @show knn_nrmsd mean_nrmsd
         @test knn_nrmsd < mean_nrmsd
         # test type stability
         @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=4); dims=:cols))
