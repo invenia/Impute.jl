@@ -83,15 +83,12 @@ savefig("st-nocb-plot.svg"); nothing # hide
 But, this looks rather crude and creates clear artifacts in the dataset.
 Since we suspect that observations in similar locations would have had similar recordings
 we could use `Impute.svd` or `Impute.knn` to find similarities across multiple locations.
-NOTE: We need to call `svd!` on the raw data because `NamedDimsArray`s/`KeyedArray`s don't seem to support `LinearAlgebra.svd` yet.
 ```@repl st-example
-Impute.svd!(parent(parent(data)); init=Impute.NOCB(), dims=:cols, tol=1e-2);
+data = Impute.knn(data; dims=:cols, k=4);
 heatmap(data);
-savefig("st-svd-plot.svg"); nothing # hide
+savefig("st-knn-plot.svg"); nothing # hide
 ```
-![](st-svd-plot.svg)
-
-TODO: Use KNN after fixing bug with that imputor
+![](st-knn-plot.svg)
 
 This method appears to have removed the artifacts found with the basic NOCB method alone.
 Now we have a complete dataset ready for downstream processing :)
