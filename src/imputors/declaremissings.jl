@@ -1,7 +1,7 @@
 """
-    Standardize(; values)
+    DeclareMissings(; values)
 
-Standardize (or replace) various missing data values with `missing`.
+DeclareMissings (or replace) various missing data values with `missing`.
 This is useful for downstream imputation methods that assume missing data is represented by
 a `missing`.
 
@@ -12,30 +12,30 @@ a `missing`.
 
 # Example
 ```jldoctest
-julia> using Impute: Standardize, impute
+julia> using Impute: DeclareMissings, impute
 
 julia> M = [1.0 2.0 -9999.0 NaN 5.0; 1.1 2.2 3.3 0.0 5.5]
 2×5 Array{Float64,2}:
  1.0  2.0  -9999.0  NaN    5.0
  1.1  2.2      3.3    0.0  5.5
 
-julia> impute(M, Standardize(; values=(NaN, -9999.0, 0.0)))
+julia> impute(M, DeclareMissings(; values=(NaN, -9999.0, 0.0)))
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 ```
 """
-struct Standardize{T<:Tuple} <: Imputor
+struct DeclareMissings{T<:Tuple} <: Imputor
     values::T
 end
 
-function Standardize(; values)
+function DeclareMissings(; values)
     T = isa(values, Tuple) ? values : tuple(values)
-    return Standardize{typeof(T)}(T)
+    return DeclareMissings{typeof(T)}(T)
 end
 
 # Primary definition just calls `replace!`
-function _impute!(data::AbstractArray{Union{T, Missing}}, imp::Standardize) where T
+function _impute!(data::AbstractArray{Union{T, Missing}}, imp::DeclareMissings) where T
     # Reduce the possible set of values to those that could actually be found in the data
     # Useful, if we declare a `Replace` imputor that should be applied to multiple datasets.
     Base.replace!(data, (v => missing for v in imp.values if v isa T)...)
@@ -43,10 +43,10 @@ end
 
 # Most of the time the in-place methods won't work because we need to change the
 # eltype with allowmissing
-impute(data::AbstractArray, imp::Standardize) = _impute!(allowmissing(data), imp)
+impute(data::AbstractArray, imp::DeclareMissings) = _impute!(allowmissing(data), imp)
 
 # Custom implementation of a non-mutating impute for tables
-function impute(table, imp::Standardize)
+function impute(table, imp::DeclareMissings)
     istable(table) || throw(MethodError(impute, (table, imp)))
 
     ctable = Tables.columns(table)
@@ -65,16 +65,16 @@ function impute(table, imp::Standardize)
 end
 
 # Specialcase for rowtable
-function impute(data::T, imp::Standardize) where T <: AbstractVector{<:NamedTuple}
+function impute(data::T, imp::DeclareMissings) where T <: AbstractVector{<:NamedTuple}
     # We use columntable here so that we don't call `materialize` more often than needed.
     return materializer(data)(impute(Tables.columntable(data), imp))
 end
 
 # Awkward imputor overrides necessary because we intercepted the higher level
 # `impute` calls
-_impute!(data::AbstractArray{Missing}, imp::Standardize) = data
+_impute!(data::AbstractArray{Missing}, imp::DeclareMissings) = data
 
 # Skip custom dims stuff cause it isn't necessary here.
-function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::Standardize) where {T}
+function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::DeclareMissings) where {T}
     return _impute!(data, imp)
 end
