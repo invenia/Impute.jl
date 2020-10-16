@@ -34,7 +34,7 @@ function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::KNN; dims=nothing
     X = d == 1 ? data : transpose(data)
 
     # Get mask array first
-    Xmask = ismissing.(X)
+    missing_mask = ismissing.(X)
 
     # Fill missing value as mean value
     impute!(X, Substitute(); dims=1)
@@ -43,7 +43,7 @@ function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::KNN; dims=nothing
     X = disallowmissing(X)
 
     # Our search points are just observations containing `missing`s
-    points = X[:, vec(reduce(|, Xmask; dims=1))]
+    points = X[:, vec(any(missing_mask; dims=1))]
 
     # Contruct our KDTree over the entire dataset
     kdtree = KDTree(X, imp.dist)
@@ -53,31 +53,33 @@ function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::KNN; dims=nothing
     # 1. It's generally faster to query for all points at once
     # 2. We wanted the results sorted so that the first idx is our data points
     #   location in the original dataset.
-    for (idx, dist) in zip(NearestNeighbors.knn(kdtree, points, imp.k, true)...)
+    for (idxs, dists) in zip(NearestNeighbors.knn(kdtree, points, imp.k, true)...)
         # Our closest neighbor should always be our input data point (distance of zero)
-        @assert iszero(first(dist))
+        @assert iszero(first(dists))
 
         # Location of point to impute
-        j = first(idx)
+        j = first(idxs)
 
         # Update each missing value in this point
-        for i in 1:size(points, 1)
+        for i in axes(points, 1)
             # Skip non-missing elements
-            Xmask[i, j] || continue
+            missing_mask[i, j] || continue
 
             # Grab our neighbor mask to excluding neighbor values that were also missing.
-            nmask = Xmask[i, idx]
+            neighbor_mask = missing_mask[i, idxs]
 
             # Skip if there are too many missing neighbor values
-            (count(nmask) / imp.k) > imp.threshold && continue
+            (count(neighbor_mask) / imp.k) > imp.threshold && continue
 
             # Weight valid neighbors based on inverse distance
-            wv = weights(1.0 ./ dist[.!nmask])
+            neighbor_dists = dists[.!neighbor_mask]
+            wv = weights(1.0 ./ neighbor_dists)
 
             # Only fill with the weighted mean of neighbors if the sum of the weights are
             # non-zero and finite.
             if isfinite(sum(wv)) && !iszero(sum(wv))
-                X[i, j] = mean(X[i, idx[.!nmask]], wv)
+                neighbor_vals = X[i, idxs[.!neighbor_mask]]
+                X[i, j] = mean(neighbor_vals, wv)
             end
         end
     end
