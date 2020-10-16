@@ -6,6 +6,7 @@ using DataFrames
 using Dates
 using Distances
 using Documenter
+using HypothesisTests
 using LinearAlgebra
 using Random
 using Statistics
