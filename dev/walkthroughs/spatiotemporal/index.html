@@ -157,7 +157,7 @@ GKS: can&#39;t connect to GKS socket application
 Did you start &#39;gksqt&#39;?
 
 GKS: Open failed in routine OPEN_WS
-GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</code></pre><p><img src="../st-nocb-plot.svg" alt/></p><p>But, this looks rather crude and creates clear artifacts in the dataset. Since we suspect that observations in similar locations would have had similar recordings we could use <code>Impute.svd</code> or <code>Impute.knn</code> to find similarities across multiple locations. NOTE: We need to call <code>svd!</code> on the raw data because <code>NamedDimsArray</code>s/<code>KeyedArray</code>s don&#39;t seem to support <code>LinearAlgebra.svd</code> yet.</p><pre><code class="language-julia-repl">julia&gt; Impute.svd!(parent(parent(data)); init=Impute.NOCB(), dims=:cols, tol=1e-2);
+GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</code></pre><p><img src="../st-nocb-plot.svg" alt/></p><p>But, this looks rather crude and creates clear artifacts in the dataset. Since we suspect that observations in similar locations would have had similar recordings we could use <code>Impute.svd</code> or <code>Impute.knn</code> to find similarities across multiple locations.</p><pre><code class="language-julia-repl">julia&gt; data = Impute.knn(data; dims=:cols, k=4);
 
 julia&gt; heatmap(data);
 
@@ -167,4 +167,4 @@ GKS: can&#39;t connect to GKS socket application
 Did you start &#39;gksqt&#39;?
 
 GKS: Open failed in routine OPEN_WS
-GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</code></pre><p><img src="../st-svd-plot.svg" alt/></p><p>TODO: Use KNN after fixing bug with that imputor</p><p>This method appears to have removed the artifacts found with the basic NOCB method alone. Now we have a complete dataset ready for downstream processing :)</p><footer><hr/><a class="previous" href="../../"><span class="direction">Previous</span><span class="title">Home</span></a><a class="next" href="../svd/"><span class="direction">Next</span><span class="title">SVD</span></a></footer></article></body></html>
+GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</code></pre><p><img src="../st-knn-plot.svg" alt/></p><p>This method appears to have removed the artifacts found with the basic NOCB method alone. Now we have a complete dataset ready for downstream processing :)</p><footer><hr/><a class="previous" href="../../"><span class="direction">Previous</span><span class="title">Home</span></a><a class="next" href="../svd/"><span class="direction">Next</span><span class="title">SVD</span></a></footer></article></body></html>
