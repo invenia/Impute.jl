@@ -19,11 +19,12 @@ using LinearAlgebra
 using LinearAlgebra: Diagonal
 
 include("utils.jl")
-include("assertions.jl")
 include("imputors.jl")
 include("filter.jl")
+include("validators.jl")
 include("chain.jl")
 include("deprecated.jl")
+
 include("functional.jl")
 include("data.jl")
 

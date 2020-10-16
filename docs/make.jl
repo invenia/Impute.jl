@@ -11,7 +11,7 @@ makedocs(
         ],
         "API" => [
             "Impute" => "api/impute.md",
-            "Assertions" => "api/assertions.md",
+            "Validators" => "api/validators.md",
             "Filter" => "api/filter.md",
             "Imputors" => "api/imputors.md",
             "Chain" => "api/chain.md",

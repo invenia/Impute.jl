@@ -1,13 +1,13 @@
-const Transform = Union{Assertion, Filter, Imputor}
+const Transform = Union{Validator, Filter, Imputor}
 
 """
     Chain{T<:Tuple{Vararg{Transform}}} <: Function
 
-Runs multiple `Assertions`, `Filter` or `Imputor`s on the same data in the order they're
+Runs multiple `Validators`, `Filter` or `Imputor`s on the same data in the order they're
 provided.
 
 # Fields
-* `transforms::Vector{Union{Assertion, Filter, Imputor}}`
+* `transforms::Vector{Union{Validator, Filter, Imputor}}`
 """
 struct Chain{T<:Tuple{Vararg{Transform}}} <: Function
     transforms::T
@@ -16,7 +16,7 @@ end
 Chain(transforms::Vector{<:Transform}) = Chain(Tuple(transforms))
 
 """
-    Chain(transforms::Union{Assertion, Filter, Imputor}...) -> Chain
+    Chain(transforms::Union{Validator, Filter, Imputor}...) -> Chain
 
 Creates a Chain using the transforms provided (ordering matters).
 """
@@ -66,9 +66,9 @@ function (C::Chain)(data; kwargs...)
     X = trycopy(data)
 
     for t in C.transforms
-        if isa(t, Assertion)
-            # Assertions just return the input
-            assert(X, t; kwargs...)
+        if isa(t, Validator)
+            # Validators just return the input
+            validate(X, t; kwargs...)
         elseif isa(t, Filter)
             # Filtering doesn't always work in-place
             X = apply(X, t; kwargs...)

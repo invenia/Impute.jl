@@ -36,18 +36,18 @@ using Impute:
     Threshold,
     ThresholdError,
     apply,
-    assert,
     impute,
     impute!,
     interp,
     run,
-    threshold
+    threshold,
+    validate
 
 
 @testset "Impute" begin
     include("testutils.jl")
 
-    include("assertions.jl")
+    include("validators.jl")
     include("chain.jl")
     include("data.jl")
     include("deprecated.jl")

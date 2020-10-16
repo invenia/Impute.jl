@@ -1,4 +1,4 @@
-# Generate a functional interface from the Assertion and Imputor types.
+# Generate a functional interface from the Validator and Imputor types.
 """
     _splitkwargs(::Type{T}, kwargs...) where T -> (imp, rem)
 
@@ -35,7 +35,7 @@ function _splitkwargs(::Type{Substitute}, kwargs...)
     return (Substitute(; kwdef...), rem)
 end
 
-const global assertion_methods = (
+const global validation_methods = (
     threshold = Threshold,
 )
 
@@ -55,12 +55,12 @@ const global imputation_methods = (
     knn = KNN,
 )
 
-for (func, type) in pairs(assertion_methods)
+for (func, type) in pairs(validation_methods)
     typename = nameof(type)
     @eval begin
         function $func(data; kwargs...)
             a, rem = _splitkwargs($typename, kwargs...)
-            return assert(data, a; rem...)
+            return validate(data, a; rem...)
         end
     end
 end

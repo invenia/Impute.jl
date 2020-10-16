@@ -1,8 +1,8 @@
-# Assertions
+# Validators
 
 ```@autodocs
 Modules = [Impute]
-Pages = ["assertions.jl"]
+Pages = ["validators.jl"]
 Order = [:module, :constant, :type, :function]
 ```
 
