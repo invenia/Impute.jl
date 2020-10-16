@@ -16,20 +16,26 @@
         data = Array(iris[:, [:SepalLength, :SepalWidth, :PetalLength, :PetalWidth]])
 
         @testset "MCAR $r" for r in (0.15, 0.25, 0.35)
+            # Original authors said they ran the test 1000 times
+            results = map(1:1000) do i
+                X = add_missings(data, r)
+                knn_imputed = impute(copy(X), Impute.KNN(; k=3); dims=:cols)
+                sub_imputed = impute(copy(X), Substitute(); dims=:cols)
 
-            X = add_missings(data, r)
-            knn_imputed = impute(copy(X), Impute.KNN(; k=3); dims=:cols)
-            mean_imputed = impute(copy(X), Substitute(); dims=:cols)
+                return nrmsd(data, knn_imputed), nrmsd(data, sub_imputed)
+            end
 
-            knn_nrmsd = nrmsd(data, knn_imputed)
-            mean_nrmsd = nrmsd(data, mean_imputed)
-            # @show knn_nrmsd mean_nrmsd
-            # Maybe want to use a static dataset or significance test if this still sometimes
-            # doesn't pass.
-            @test knn_nrmsd < mean_nrmsd
+            knn_nrmsd = first.(results)
+            sub_nrmsd = last.(results)
+
+            # Test that knn is better on average
+            @test mean(knn_nrmsd) < mean(sub_nrmsd)
+            # Test that the difference is "significant".
+            @test pvalue(UnequalVarianceTTest(knn_nrmsd, sub_nrmsd)) < 0.05
+
             # test type stability
-            @test typeof(X) == typeof(impute(copy(X), Impute.KNN(; k=3); dims=:cols))
-            @test typeof(X) == typeof(impute(copy(X), Substitute(); dims=:cols))
+            @test typeof(impute(add_missings(data, r), Impute.KNN(; k=3); dims=:cols)) == Matrix{Union{Float64, Missing}}
+            @test typeof(impute(add_missings(data, r), Substitute(); dims=:cols)) == Matrix{Union{Float64, Missing}}
         end
     end
 
