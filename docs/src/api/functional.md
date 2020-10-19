@@ -1,6 +1,6 @@
 # Functional
 
-To reduce verbosity, Impute.jl also provides a functional interface to its `Assertion`s, `Filter`s, `Imputor`s, etc.
+To reduce verbosity, Impute.jl also provides a functional interface to its `Validator`s, `Filter`s, `Imputor`s, etc.
 
 Ex)
 

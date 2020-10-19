@@ -31,14 +31,14 @@ If a weights array is provided then the ratio will be calculated as the
 * `weights::AbstractWeights`: A set of statistical weights to use when evaluating the importance
   of each observation. If present a weighted ratio of missing values will be calculated.
 """
-struct Threshold <: Assertion
+struct Threshold <: Validator
     ratio::Float64
     weights::Union{AbstractWeights, Nothing}
 end
 
 Threshold(; ratio=0.1, weights=nothing) = Threshold(ratio, weights)
 
-function _assert(data::AbstractArray{Union{T, Missing}}, t::Threshold) where T
+function _validate(data::AbstractArray{Union{T, Missing}}, t::Threshold) where T
     mratio = if t.weights === nothing
         count(ismissing, data) / length(data)
     else
