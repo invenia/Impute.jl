@@ -6,10 +6,10 @@ Pages = ["imputors.jl"]
 Order = [:module, :constant, :type, :function]
 ```
 
-## Standardize
+## DeclareMissings
 ```@autodocs
 Modules = [Impute]
-Pages = ["standardize.jl"]
+Pages = ["declaremissings.jl"]
 Order = [:module, :constant, :type, :function]
 ```
 

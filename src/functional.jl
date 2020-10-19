@@ -49,7 +49,7 @@ const global imputation_methods = (
     nocb = NOCB,
     replace = Replace,
     srs = SRS,
-    standardize = Standardize,
+    declaremissings = DeclareMissings,
     substitute = Substitute,
     svd = SVD,
     knn = KNN,
@@ -400,9 +400,9 @@ julia> Impute.srs(df; rng=MersenneTwister(1234))
 """ srs
 
 @doc """
-    Impute.standardize(data; values)
+    Impute.declaremissings(data; values)
 
-Standardize (or replace) various missing data representations with `missing`.
+DeclareMissings (or replace) various missing data representations with `missing`.
 
 # Keyword Arguments
 * `value::Tuple`: A tuple of values that should be considered `missing`
@@ -426,7 +426,7 @@ julia> df = DataFrame(
 │ 4   │ NaN     │ -9999 │ y      │
 │ 5   │ 5.5     │ 5     │ NULL   │
 
-julia> Impute.standardize(df; values=(NaN, -9999, "NULL"))
+julia> Impute.declaremissings(df; values=(NaN, -9999, "NULL"))
 5×3 DataFrame
 │ Row │ a        │ b       │ c       │
 │     │ Float64? │ Int64?  │ String? │
@@ -437,7 +437,7 @@ julia> Impute.standardize(df; values=(NaN, -9999, "NULL"))
 │ 4   │ missing  │ missing │ y       │
 │ 5   │ 5.5      │ 5       │ missing │
 ```
-""" standardize
+""" declaremissings
 
 @doc """
     Impute.substitute(data; statistic=nothing)

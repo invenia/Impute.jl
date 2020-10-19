@@ -29,7 +29,7 @@ using Impute:
     NOCB,
     Replace,
     SRS,
-    Standardize,
+    DeclareMissings,
     Substitute,
     SVD,
     Filter,
@@ -58,7 +58,7 @@ using Impute:
     include("imputors/nocb.jl")
     include("imputors/replace.jl")
     include("imputors/srs.jl")
-    include("imputors/standardize.jl")
+    include("imputors/declaremissings.jl")
     include("imputors/substitute.jl")
     include("imputors/svd.jl")
     include("utils.jl")

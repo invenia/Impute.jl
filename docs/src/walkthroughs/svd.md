@@ -32,7 +32,7 @@ Okay, so as we'd expect there's a reasonable bit of structure we can exploit.
 So how does the svd method compare against other common, yet simpler, methods?
 
 ```@repl svd-example
-data = Impute.standardize(incomplete; values=-1.0)
+data = Impute.declaremissings(incomplete; values=-1.0)
 
 # NOTE: SVD performance is almost identical regardless of the `init` setting.
 imputors = [

@@ -1,9 +1,9 @@
-# The standardize imputor is sufficiently different in its input and behaviour
+# The declaremissings imputor is sufficiently different in its input and behaviour
 # that we don't bother using the ImputorTester here.
-@testset "Standardize" begin
+@testset "DeclareMissings" begin
     # List a couple known missing data values people might use.
     values = (NaN, 0.0, Nothing, "", 9999, -99, 0, DateTime(0))
-    imp = Standardize(; values=values)
+    imp = DeclareMissings(; values=values)
 
     @testset "Vector" begin
         @testset "disallowmissing" begin

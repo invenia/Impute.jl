@@ -37,9 +37,9 @@ Impute.threshold
 Impute.filter
 ```
 
-## Standardize
+## DeclareMissings
 ```@docs
-Impute.standardize
+Impute.declaremissings
 ```
 
 ## Replace
