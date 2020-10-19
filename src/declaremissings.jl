@@ -12,20 +12,20 @@ a `missing`.
 
 # Example
 ```jldoctest
-julia> using Impute: DeclareMissings, impute
+julia> using Impute: DeclareMissings, apply
 
 julia> M = [1.0 2.0 -9999.0 NaN 5.0; 1.1 2.2 3.3 0.0 5.5]
 2×5 Array{Float64,2}:
  1.0  2.0  -9999.0  NaN    5.0
  1.1  2.2      3.3    0.0  5.5
 
-julia> impute(M, DeclareMissings(; values=(NaN, -9999.0, 0.0)))
+julia> apply(M, DeclareMissings(; values=(NaN, -9999.0, 0.0)))
 2×5 Array{Union{Missing, Float64},2}:
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 ```
 """
-struct DeclareMissings{T<:Tuple} <: Imputor
+struct DeclareMissings{T<:Tuple}
     values::T
 end
 
@@ -34,8 +34,10 @@ function DeclareMissings(; values)
     return DeclareMissings{typeof(T)}(T)
 end
 
+apply!(data::AbstractArray{Missing}, imp::DeclareMissings) = data
+
 # Primary definition just calls `replace!`
-function _impute!(data::AbstractArray{Union{T, Missing}}, imp::DeclareMissings) where T
+function apply!(data::AbstractArray{Union{T, Missing}}, imp::DeclareMissings) where T
     # Reduce the possible set of values to those that could actually be found in the data
     # Useful, if we declare a `Replace` imputor that should be applied to multiple datasets.
     Base.replace!(data, (v => missing for v in imp.values if v isa T)...)
@@ -43,16 +45,16 @@ end
 
 # Most of the time the in-place methods won't work because we need to change the
 # eltype with allowmissing
-impute(data::AbstractArray, imp::DeclareMissings) = _impute!(allowmissing(data), imp)
+apply(data::AbstractArray, imp::DeclareMissings) = apply!(allowmissing(data), imp)
 
 # Custom implementation of a non-mutating impute for tables
-function impute(table, imp::DeclareMissings)
-    istable(table) || throw(MethodError(impute, (table, imp)))
+function apply(table, imp::DeclareMissings)
+    istable(table) || throw(MethodError(apply, (table, imp)))
 
     ctable = Tables.columns(table)
 
     cnames = Tuple(propertynames(ctable))
-    cdata = Tuple(impute(getproperty(ctable, cname), imp) for cname in cnames)
+    cdata = Tuple(apply(getproperty(ctable, cname), imp) for cname in cnames)
     # Reconstruct as a ColumnTable
     result = NamedTuple{cnames}(cdata)
 
@@ -65,16 +67,7 @@ function impute(table, imp::DeclareMissings)
 end
 
 # Specialcase for rowtable
-function impute(data::T, imp::DeclareMissings) where T <: AbstractVector{<:NamedTuple}
+function apply(data::T, imp::DeclareMissings) where T <: AbstractVector{<:NamedTuple}
     # We use columntable here so that we don't call `materialize` more often than needed.
-    return materializer(data)(impute(Tables.columntable(data), imp))
-end
-
-# Awkward imputor overrides necessary because we intercepted the higher level
-# `impute` calls
-_impute!(data::AbstractArray{Missing}, imp::DeclareMissings) = data
-
-# Skip custom dims stuff cause it isn't necessary here.
-function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::DeclareMissings) where {T}
-    return _impute!(data, imp)
+    return materializer(data)(apply(Tables.columntable(data), imp))
 end

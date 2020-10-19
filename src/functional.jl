@@ -49,7 +49,6 @@ const global imputation_methods = (
     nocb = NOCB,
     replace = Replace,
     srs = SRS,
-    declaremissings = DeclareMissings,
     substitute = Substitute,
     svd = SVD,
     knn = KNN,
@@ -82,6 +81,9 @@ for (func, type) in pairs(imputation_methods)
         @deprecate $func!(; kwargs...) data -> $func!(data; kwargs...) false
     end
 end
+
+declaremissings(data; kwargs...) = apply(data, DeclareMissings(; kwargs...))
+declaremissings!(data; kwargs...) = apply!(data, DeclareMissings(; kwargs...))
 
 # Provide a specific functional API for Impute.Filter.
 filter(data; kwargs...) = apply(data, Filter(); kwargs...)
