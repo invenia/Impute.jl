@@ -32,6 +32,11 @@
             result2 = apply!(b, imp)
             @test eltype(result2) == Union{Float64, Missing}
             @test all(ismissing, result2[[2, 3, 7]])
+
+            c = copy(a)
+            result3 = Impute.declaremissings!(c; values=values)
+            @test eltype(result3) == Union{Float64, Missing}
+            @test all(ismissing, result3[[2, 3, 7]])
         end
 
         @testset "All missing" begin

@@ -1,4 +1,5 @@
-const Transform = Union{Validator, Filter, Imputor}
+# This should maybe be a supertype at some point?
+const Transform = Union{Validator, DeclareMissings, Filter, Imputor}
 
 """
     Chain{T<:Tuple{Vararg{Transform}}} <: Function
@@ -69,6 +70,9 @@ function (C::Chain)(data; kwargs...)
         if isa(t, Validator)
             # Validators just return the input
             validate(X, t; kwargs...)
+        elseif isa(t, DeclareMissings)
+            # DeclareMissings isn't guaranteed to work in-place
+            X = apply(X, t)
         elseif isa(t, Filter)
             # Filtering doesn't always work in-place
             X = apply(X, t; kwargs...)

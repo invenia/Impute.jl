@@ -110,6 +110,7 @@
         # Filter out colunns with more than 400 missing values, Fill with 0, and check that
         # everything was replaced
         C = Chain(
+            Impute.DeclareMissings(; values=(NaN, Inf, -Inf)),
             Impute.Filter(c -> count(ismissing, c) < 400),
             Impute.Replace(; values=0.0),
             Impute.Threshold(),
