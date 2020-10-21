@@ -31,6 +31,7 @@ using Impute:
     SRS,
     DeclareMissings,
     Substitute,
+    WeightedSubstitute,
     SVD,
     Filter,
     Threshold,

@@ -52,6 +52,7 @@ const global imputation_methods = (
     srs = SRS,
     declaremissings = DeclareMissings,
     substitute = Substitute,
+    wsubstitute = WeightedSubstitute,
     svd = SVD,
     knn = KNN,
 )
