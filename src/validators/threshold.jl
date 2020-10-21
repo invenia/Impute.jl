@@ -15,44 +15,61 @@ end
 function Base.showerror(io::IO, err::ThresholdError)
     println(
         io,
-        "ThresholdError: Ratio of missing values exceeded $(err.limit) ($(err.value))",
+        "ThresholdError: Missing data limit exceeded $(err.limit) ($(err.value))",
     )
 end
 
 """
-    Threshold(; ratio=0.1, weights=nothing)
+    Threshold(; limit=0.1)
 
-Assert that the ratio of missing values in the provided dataset does not exceed to specified ratio.
-If a weights array is provided then the ratio will be calculated as the
-`sum(weights[ismissing.(data)]) / sum(weights)`
+Assert that the ratio of missing values in the provided dataset does not exceed to
+specified limit.
 
 # Keyword Arguments
-* `ratio::Real`: Allowed proportion of missing values (should be between 0.0 and 1.0).
-* `weights::AbstractWeights`: A set of statistical weights to use when evaluating the importance
-  of each observation. If present a weighted ratio of missing values will be calculated.
+* `limit::Real`: Allowed proportion of missing values (should be between 0.0 and 1.0).
 """
 struct Threshold <: Validator
-    ratio::Float64
+    limit::Float64
     weights::Union{AbstractWeights, Nothing}
 end
 
-Threshold(; ratio=0.1, weights=nothing) = Threshold(ratio, weights)
+Threshold(; limit=0.1, weights=nothing) = Threshold(limit, weights)
 
 function _validate(data::AbstractArray{Union{T, Missing}}, t::Threshold) where T
-    mratio = if t.weights === nothing
-        count(ismissing, data) / length(data)
-    else
-        if size(data) != size(t.weights)
-            throw(DimensionMismatch(string(
-                "Input has dimensions $(size(data)), but thresholds weights ",
-                "has dimensions $(size(t.weights))"
-            )))
-        end
+    mratio = count(ismissing, data) / length(data)
+    mratio > t.limit && throw(ThresholdError(t.limit, mratio))
+    return data
+end
 
-        sum(t.weights[ismissing.(data)]) / sum(t.weights)
+"""
+    WeightedThreshold(; limit, weights)
+
+Assert that the weighted proportion missing values in the provided dataset does not exceed
+to specified limit. The weighed proportion is calculated as
+`sum(weights[ismissing.(data)]) / sum(weights)`
+
+# Keyword Arguments
+* `limit::Real`: Allowed proportion of missing values (should be between 0.0 and 1.0).
+* `weights::AbstractWeights`: A set of statistical weights to use when evaluating the importance
+  of each observation.
+"""
+struct WeightedThreshold{W <: AbstractArray{<:Real}} <: Validator
+    limit::Float64
+    weights::W
+end
+
+WeightedThreshold(; limit, weights) = WeightedThreshold(limit, weights)
+
+function _validate(data::AbstractArray{Union{T, Missing}}, wt::WeightedThreshold) where T
+    if size(data) != size(wt.weights)
+        throw(DimensionMismatch(string(
+            "Input has dimensions $(size(data)), but thresholds weights ",
+            "has dimensions $(size(wt.weights))"
+        )))
     end
 
-    mratio > t.ratio && throw(ThresholdError(t.ratio, mratio))
+    val = sum(wt.weights[ismissing.(data)]) / sum(wt.weights)
+    val > wt.limit && throw(ThresholdError(wt.limit, val))
 
     return data
 end

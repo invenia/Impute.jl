@@ -37,6 +37,7 @@ end
 
 const global validation_methods = (
     threshold = Threshold,
+    wthreshold = WeightedThreshold,
 )
 
 const global imputation_methods = (
@@ -90,9 +91,9 @@ filter(f::Function, data; kwargs...) = apply(data, Filter(f); kwargs...)
 filter!(f::Function, data; kwargs...) = apply!(data, Filter(f); kwargs...)
 
 @doc """
-    Impute.threshold(data; ratio=0.1, weights=nothing, kwargs...)
+    Impute.threshold(data; limit=0.1, kwargs...)
 
-Assert that proportion of missing values in the `data` do not exceed the `ratio`.
+Assert that proportion of missing values in the `data` do not exceed the `limit`.
 
 # Examples
 ```julia-repl
@@ -110,11 +111,11 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 │ 5   │ 5.0      │ 5.5      │
 
 julia> Impute.threshold(df)
-ERROR: ThresholdError: Ratio of missing values exceeded 0.1 (0.4)
+ERROR: ThresholdError: Missing data limit exceeded 0.1 (0.4)
 Stacktrace:
 ...
 
-julia> Impute.threshold(df; ratio=0.8)
+julia> Impute.threshold(df; limit=0.8)
 5×2 DataFrames.DataFrame
 │ Row │ a        │ b        │
 │     │ Float64  │ Float64  │
@@ -127,6 +128,45 @@ julia> Impute.threshold(df; ratio=0.8)
 ```
 """
 threshold
+
+@doc """
+    Impute.wthreshold(data; ratio, weights, kwargs...)
+
+Assert that the weighted proportion of missing values in the `data` do not exceed the `limit`.
+
+# Examples
+```julia-repl
+julia> using DataFrames, Impute
+
+julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
+5×2 DataFrames.DataFrame
+│ Row │ a        │ b        │
+│     │ Float64  │ Float64  │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ missing  │ 3.3      │
+│ 4   │ missing  │ missing  │
+│ 5   │ 5.0      │ 5.5      │
+
+julia> Impute.wthreshold(df; limit=0.4, weights=0.1:0.1:0.5)
+ERROR: ThresholdError: Missing data limit exceeded 0.4 (0.4666666666666666)
+Stacktrace:
+...
+
+julia> Impute.wthreshold(df; limit=0.4, weights=0.5:-0.1:0.1)
+5×2 DataFrames.DataFrame
+│ Row │ a        │ b        │
+│     │ Float64  │ Float64  │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ missing  │ 3.3      │
+│ 4   │ missing  │ missing  │
+│ 5   │ 5.0      │ 5.5      │
+```
+"""
+wthreshold
 
 @doc """
     Impute.dropobs(data; dims=1)

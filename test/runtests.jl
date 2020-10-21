@@ -34,6 +34,7 @@ using Impute:
     SVD,
     Filter,
     Threshold,
+    WeightedThreshold,
     ThresholdError,
     apply,
     impute,
@@ -41,6 +42,7 @@ using Impute:
     interp,
     run,
     threshold,
+    wthreshold,
     validate
 
 

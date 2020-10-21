@@ -21,7 +21,7 @@
     table.sin[[2, 3, 7, 12, 19]] .= missing
 
     @testset "Base" begin
-        t = Threshold(; ratio=0.1)
+        t = Threshold(; limit=0.1)
         @test_throws ThresholdError validate(a, t)
         @test_throws ThresholdError validate(m, t)
         @test_throws ThresholdError validate(aa, t)
@@ -34,9 +34,9 @@
             sprint(showerror, e)
         end
 
-        @test msg == "ThresholdError: Ratio of missing values exceeded 0.1 (0.15)\n"
+        @test msg == "ThresholdError: Missing data limit exceeded 0.1 (0.15)\n"
 
-        t = Threshold(; ratio=0.8)
+        t = Threshold(; limit=0.8)
         # Use isequal because we expect the results to contain missings
         @test isequal(validate(a, t), a)
         @test isequal(validate(m, t), m)
@@ -47,20 +47,20 @@
     @testset "Weighted" begin
         # If we use an exponentially weighted context then we won't pass the limit
         # because missing earlier observations is less important than later ones.
-        t = Threshold(; ratio=0.8, weights=eweights(20, 0.3))
+        t = WeightedThreshold(; limit=0.8, weights=eweights(20, 0.3))
         @test isequal(validate(a, t), a)
         @test isequal(validate(table, t), table)
 
-        @test isequal(threshold(m; ratio=0.8, weights=eweights(5, 0.3), dims=:cols), m)
-        @test isequal(threshold(m; ratio=0.8, weights=eweights(5, 0.3), dims=:cols), aa)
+        @test isequal(wthreshold(m; limit=0.8, weights=eweights(5, 0.3), dims=:cols), m)
+        @test isequal(wthreshold(m; limit=0.8, weights=eweights(5, 0.3), dims=:cols), aa)
 
         # If we reverse the weights such that earlier observations are more important
         # then our previous limit of 0.2 won't be enough to succeed.
-        t = Threshold(; ratio=0.1, weights=reverse!(eweights(20, 0.3)))
+        t = WeightedThreshold(; limit=0.1, weights=reverse!(eweights(20, 0.3)))
         @test_throws ThresholdError validate(a, t)
         @test_throws ThresholdError validate(table, t)
 
-        t = Threshold(; ratio=0.1, weights=reverse!(eweights(5, 0.3)))
+        t = WeightedThreshold(; limit=0.1, weights=reverse!(eweights(5, 0.3)))
         @test_throws ThresholdError validate(m, t; dims=:cols)
         @test_throws ThresholdError validate(aa, t; dims=:cols)
 
@@ -69,8 +69,8 @@
     end
 
     @testset "functional" begin
-        @test_throws ThresholdError Impute.threshold(a; ratio=0.1)
+        @test_throws ThresholdError Impute.threshold(a; limit=0.1)
         # Use isequal because we expect the results to contain missings
-        @test isequal(Impute.threshold(a; ratio=0.8), a)
+        @test isequal(Impute.threshold(a; limit=0.8), a)
     end
 end
