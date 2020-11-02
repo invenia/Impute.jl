@@ -19,6 +19,7 @@ using LinearAlgebra
 using LinearAlgebra: Diagonal
 
 include("utils.jl")
+include("declaremissings.jl")
 include("imputors.jl")
 include("filter.jl")
 include("validators.jl")

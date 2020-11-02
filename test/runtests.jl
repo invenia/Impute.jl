@@ -36,6 +36,7 @@ using Impute:
     Threshold,
     ThresholdError,
     apply,
+    apply!,
     impute,
     impute!,
     interp,
@@ -48,6 +49,7 @@ using Impute:
     include("testutils.jl")
 
     include("validators.jl")
+    include("declaremissings.jl")
     include("chain.jl")
     include("data.jl")
     include("deprecated.jl")
@@ -58,7 +60,6 @@ using Impute:
     include("imputors/nocb.jl")
     include("imputors/replace.jl")
     include("imputors/srs.jl")
-    include("imputors/declaremissings.jl")
     include("imputors/substitute.jl")
     include("imputors/svd.jl")
     include("utils.jl")

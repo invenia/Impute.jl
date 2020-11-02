@@ -10,36 +10,39 @@
             a = collect(1.0:1.0:20.0)
             a[[2, 3, 7]] .= [NaN, 0.0, NaN]
 
-            result = impute(a, imp)
+            result = apply(a, imp)
             @test eltype(result) == Union{Float64, Missing}
             @test all(ismissing, result[[2, 3, 7]])
 
             # In-place operation don't work when the source array doesn't allow missings.
             b = copy(a)
-            result2 = impute!(b, imp)
-            @test eltype(result2) == Float64
-            @test isequal(result2[[2, 3, 7]], [NaN, 0.0, NaN])
+            @test_throws MethodError apply!(b, imp)
         end
 
         @testset "allowmissing" begin
             a = allowmissing(collect(1.0:1.0:20.0))
             a[[2, 3, 7]] .= [NaN, 0.0, NaN]
 
-            result = impute(a, imp)
+            result = apply(a, imp)
             @test eltype(result) == Union{Float64, Missing}
             @test all(ismissing, result[[2, 3, 7]])
 
-            # In-place operation don't work when the source array doesn't allow missings.
+            # In-place operation work when the source array allows missings.
             b = copy(a)
-            result2 = impute!(b, imp)
+            result2 = apply!(b, imp)
             @test eltype(result2) == Union{Float64, Missing}
             @test all(ismissing, result2[[2, 3, 7]])
+
+            c = copy(a)
+            result3 = Impute.declaremissings!(c; values=values)
+            @test eltype(result3) == Union{Float64, Missing}
+            @test all(ismissing, result3[[2, 3, 7]])
         end
 
         @testset "All missing" begin
             # Test having only missing data
             c = fill(missing, 10)
-            @test isequal(impute(c, imp), c)
+            @test isequal(apply(c, imp), c)
         end
     end
 
@@ -49,15 +52,13 @@
             a[[2, 3, 7]] .= [NaN, 0.0, NaN]
             m = collect(reshape(a, 5, 4))
 
-            result = impute(m, imp)
+            result = apply(m, imp)
             @test eltype(result) == Union{Float64, Missing}
             @test all(ismissing, result[[2, 3, 7]])
 
             # In-place operation don't work when the source array doesn't allow missings.
             n = copy(m)
-            result2 = impute!(n, imp)
-            @test eltype(result2) == Float64
-            @test isequal(result2[[2, 3, 7]], [NaN, 0.0, NaN])
+            @test_throws MethodError apply!(n, imp)
         end
 
         @testset "allowmissing" begin
@@ -65,13 +66,13 @@
             a[[2, 3, 7]] .= [NaN, 0.0, NaN]
             m = collect(reshape(a, 5, 4))
 
-            result = impute(m, imp)
+            result = apply(m, imp)
             @test eltype(result) == Union{Float64, Missing}
             @test all(ismissing, result[[2, 3, 7]])
 
             # In-place operation don't work when the source array doesn't allow missings.
             n = copy(m)
-            result2 = impute!(n, imp)
+            result2 = apply!(n, imp)
             @test eltype(result2) == Union{Float64, Missing}
             @test all(ismissing, result2[[2, 3, 7]])
         end
@@ -79,7 +80,7 @@
         @testset "All missing" begin
             # Test having only missing data
             c = fill(missing, 5, 4)
-            @test isequal(impute(c, imp), c)
+            @test isequal(apply(c, imp), c)
         end
     end
     @testset "Tables" begin
@@ -106,21 +107,8 @@
                 :desc => ["foo", "bar", missing],
             )
 
-            @testset "disallowmissing" begin
-                result = impute(table, imp)
-                @test isequal(result, expected)
-
-                result2 = impute!(deepcopy(table), imp)
-                @test !isequal(result2, expected)
-            end
-
-            @testset "allowmissing" begin
-                result = impute(mtable, imp)
-                @test isequal(result, expected)
-
-                result2 = impute!(deepcopy(mtable), imp)
-                @test isequal(result2, expected)
-            end
+            result = apply(table, imp)
+            @test isequal(result, expected)
         end
 
         @testset "Column Table" begin
@@ -146,21 +134,8 @@
                 desc = ["foo", "bar", missing],
             )
 
-            @testset "disallowmissing" begin
-                result = impute(table, imp)
-                @test isequal(result, expected)
-
-                result2 = impute!(deepcopy(table), imp)
-                @test !isequal(result2, expected)
-            end
-
-            @testset "allowmissing" begin
-                result = impute(mtable, imp)
-                @test isequal(result, expected)
-
-                result2 = impute!(deepcopy(mtable), imp)
-                @test isequal(result2, expected)
-            end
+            result = apply(table, imp)
+            @test isequal(result, expected)
         end
 
         @testset "Row Table" begin
@@ -186,21 +161,8 @@
                 desc = ["foo", "bar", missing],
             ))
 
-            @testset "disallowmissing" begin
-                result = impute(table, imp)
-                @test isequal(result, expected)
-
-                result2 = impute!(deepcopy(table), imp)
-                @test !isequal(result2, expected)
-            end
-
-            @testset "allowmissing" begin
-                result = impute(mtable, imp)
-                @test isequal(result, expected)
-
-                result2 = impute!(deepcopy(mtable), imp)
-                @test isequal(result2, expected)
-            end
+            result = apply(table, imp)
+            @test isequal(result, expected)
         end
     end
 end
