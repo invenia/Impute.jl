@@ -1,20 +1,26 @@
 @testset "Chaining and Piping" begin
-    # TODO: Add tests at each section to double check that orig hasn't been overwritten.
+    # `orig` should never be imputed as it is used as a reference for checking that the
+    # `data` isn't being mutated below
     orig = Impute.dataset("test/table/neuro") |> DataFrame
+    data = deepcopy(orig)
 
     @testset "DataFrame" begin
         # Less effecient, but a chain should produce the same results as manual
         # piping the functional outputs.
-        result = Impute.interp(orig) |> Impute.locf! |> Impute.nocb!
+        result = Impute.interp(data) |> Impute.locf! |> Impute.nocb!
 
         @test size(result) == size(orig)
         # Confirm that we don't have any more missing values
         @test all(!ismissing, Matrix(result))
+        # Test we haven't mutated the data
+        @test isequal(orig, data)
 
         # We can also use the Chain type with explicit Imputor types
         C = Impute.Interpolate() ∘ Impute.LOCF() ∘ Impute.NOCB()
-        result2 = C(orig)
+        result2 = C(data)
         @test result == result2
+        # Test we haven't mutated the data
+        @test isequal(orig, data)
 
         @testset "GroupedDataFrame" begin
             T = NamedTuple{(:hod, :obj, :val), Tuple{Int, Int, Union{Float64, Missing}}}
@@ -47,8 +53,8 @@
     end
 
     @testset "Column Table" begin
-        result = Tables.columntable(orig) |>
-            Impute.interp! |>
+        result = Tables.columntable(data) |>
+            Impute.interp |>
             Impute.locf! |>
             Impute.nocb! |>
             Tables.matrix
@@ -56,11 +62,13 @@
         @test size(result) == size(orig)
         # Confirm that we don't have any more missing values
         @test all(!ismissing, result)
+        # Test we haven't mutated the data
+        @test isequal(orig, data)
     end
 
     @testset "Row Table" begin
-        result = Tables.rowtable(orig) |>
-            Impute.interp! |>
+        result = Tables.rowtable(data) |>
+            Impute.interp |>
             Impute.locf! |>
             Impute.nocb! |>
             Tables.matrix
@@ -68,45 +76,53 @@
         @test size(result) == size(orig)
         # Confirm that we don't have any more missing values
         @test all(!ismissing, result)
+        # Test we haven't mutated the data
+        @test isequal(orig, data)
     end
 
     @testset "Matrix" begin
-        data = Matrix(orig)
+        input = Matrix(data)
         C = Impute.Interpolate() ∘ Impute.LOCF() ∘ Impute.NOCB()
-        result = C(data; dims=:cols)
+        result = C(input; dims=:cols)
 
-        @test size(result) == size(data)
+        @test size(result) == size(input)
         # Confirm that we don't have any more missing values
         @test all(!ismissing, result)
+        # Test we haven't mutated the data
+        @test isequal(orig, data)
     end
 
     @testset "AxisArray" begin
-        data = AxisArray(
+        input = AxisArray(
             Matrix(orig),
             Axis{:row}(1:size(orig, 1)),
             Axis{:V}(names(orig)),
         )
         C = Impute.Interpolate() ∘ Impute.LOCF() ∘ Impute.NOCB()
-        result = C(data; dims=:cols)
+        result = C(input; dims=:cols)
 
-        @test size(result) == size(data)
+        @test size(result) == size(input)
         # Confirm that we don't have any more missing values
         @test all(!ismissing, result)
+        # Test we haven't mutated the data
+        @test isequal(orig, data)
     end
 
     @testset "KeyedArray" begin
-        data = KeyedArray(Matrix(orig); row=1:size(orig, 1), V=names(orig))
+        input = KeyedArray(Matrix(orig); row=1:size(orig, 1), V=names(orig))
         C = Impute.Interpolate() ∘ Impute.LOCF() ∘ Impute.NOCB()
-        result = C(data; dims=:cols)
+        result = C(input; dims=:cols)
 
-        @test size(result) == size(data)
+        @test size(result) == size(input)
         # Confirm that we don't have any more missing values
         @test all(!ismissing, result)
+        # Test we haven't mutated the data
+        @test isequal(orig, data)
     end
 
     @testset "Multi-type" begin
-        data = Impute.dataset("test/table/neuro") |> Tables.matrix
-        @test any(ismissing, data)
+        input = Tables.matrix(data)
+        @test any(ismissing, input)
         # Filter out colunns with more than 400 missing values, Fill with 0, and check that
         # everything was replaced
         C = Chain(
@@ -116,10 +132,12 @@
             Impute.Threshold(),
         )
 
-        result = C(data; dims=:cols)
-        @test size(result, 1) == size(data, 1)
+        result = C(input; dims=:cols)
+        @test size(result, 1) == size(input, 1)
         # We should have filtered out 1 column
-        @test size(result, 2) < size(data, 2)
+        @test size(result, 2) < size(input, 2)
         @test all(!ismissing, result)
+        # Test we haven't mutated the data
+        @test isequal(orig, data)
     end
 end
