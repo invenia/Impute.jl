@@ -31,9 +31,11 @@ using Impute:
     SRS,
     DeclareMissings,
     Substitute,
+    WeightedSubstitute,
     SVD,
     Filter,
     Threshold,
+    WeightedThreshold,
     ThresholdError,
     apply,
     apply!,
@@ -42,6 +44,7 @@ using Impute:
     interp,
     run,
     threshold,
+    wthreshold,
     validate
 
 

@@ -26,3 +26,29 @@ function dim(data, d)
         return NamedDims.dim(NamedDims.dimnames(data), d)
     end
 end
+
+# Remove this once the corresponding statsbase pull request is merged and tagged.
+# https://github.com/JuliaStats/StatsBase.jl/pull/611
+_mode(a::AbstractArray) = mode(a)
+
+function _mode(a::AbstractVector, wv::AbstractArray{T}) where T <: Real
+    isempty(a) && throw(ArgumentError("mode is not defined for empty collections"))
+    length(a) == length(wv) || throw(ArgumentError(
+        "data and weight vectors must be the same size, got $(length(a)) and $(length(wv))"
+    ))
+
+    # Iterate through the data
+    mv = first(a)
+    mw = first(wv)
+    weights = Dict{eltype(a), T}()
+    for (x, w) in zip(a, wv)
+        _w = get!(weights, x, zero(T)) + w
+        if _w > mw
+            mv = x
+            mw = _w
+        end
+        weights[x] = _w
+    end
+
+    return mv
+end
