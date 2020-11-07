@@ -144,8 +144,9 @@
 
         @testset "rows" begin
             result = apply(aa, Filter(); dims=:rows)
-            expected = m[[1, 4, 5], :]
+            expected = aa[[1, 4, 5], :]
 
+            @test_broken isa(result, AxisArray)
             @test isequal(result, expected)
             @test isequal(result, Impute.filter(aa; dims=:rows))
             @test isequal(collect(result'), Impute.filter(collect(aa'); dims=:cols))
@@ -155,6 +156,7 @@
             result = apply(aa, Filter(); dims=:cols)
             expected = copy(aa)[:, 3:4]
 
+            @test_broken isa(result, AxisArray)
             @test isequal(result, expected)
             @test isequal(result, Impute.filter(aa; dims=:cols))
             @test isequal(collect(result'), Impute.filter(collect(aa'); dims=:rows))
