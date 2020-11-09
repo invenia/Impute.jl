@@ -34,9 +34,9 @@ end
 function apply(data::AbstractArray{Union{T, Missing}}, f::Filter; dims) where T
     d = dim(data, dims)
     mask = map(f.func, eachslice(data; dims=d))
-    # use selectdim to reduce along dimension d using our mask, but call collect
-    # because we don't want to return a view
-    return collect(selectdim(data, d, mask))
+    # use selectdim to reduce along dimension d using our mask, but call copy
+    # because we don't want to return a view and collect may change the return type
+    return copy(selectdim(data, d, mask))
 end
 
 apply(data::AbstractArray, f::Filter) = disallowmissing(data)
