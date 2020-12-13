@@ -1,38 +1,13 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>SVD · Impute.jl</title><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link href="../../assets/documenter.css" rel="stylesheet" type="text/css"/><link href="../../assets/invenia.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>Impute.jl</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../../">Home</a></li><li><span class="toctext">Walkthroughs</span><ul><li><a class="toctext" href="../spatiotemporal/">Spatiotemporal</a></li><li class="current"><a class="toctext" href>SVD</a><ul class="internal"></ul></li></ul></li><li><span class="toctext">API</span><ul><li><a class="toctext" href="../../api/impute/">Impute</a></li><li><a class="toctext" href="../../api/validators/">Validators</a></li><li><a class="toctext" href="../../api/filter/">Filter</a></li><li><a class="toctext" href="../../api/imputors/">Imputors</a></li><li><a class="toctext" href="../../api/chain/">Chain</a></li><li><a class="toctext" href="../../api/functional/">Functional</a></li><li><a class="toctext" href="../../api/utils/">Utilities</a></li></ul></li></ul></nav><article id="docs"><header><nav><ul><li>Walkthroughs</li><li><a href>SVD</a></li></ul><a class="edit-page" href="https://github.com/invenia/Impute.jl/blob/master/docs/src/walkthroughs/svd.md#L"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>SVD</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="SVD-Imputation-1" href="#SVD-Imputation-1">SVD Imputation</a></h1><p>Often matrices and n-dimensional arrays with missing values can be imputed via a low rank approximation. Impute.jl provides one such method using a single value decomposition. The general idea is to:</p><ol><li>Fill the missing values with some rough approximates (e.g., <code>mean</code>, <code>median</code>, <code>rand</code>)</li><li>Reconstruct this &quot;completed&quot; matrix with a low rank SVD approximation (i.e., <code>k</code> largest singular values)</li><li>Replace our initial estimates with the reconstructed values</li><li>Repeat steps 1-3 until convergence (update difference is below a tolerance)</li></ol><p>To demonstrate how this is useful lets load a reduced MNIST dataset. We&#39;ll want both the completed dataset and another dataset with 35% of the values set to <code>-1.0</code> (indicating missingness).</p><p>TODO: Update example with more a realistic dataset like some microarray data</p><pre><code class="language-julia-repl">julia&gt; using Distances, Impute, Plots, Statistics
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>SVD · Impute.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/invenia.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">Impute.jl</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Walkthroughs</span><ul><li><a class="tocitem" href="../spatiotemporal/">Spatiotemporal</a></li><li class="is-active"><a class="tocitem" href>SVD</a></li></ul></li><li><span class="tocitem">API</span><ul><li><a class="tocitem" href="../../api/impute/">Impute</a></li><li><a class="tocitem" href="../../api/validators/">Validators</a></li><li><a class="tocitem" href="../../api/filter/">Filter</a></li><li><a class="tocitem" href="../../api/imputors/">Imputors</a></li><li><a class="tocitem" href="../../api/chain/">Chain</a></li><li><a class="tocitem" href="../../api/functional/">Functional</a></li><li><a class="tocitem" href="../../api/utils/">Utilities</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Walkthroughs</a></li><li class="is-active"><a href>SVD</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>SVD</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/invenia/Impute.jl/blob/master/docs/src/walkthroughs/svd.md#L" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="SVD-Imputation"><a class="docs-heading-anchor" href="#SVD-Imputation">SVD Imputation</a><a id="SVD-Imputation-1"></a><a class="docs-heading-anchor-permalink" href="#SVD-Imputation" title="Permalink"></a></h1><p>Often matrices and n-dimensional arrays with missing values can be imputed via a low rank approximation. Impute.jl provides one such method using a single value decomposition. The general idea is to:</p><ol><li>Fill the missing values with some rough approximates (e.g., <code>mean</code>, <code>median</code>, <code>rand</code>)</li><li>Reconstruct this &quot;completed&quot; matrix with a low rank SVD approximation (i.e., <code>k</code> largest singular values)</li><li>Replace our initial estimates with the reconstructed values</li><li>Repeat steps 1-3 until convergence (update difference is below a tolerance)</li></ol><p>To demonstrate how this is useful lets load a reduced MNIST dataset. We&#39;ll want both the completed dataset and another dataset with 35% of the values set to <code>-1.0</code> (indicating missingness).</p><p>TODO: Update example with more a realistic dataset like some microarray data</p><pre><code class="language-julia-repl">julia&gt; using Distances, Impute, Plots, Statistics
 
 julia&gt; mnist = Impute.dataset(&quot;test/matrix/mnist&quot;);
+ERROR: DataDeps.DisabledError(&quot;DataDeps download disabled, as we appear to be in a CI environment, and the environment variable `DATADEPS_ALWAYS_ACCEPT` is not set.\nIf this is indeed running in a headless CI environment, then set the `DATADEPS_ALWAYS_ACCEPT` environment variable to `true` to bypass the accept download prompt (if you do wish to always accept.)\nIf not, then either unset the `CI` environment variable from true, or set `DATADEPS_ALWAYS_ACCEPT` to `false` for the normal prompt behaviour.&quot;)
 
-julia&gt; completed, incomplete = mnist[0.0], mnist[0.25];</code></pre><p>Alright, before we get started lets have a look at what our incomplete data looks like:</p><pre><code class="language-julia-repl">julia&gt; heatmap(incomplete; color=:greys);
-
-/home/travis/.julia/packages/GR/oiZD3/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
-connect: Connection refused
-GKS: can&#39;t connect to GKS socket application
-Did you start &#39;gksqt&#39;?
-
-GKS: Open failed in routine OPEN_WS
-GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</code></pre><p><img src="../mnist-incomplete-plot.svg" alt/></p><p>Okay, so as we&#39;d expect there&#39;s a reasonable bit of structure we can exploit. So how does the svd method compare against other common, yet simpler, methods?</p><pre><code class="language-julia-repl">julia&gt; data = Impute.declaremissings(incomplete; values=-1.0)
-196×1000 Array{Union{Missing, Float64},2}:
- 0.0       0.0       0.0       0.0       …   missing   missing  0.0
- 0.0       0.0       0.0       0.0          0.0       0.0       0.0
-  missing   missing  0.0        missing     0.0       0.0        missing
- 0.0       0.0       0.0        missing     0.0        missing  0.0
-  missing  0.0       0.0       0.0          0.0        missing   missing
-  missing   missing   missing  0.0       …  0.0       0.0       0.0
- 0.0        missing  0.0       0.0          0.0       0.0       0.0
-  missing  0.0       0.0       0.0           missing  0.0       0.0
- 0.0        missing  0.0       0.0          0.0       0.0       0.0
- 0.0        missing  0.0       0.0           missing  0.0       0.0
- ⋮                                       ⋱
-  missing  0.0        missing   missing      missing  0.0        missing
- 0.0       0.0       0.0       0.0          0.0       0.0       0.0
- 0.0       0.0       0.0       0.0          0.0       0.0       0.0
- 0.0        missing  0.0        missing  …   missing  0.0        missing
- 0.0       0.0       0.0       0.0          0.0       0.0       0.0
-  missing  0.0       0.0       0.0           missing  0.0       0.0
- 0.0       0.0       0.0       0.0          0.0       0.0       0.0
-  missing  0.0       0.0       0.0           missing  0.0       0.0
- 0.0       0.0       0.0       0.0       …  0.0        missing   missing
+julia&gt; completed, incomplete = mnist[0.0], mnist[0.25];
+ERROR: UndefVarError: mnist not defined</code></pre><p>Alright, before we get started lets have a look at what our incomplete data looks like:</p><pre><code class="language-julia-repl">julia&gt; heatmap(incomplete; color=:greys);
+ERROR: UndefVarError: incomplete not defined</code></pre><p><img src="mnist-incomplete-plot.svg" alt/></p><p>Okay, so as we&#39;d expect there&#39;s a reasonable bit of structure we can exploit. So how does the svd method compare against other common, yet simpler, methods?</p><pre><code class="language-julia-repl">julia&gt; data = Impute.declaremissings(incomplete; values=-1.0)
+ERROR: UndefVarError: incomplete not defined
 
 julia&gt; # NOTE: SVD performance is almost identical regardless of the `init` setting.
        imputors = [
@@ -41,28 +16,16 @@ julia&gt; # NOTE: SVD performance is almost identical regardless of the `init` s
            &quot;median&quot; =&gt; Impute.Substitute(),
            &quot;svd&quot; =&gt; Impute.SVD(; tol=1e-2),
        ]
-4-element Array{Pair{String,Impute.Imputor},1}:
-    &quot;0.5&quot; =&gt; Impute.Replace((0.5,))
-   &quot;mean&quot; =&gt; Impute.Substitute(Impute.var&quot;#25#26&quot;{Bool,Nothing}(false, nothing))
- &quot;median&quot; =&gt; Impute.Substitute(Impute.var&quot;#25#26&quot;{Bool,Nothing}(true, nothing))
-    &quot;svd&quot; =&gt; Impute.SVD(Impute.Substitute(Impute.var&quot;#25#26&quot;{Bool,Nothing}(true, nothing)), nothing, 0.01, 100, nothing, true)
+ERROR: MethodError: no method matching Impute.Substitute(; robust=false)
+Closest candidates are:
+  Impute.Substitute(; statistic) at /home/runner/work/Impute.jl/Impute.jl/src/imputors/substitute.jl:36 got unsupported keyword argument &quot;robust&quot;
+  Impute.Substitute(!Matched::F) where F&lt;:Function at /home/runner/work/Impute.jl/Impute.jl/src/imputors/substitute.jl:33 got unsupported keyword argument &quot;robust&quot;
 
 julia&gt; results = map(last.(imputors)) do imp
            r = Impute.impute(data, imp; dims=:)
            return nrmsd(completed, r)
        end
-4-element Array{Float64,1}:
- 0.2182014647100205
- 0.13187323162381387
- 0.1455168592338636
- 0.07767838784377504
+ERROR: UndefVarError: imputors not defined
 
 julia&gt; bar(first.(imputors), results);
-
-/home/travis/.julia/packages/GR/oiZD3/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
-connect: Connection refused
-GKS: can&#39;t connect to GKS socket application
-Did you start &#39;gksqt&#39;?
-
-GKS: Open failed in routine OPEN_WS
-GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</code></pre><p><img src="../svd-results-plot.svg" alt/></p><footer><hr/><a class="previous" href="../spatiotemporal/"><span class="direction">Previous</span><span class="title">Spatiotemporal</span></a><a class="next" href="../../api/impute/"><span class="direction">Next</span><span class="title">Impute</span></a></footer></article></body></html>
+ERROR: UndefVarError: imputors not defined</code></pre><p><img src="svd-results-plot.svg" alt/></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../spatiotemporal/">« Spatiotemporal</a><a class="docs-footer-nextpage" href="../../api/impute/">Impute »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Sunday 13 December 2020 08:09">Sunday 13 December 2020</span>. Using Julia version 1.5.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
