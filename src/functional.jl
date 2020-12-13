@@ -245,28 +245,29 @@ containing `missing`s.
 julia> using DataFrames; using Impute: Impute
 
 
+
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrame
-│ Row │ a        │ b        │
-│     │ Float64? │ Float64? │
-├─────┼──────────┼──────────┤
-│ 1   │ 1.0      │ 1.1      │
-│ 2   │ 2.0      │ 2.2      │
-│ 3   │ missing  │ 3.3      │
-│ 4   │ missing  │ missing  │
-│ 5   │ 5.0      │ 5.5      │
+ Row │ a          b
+     │ Float64?   Float64?
+─────┼──────────────────────
+   1 │       1.0        1.1
+   2 │       2.0        2.2
+   3 │ missing          3.3
+   4 │ missing    missing
+   5 │       5.0        5.5
 
 julia> Impute.filter(df; dims=:cols)
 0×0 DataFrame
 
 julia> Impute.filter(df; dims=:rows)
 3×2 DataFrame
-│ Row │ a       │ b       │
-│     │ Float64 │ Float64 │
-├─────┼─────────┼─────────┤
-│ 1   │ 1.0     │ 1.1     │
-│ 2   │ 2.0     │ 2.2     │
-│ 3   │ 5.0     │ 5.5     │
+ Row │ a        b
+     │ Float64  Float64
+─────┼──────────────────
+   1 │     1.0      1.1
+   2 │     2.0      2.2
+   3 │     5.0      5.5
 ```
 """ filter
 
@@ -280,27 +281,28 @@ See [Interpolate](@ref) for details.
 ```jldoctest
 julia> using DataFrames; using Impute: Impute
 
+
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrame
-│ Row │ a        │ b        │
-│     │ Float64? │ Float64? │
-├─────┼──────────┼──────────┤
-│ 1   │ 1.0      │ 1.1      │
-│ 2   │ 2.0      │ 2.2      │
-│ 3   │ missing  │ 3.3      │
-│ 4   │ missing  │ missing  │
-│ 5   │ 5.0      │ 5.5      │
+ Row │ a          b
+     │ Float64?   Float64?
+─────┼──────────────────────
+   1 │       1.0        1.1
+   2 │       2.0        2.2
+   3 │ missing          3.3
+   4 │ missing    missing
+   5 │       5.0        5.5
 
 julia> Impute.interp(df)
 5×2 DataFrame
-│ Row │ a        │ b        │
-│     │ Float64? │ Float64? │
-├─────┼──────────┼──────────┤
-│ 1   │ 1.0      │ 1.1      │
-│ 2   │ 2.0      │ 2.2      │
-│ 3   │ 3.0      │ 3.3      │
-│ 4   │ 4.0      │ 4.4      │
-│ 5   │ 5.0      │ 5.5      │
+ Row │ a         b
+     │ Float64?  Float64?
+─────┼────────────────────
+   1 │      1.0       1.1
+   2 │      2.0       2.2
+   3 │      3.0       3.3
+   4 │      4.0       4.4
+   5 │      5.0       5.5
 ```
 """ interp
 
@@ -349,27 +351,28 @@ observation. See [LOCF](@ref) for details.
 ```jldoctest
 julia> using DataFrames; using Impute: Impute
 
+
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrame
-│ Row │ a        │ b        │
-│     │ Float64? │ Float64? │
-├─────┼──────────┼──────────┤
-│ 1   │ 1.0      │ 1.1      │
-│ 2   │ 2.0      │ 2.2      │
-│ 3   │ missing  │ 3.3      │
-│ 4   │ missing  │ missing  │
-│ 5   │ 5.0      │ 5.5      │
+ Row │ a          b
+     │ Float64?   Float64?
+─────┼──────────────────────
+   1 │       1.0        1.1
+   2 │       2.0        2.2
+   3 │ missing          3.3
+   4 │ missing    missing
+   5 │       5.0        5.5
 
 julia> Impute.locf(df)
 5×2 DataFrame
-│ Row │ a        │ b        │
-│     │ Float64? │ Float64? │
-├─────┼──────────┼──────────┤
-│ 1   │ 1.0      │ 1.1      │
-│ 2   │ 2.0      │ 2.2      │
-│ 3   │ 2.0      │ 3.3      │
-│ 4   │ 2.0      │ 3.3      │
-│ 5   │ 5.0      │ 5.5      │
+ Row │ a         b
+     │ Float64?  Float64?
+─────┼────────────────────
+   1 │      1.0       1.1
+   2 │      2.0       2.2
+   3 │      2.0       3.3
+   4 │      2.0       3.3
+   5 │      5.0       5.5
 ```
 """ locf
 
@@ -383,27 +386,28 @@ observation. See [LOCF](@ref) for details.
 ```jldoctest
 julia> using DataFrames; using Impute: Impute
 
+
 julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 3.3, missing, 5.5])
 5×2 DataFrame
-│ Row │ a        │ b        │
-│     │ Float64? │ Float64? │
-├─────┼──────────┼──────────┤
-│ 1   │ 1.0      │ 1.1      │
-│ 2   │ 2.0      │ 2.2      │
-│ 3   │ missing  │ 3.3      │
-│ 4   │ missing  │ missing  │
-│ 5   │ 5.0      │ 5.5      │
+ Row │ a          b
+     │ Float64?   Float64?
+─────┼──────────────────────
+   1 │       1.0        1.1
+   2 │       2.0        2.2
+   3 │ missing          3.3
+   4 │ missing    missing
+   5 │       5.0        5.5
 
 julia> Impute.nocb(df)
 5×2 DataFrame
-│ Row │ a        │ b        │
-│     │ Float64? │ Float64? │
-├─────┼──────────┼──────────┤
-│ 1   │ 1.0      │ 1.1      │
-│ 2   │ 2.0      │ 2.2      │
-│ 3   │ 5.0      │ 3.3      │
-│ 4   │ 5.0      │ 5.5      │
-│ 5   │ 5.0      │ 5.5      │
+ Row │ a         b
+     │ Float64?  Float64?
+─────┼────────────────────
+   1 │      1.0       1.1
+   2 │      2.0       2.2
+   3 │      5.0       3.3
+   4 │      5.0       5.5
+   5 │      5.0       5.5
 ```
 """ nocb
 
@@ -454,31 +458,32 @@ DeclareMissings (or replace) various missing data representations with `missing`
 ```jldoctest
 julia> using DataFrames, Impute
 
+
 julia> df = DataFrame(
            :a => [1.1, 2.2, NaN, NaN, 5.5],
            :b => [1, 2, 3, -9999, 5],
            :c => ["v", "w", "x", "y", "NULL"],
        )
 5×3 DataFrame
-│ Row │ a       │ b     │ c      │
-│     │ Float64 │ Int64 │ String │
-├─────┼─────────┼───────┼────────┤
-│ 1   │ 1.1     │ 1     │ v      │
-│ 2   │ 2.2     │ 2     │ w      │
-│ 3   │ NaN     │ 3     │ x      │
-│ 4   │ NaN     │ -9999 │ y      │
-│ 5   │ 5.5     │ 5     │ NULL   │
+ Row │ a        b      c
+     │ Float64  Int64  String
+─────┼────────────────────────
+   1 │     1.1      1  v
+   2 │     2.2      2  w
+   3 │   NaN        3  x
+   4 │   NaN    -9999  y
+   5 │     5.5      5  NULL
 
 julia> Impute.declaremissings(df; values=(NaN, -9999, "NULL"))
 5×3 DataFrame
-│ Row │ a        │ b       │ c       │
-│     │ Float64? │ Int64?  │ String? │
-├─────┼──────────┼─────────┼─────────┤
-│ 1   │ 1.1      │ 1       │ v       │
-│ 2   │ 2.2      │ 2       │ w       │
-│ 3   │ missing  │ 3       │ x       │
-│ 4   │ missing  │ missing │ y       │
-│ 5   │ 5.5      │ 5       │ missing │
+ Row │ a          b        c
+     │ Float64?   Int64?   String?
+─────┼─────────────────────────────
+   1 │       1.1        1  v
+   2 │       2.2        2  w
+   3 │ missing          3  x
+   4 │ missing    missing  y
+   5 │       5.5        5  missing
 ```
 """ declaremissings
 
@@ -502,37 +507,38 @@ See [Substitute](@ref) for details on substitution rules defined in `defaultstat
 ```jldoctest
 julia> using DataFrames, Impute
 
+
 julia> df = DataFrame(
                   :a => [8.9, 2.2, missing, missing, 1.3, 6.2, 3.7, 4.8],
                   :b => [2, 6, 3, missing, 7, 1, 9, missing],
                   :c => [true, false, true, true, false, missing, false, true],
               )
 8×3 DataFrame
-│ Row │ a        │ b       │ c       │
-│     │ Float64? │ Int64?  │ Bool?   │
-├─────┼──────────┼─────────┼─────────┤
-│ 1   │ 8.9      │ 2       │ 1       │
-│ 2   │ 2.2      │ 6       │ 0       │
-│ 3   │ missing  │ 3       │ 1       │
-│ 4   │ missing  │ missing │ 1       │
-│ 5   │ 1.3      │ 7       │ 0       │
-│ 6   │ 6.2      │ 1       │ missing │
-│ 7   │ 3.7      │ 9       │ 0       │
-│ 8   │ 4.8      │ missing │ 1       │
+ Row │ a          b        c
+     │ Float64?   Int64?   Bool?
+─────┼─────────────────────────────
+   1 │       8.9        2     true
+   2 │       2.2        6    false
+   3 │ missing          3     true
+   4 │ missing    missing     true
+   5 │       1.3        7    false
+   6 │       6.2        1  missing
+   7 │       3.7        9    false
+   8 │       4.8  missing     true
 
 julia> Impute.substitute(df)
 8×3 DataFrame
-│ Row │ a        │ b      │ c     │
-│     │ Float64? │ Int64? │ Bool? │
-├─────┼──────────┼────────┼───────┤
-│ 1   │ 8.9      │ 2      │ 1     │
-│ 2   │ 2.2      │ 6      │ 0     │
-│ 3   │ 4.25     │ 3      │ 1     │
-│ 4   │ 4.25     │ 4      │ 1     │
-│ 5   │ 1.3      │ 7      │ 0     │
-│ 6   │ 6.2      │ 1      │ 1     │
-│ 7   │ 3.7      │ 9      │ 0     │
-│ 8   │ 4.8      │ 4      │ 1     │
+ Row │ a         b       c
+     │ Float64?  Int64?  Bool?
+─────┼─────────────────────────
+   1 │     8.9        2   true
+   2 │     2.2        6  false
+   3 │     4.25       3   true
+   4 │     4.25       4   true
+   5 │     1.3        7  false
+   6 │     6.2        1   true
+   7 │     3.7        9  false
+   8 │     4.8        4   true
 ```
 """ substitute
 
