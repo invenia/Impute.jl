@@ -14,6 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        version:
           - "1.0"  # LTS
           - "1"    # Latest Release
         os:
