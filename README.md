@@ -1,7 +1,7 @@
 # Impute
 [![stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://invenia.github.io/Impute.jl/stable/)
 [![latest](https://img.shields.io/badge/docs-latest-blue.svg)](https://invenia.github.io/Impute.jl/latest/)
-[![Build Status](https://github.com/invenia/Impute.jl/workflows/CI/badge.svg)](https://github.com/invenia/Impute.jl/actions)
+[![CI](https://github.com/Invenia/Impute.jl/workflows/CI/badge.svg)](https://github.com/Invenia/Impute.jl/actions?query=workflow%3ACI)
 [![codecov](https://codecov.io/gh/invenia/Impute.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/invenia/Impute.jl)
 
 Impute.jl provides various methods for handling missing data in Vectors, Matrices and [Tables](https://github.com/JuliaData/Tables.jl).

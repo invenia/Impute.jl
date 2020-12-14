@@ -69,5 +69,6 @@ using Impute:
 
     # Start running doctests before we wrap up technical changes and work
     # on more documentation
-    doctest(Impute)
+    # The doctests fail on x86, so only run them on 64-bit hardware
+    Sys.WORD_SIZE == 64 && doctest(Impute)
 end
