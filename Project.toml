@@ -30,7 +30,7 @@ Missings = "0.4"
 NamedDims = "0.2"
 NearestNeighbors = "0.4"
 StatsBase = "0.32, 0.33"
-TableOperations = "0.2"
+TableOperations = "0.2, 1.0"
 Tables = "1"
 julia = "1"
 

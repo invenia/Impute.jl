@@ -70,9 +70,9 @@ version = "0.12.4"
 
 [[Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "SHA", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
-git-tree-sha1 = "2724ac91f1334c8e5c10565faad5afeafd1bfc89"
+git-tree-sha1 = "919c7f3151e79ff196add81d7f4e45d91bbf420b"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "3.24.0"
+version = "3.25.0"
 
 [[Contour]]
 deps = ["StaticArrays"]
@@ -548,10 +548,10 @@ uuid = "856f2bd8-1eba-4b0a-8007-ebc267875bd4"
 version = "1.2.1"
 
 [[TableOperations]]
-deps = ["Tables", "Test"]
-git-tree-sha1 = "208630a14884abd110a8f8008b0882f0d0f5632c"
+deps = ["SentinelArrays", "Tables", "Test"]
+git-tree-sha1 = "a7cf690d0ac3f5b53dd09b5d613540b230233647"
 uuid = "ab02a1b2-a7df-11e8-156e-fb1833f50b87"
-version = "0.2.1"
+version = "1.0.0"
 
 [[TableTraits]]
 deps = ["IteratorInterfaceExtensions"]
