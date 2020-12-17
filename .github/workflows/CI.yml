@@ -2,7 +2,7 @@ name: CI
 # Run on master, tags, or any pull request
 on:
   schedule:
-    - cron: '0 * * * *'  # Run every hour to test the slack, then rever to -> Daily at 2 AM UTC (8 PM CST)
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC (8 PM CST)
   push:
     branches: [master]
     tags: ["*"]
@@ -15,8 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - "1.0"  # LTS
-          - "1"    # Latest Release
+          - "1"  # Latest Release
         os:
           - ubuntu-latest
         arch:
@@ -50,9 +49,6 @@ jobs:
             ${{ runner.os }}-test-
             ${{ runner.os }}-
       - uses: julia-actions/julia-buildpkg@latest
-      - run: |
-          git config --global user.name Tester
-          git config --global user.email te@st.er
       - uses: julia-actions/julia-runtest@latest
         env:
           DATADEPS_ALWAYS_ACCEPT: true
@@ -86,15 +82,11 @@ jobs:
         with:
           version: '1'
       - run: |
-          git config --global user.name name
-          git config --global user.email email
-          git config --global github.user username
-      - run: |
           julia --project=docs -e '
-            using Pkg;
-            Pkg.develop(PackageSpec(path=pwd()));
-            Pkg.instantiate();
-            include("docs/make.jl");'
+            using Pkg
+            Pkg.develop(PackageSpec(path=pwd()))
+            Pkg.instantiate()
+            include("docs/make.jl")'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
