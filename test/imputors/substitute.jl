@@ -106,7 +106,7 @@
     @testset "all missing" begin
         a = [missing 2; missing 3]
         # Test that substitution along columns with all missing data will just return that data.
-        Impute.substitute(a; dims=2) == a
+        @test Impute.substitute(a; dims=2) == a
     end
 end
 
@@ -230,6 +230,6 @@ end
     @testset "all missing" begin
         a = [missing 2; missing 3]
         # Test that substitution along columns with all missing data will just return that data.
-        Impute.wsubstitute(a; weights=eweights(2, 0.3), dims=2) == a
+        @test Impute.wsubstitute(a; weights=eweights(2, 0.3), dims=2) == a
     end
 end

@@ -43,7 +43,7 @@ function _impute!(data::AbstractArray{Union{T, Missing}}, imp::Substitute) where
         x = imp.statistic(disallowmissing(data[mask]))
         return Base.replace!(data, missing => x)
     else
-        @debug(
+        @warn(
             "Cannot apply substitution function ($(imp.statistic)) " *
             "when all values are missing"
         )
@@ -99,7 +99,7 @@ function _impute!(data::AbstractArray{Union{T, Missing}}, imp::WeightedSubstitut
         x = imp.statistic(disallowmissing(data[mask]), imp.weights[mask])
         return Base.replace!(data, missing => x)
     else
-        @debug(
+        @warn(
             "Cannot apply weighted substitution function ($(imp.statistic)) " *
             "when all values are missing"
         )
