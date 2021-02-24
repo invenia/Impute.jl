@@ -37,8 +37,18 @@ Substitute(; statistic=defaultstats) = Substitute(statistic)
 
 function _impute!(data::AbstractArray{Union{T, Missing}}, imp::Substitute) where T
     mask = .!ismissing.(data)
-    x = imp.statistic(disallowmissing(data[mask]))
-    return Base.replace!(data, missing => x)
+    # Since most summary statistics will require some data, we throw a debug message when
+    # all supplied values are missing
+    if any(mask)
+        x = imp.statistic(disallowmissing(data[mask]))
+        return Base.replace!(data, missing => x)
+    else
+        @warn(
+            "Cannot apply substitution function ($(imp.statistic)) " *
+            "when all values are missing"
+        )
+        return data
+    end
 end
 
 
@@ -82,8 +92,19 @@ end
 
 function _impute!(data::AbstractArray{Union{T, Missing}}, imp::WeightedSubstitute) where T
     mask = .!ismissing.(data)
-    x = imp.statistic(disallowmissing(data[mask]), imp.weights[mask])
-    return Base.replace!(data, missing => x)
+
+    # Since most summary statistics will require some data, we throw a debug message when
+    # all supplied values are missing
+    if any(mask)
+        x = imp.statistic(disallowmissing(data[mask]), imp.weights[mask])
+        return Base.replace!(data, missing => x)
+    else
+        @warn(
+            "Cannot apply weighted substitution function ($(imp.statistic)) " *
+            "when all values are missing"
+        )
+        return data
+    end
 end
 
 # Auxiliary functions defining our default substitution rules

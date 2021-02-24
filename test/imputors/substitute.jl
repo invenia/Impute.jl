@@ -102,6 +102,11 @@
         )
         @test result == expected
     end
+
+    @testset "all missing" begin
+        a = [missing 2; missing 3]
+        @test_logs (:warn, r"all values are missing") Impute.substitute(a; dims=2)
+    end
 end
 
 @testset "WeightedSubstitute" begin
@@ -219,5 +224,10 @@ end
             weights=wv
         )
         @test result == expected
+    end
+
+    @testset "all missing" begin
+        a = [missing 2; missing 3]
+        @test_logs (:warn, r"all values are missing") Impute.substitute(a; dims=2)
     end
 end
