@@ -105,8 +105,7 @@
 
     @testset "all missing" begin
         a = [missing 2; missing 3]
-        # Test that substitution along columns with all missing data will just return that data.
-        @test Impute.substitute(a; dims=2) == a
+        @test_logs (:warn, r"all values are missing") Impute.substitute(a; dims=2)
     end
 end
 
@@ -229,7 +228,6 @@ end
 
     @testset "all missing" begin
         a = [missing 2; missing 3]
-        # Test that substitution along columns with all missing data will just return that data.
-        @test Impute.wsubstitute(a; weights=eweights(2, 0.3), dims=2) == a
+        @test_logs (:warn, r"all values are missing") Impute.substitute(a; dims=2)
     end
 end
