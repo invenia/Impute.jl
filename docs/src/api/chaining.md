@@ -1,6 +1,7 @@
-# Filter
+# Chaining
+
 ```@autodocs
 Modules = [Impute]
-Pages = ["filter.jl"]
+Pages = ["chain.jl"]
 Order = [:module, :constant, :type, :function]
 ```

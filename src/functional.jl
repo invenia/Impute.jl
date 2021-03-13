@@ -275,7 +275,7 @@ julia> Impute.filter(df; dims=:rows)
     Impute.interp(data; dims=1)
 
 Performs linear interpolation between the nearest values in an vector.
-See [Interpolate](@ref) for details.
+See [`Impute.Interpolate`](@ref) for details.
 
 # Example
 ```jldoctest
@@ -345,7 +345,7 @@ julia> Impute.fill(df; value=-1.0)
     Impute.locf(data; dims=1)
 
 Iterates forwards through the `data` and fills missing data with the last existing
-observation. See [LOCF](@ref) for details.
+observation. See [`Impute.LOCF`](@ref) for details.
 
 # Example
 ```jldoctest
@@ -380,7 +380,7 @@ julia> Impute.locf(df)
     Impute.nocb(data; dims=1)
 
 Iterates backwards through the `data` and fills missing data with the next existing
-observation. See [LOCF](@ref) for details.
+observation. See [`Impute.NOCB`](@ref) for details.
 
 # Example
 ```jldoctest
@@ -486,6 +486,49 @@ julia> Impute.declaremissings(df; values=(NaN, -9999, "NULL"))
    5 │       5.5        5  missing
 ```
 """ declaremissings
+
+@doc """
+    Impute.replace(data; values)
+
+Replace `missing`s with one of the specified constant values, depending on the input type.
+If multiple values of the same type are provided then the first one will be used.
+If the input data is of a different type then the no replacement will be performed.
+
+# Keyword Arguments
+* `values::Tuple`: A scalar or tuple of different values that should be used to replace
+  missings. Typically, one value per type you're considering imputing for.
+
+# Example
+```jldoctest
+julia> using DataFrames, Impute
+
+julia> df = DataFrame(
+           :a => [1.1, 2.2, missing, missing, 5.5],
+           :b => [1, 2, 3, missing, 5],
+           :c => ["v", "w", "x", "y", missing],
+       )
+5×3 DataFrame
+ Row │ a          b        c
+     │ Float64?   Int64?   String?
+─────┼─────────────────────────────
+   1 │       1.1        1  v
+   2 │       2.2        2  w
+   3 │ missing          3  x
+   4 │ missing    missing  y
+   5 │       5.5        5  missing
+
+julia> Impute.replace(df; values=(NaN, -9999, "NULL"))
+5×3 DataFrame
+ Row │ a         b       c
+     │ Float64?  Int64?  String?
+─────┼───────────────────────────
+   1 │      1.1       1  v
+   2 │      2.2       2  w
+   3 │    NaN         3  x
+   4 │    NaN     -9999  y
+   5 │      5.5       5  NULL
+```
+""" replace
 
 @doc """
     Impute.substitute(data; statistic=nothing)

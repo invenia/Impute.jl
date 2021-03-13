@@ -5,7 +5,7 @@ Next observation carried backward (NOCB) iterates backwards through the `data` a
 missing data with the next existing observation.
 
 See also:
-- [LOCF](@ref): Last Observation Carried Forward
+- [`Impute.LOCF`](@ref): Last Observation Carried Forward
 
 !!! Missing elements at the tail of the array may not be imputed if there is no
 existing observation to carry backward. As a result, this method does not guarantee
