@@ -25,8 +25,7 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/invenia/Impute.jl.git",
-    target = "build",
-    deps = nothing,
-    make = nothing,
+    repo = "github.com/invenia/Impute.jl",
+    devbranch = "master",
+    push_preview = true,
 )
