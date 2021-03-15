@@ -14,7 +14,7 @@ We'll want both the completed dataset and another dataset with 35% of the values
 
 TODO: Update example with more a realistic dataset like some microarray data
 
-```@repl svd-example
+```@example svd-example
 using Distances, Impute, Plots, Statistics
 mnist = Impute.dataset("test/matrix/mnist");
 completed, incomplete = mnist[0.0], mnist[0.25];
@@ -22,7 +22,7 @@ completed, incomplete = mnist[0.0], mnist[0.25];
 
 Alright, before we get started lets have a look at what our incomplete data looks like:
 
-```@repl svd-example
+```@example svd-example
 heatmap(incomplete; color=:greys);
 savefig("mnist-incomplete-plot.svg"); nothing # hide
 ```
@@ -31,13 +31,12 @@ savefig("mnist-incomplete-plot.svg"); nothing # hide
 Okay, so as we'd expect there's a reasonable bit of structure we can exploit.
 So how does the svd method compare against other common, yet simpler, methods?
 
-```@repl svd-example
+```@example svd-example
 data = Impute.declaremissings(incomplete; values=-1.0)
 
 # NOTE: SVD performance is almost identical regardless of the `init` setting.
 imputors = [
     "0.5" => Impute.Replace(; values=0.5),
-    "mean" => Impute.Substitute(; robust=false),
     "median" => Impute.Substitute(),
     "svd" => Impute.SVD(; tol=1e-2),
 ]

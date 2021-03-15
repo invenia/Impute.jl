@@ -26,7 +26,7 @@ function _splitkwargs(::Type{Substitute}, kwargs...)
     rem = Dict(kwargs...)
     kwdef = empty(rem)
 
-    for f in (:statistic, :robust, :weights)
+    for f in (:statistic, :weights)
         if haskey(rem, f)
             kwdef[f] = pop!(rem, f)
         end
@@ -532,7 +532,7 @@ julia> Impute.replace(df; values=(NaN, -9999, "NULL"))
 
 @doc """
     Impute.substitute(data; statistic=nothing)
-    Impute.substitute(data; robust=true, weights=nothing)
+    Impute.substitute(data; weights=nothing)
 
 Substitute missing values with a summary statistic over the non-missing values.
 
@@ -541,7 +541,6 @@ Substitute missing values with a summary statistic over the non-missing values.
   This function should return a value of the same type as the input data `eltype`.
   If this function isn't passed in then the `defaultstats` function is used to make a
   best guess.
-* `robust`: Whether to use `median` or `mean` for continuous datasets in `defaultstats`
 * `weights`: A set of statistical weights to apply to the `mean` or `median` in `defaultstats`.
 
 See [Substitute](@ref) for details on substitution rules defined in `defaultstats`.
