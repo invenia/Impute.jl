@@ -13,13 +13,13 @@ julia> using Pkg; Pkg.add("Impute")
 
 ## Quickstart
 Let's start by loading our dependencies:
-```jldoctest quickstart
+```julia
 julia> using DataFrames, Impute
 ```
 
 We'll also want some test data containing missings to work with:
 
-```jldoctest quickstart
+```julia
 julia> df = Impute.dataset("test/table/neuro") |> DataFrame
 469×6 DataFrame
  Row │ V1         V2         V3       V4        V5         V6
@@ -46,7 +46,7 @@ julia> df = Impute.dataset("test/table/neuro") |> DataFrame
 
 Our first instinct might be to drop all observations, but this leaves us too few rows to work with:
 
-```jldoctest quickstart
+```julia
 julia> Impute.filter(df; dims=:rows)
 4×6 DataFrame
  Row │ V1       V2       V3       V4       V5       V6
@@ -61,7 +61,7 @@ julia> Impute.filter(df; dims=:rows)
 We could try imputing the values with linear interpolation, but that still leaves missing
 data at the head and tail of our dataset:
 
-```jldoctest quickstart
+```julia
 julia> Impute.interp(df)
 469×6 DataFrame
  Row │ V1           V2         V3       V4        V5         V6
@@ -88,7 +88,7 @@ julia> Impute.interp(df)
 
 Finally, we can chain multiple simple methods together to give a complete dataset:
 
-```jldoctest quickstart
+```julia
 julia> Impute.interp(df) |> Impute.locf() |> Impute.nocb()
 469×6 DataFrame
  Row │ V1        V2         V3       V4        V5        V6
