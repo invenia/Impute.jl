@@ -1,12 +1,12 @@
 """
-    LOCF())
+    LOCF()
 
 Last observation carried forward (LOCF) iterates forwards through the `data` and fills
 missing data with the last existing observation. The current implementation is univariate,
 so each variable in a table or matrix will be handled independently.
 
 See also:
-- [NOCB](@ref): Next Observation Carried Backward
+- [`Impute.NOCB`](@ref): Next Observation Carried Backward
 
 !!! Missing elements at the head of the array may not be imputed if there is no
 existing observation to carry forward. As a result, this method does not guarantee

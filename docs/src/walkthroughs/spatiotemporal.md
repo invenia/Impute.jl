@@ -5,7 +5,7 @@ For this example, we'll use daily temperature values from major cities around th
 
 TODO: Give a different workflow/example using a DataFrame.
 
-```@repl st-example
+```@example st-example
 using AxisKeys, Impute, NamedDims, Plots, Statistics, StatsBase
 
 # So NamedDimsArray is the outer wrapper
@@ -27,7 +27,7 @@ data = rename(data, :dt => :time, :City => :loc)
 ```
 
 Okay, so let's take a look at how much temperature data is missing.
-```@repl st-example
+```@example st-example
 heatmap(ismissing.(data); color=:greys);
 savefig("st-missing-plot.svg"); nothing # hide
 ```
@@ -38,7 +38,7 @@ A common operation is to remove locations with too many missing historical obser
 In our case, we also want to penalize observations closer to the present.
 
 Lets start be define a set of exponential weights for our observations:
-```@repl st-example
+```@example st-example
 wv = eweights(1:length(data.time), 0.001)
 plot(wv);
 savefig("st-wv-plot.svg"); nothing # hide
@@ -47,7 +47,7 @@ savefig("st-wv-plot.svg"); nothing # hide
 
 Now we want to filter out locations (columns) according to those weights.
 For now, we'll say that a location should be removed if the weighted ratio exceeds `0.1`.
-```@repl st-example
+```@example st-example
 data = Impute.filter(data; dims=:cols) do v
     mratio = sum(wv[ismissing.(v)]) / sum(wv)
     return mratio < 0.1
@@ -57,7 +57,7 @@ end
 Okay, so we removed almost 25% of the locations that didn't meet our missing data requirement.
 However, most of our observations from the 1700's are still mostly missing.
 Let's remove those rows that have more 50% of the locations missing.
-```@repl st-example
+```@example st-example
 data = Impute.filter(data; dims=:rows) do v
     mratio = count(ismissing, v) / length(v)
     return mratio < 0.5
@@ -65,7 +65,7 @@ end
 ```
 
 Now let's take a look at what data remains.
-```@repl st-example
+```@example st-example
 heatmap(ismissing.(data); color=:greys);
 savefig("st-missing-reduced-plot.svg"); nothing # hide
 ```
@@ -74,7 +74,7 @@ savefig("st-missing-reduced-plot.svg"); nothing # hide
 
 Alright, we can work with the remaining missing values now.
 Now we could try simply imputing the values columnwise for each city using something like `Impute.nocb`
-```@repl st-example
+```@example st-example
 heatmap(Impute.nocb(data; dims=:cols));
 savefig("st-nocb-plot.svg"); nothing # hide
 ```
@@ -83,7 +83,7 @@ savefig("st-nocb-plot.svg"); nothing # hide
 But, this looks rather crude and creates clear artifacts in the dataset.
 Since we suspect that observations in similar locations would have had similar recordings
 we could use `Impute.svd` or `Impute.knn` to find similarities across multiple locations.
-```@repl st-example
+```@example st-example
 data = Impute.knn(data; dims=:cols, k=4);
 heatmap(data);
 savefig("st-knn-plot.svg"); nothing # hide

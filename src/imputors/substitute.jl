@@ -6,7 +6,7 @@ Substitute missing values with a summary statistic over the non-missing values.
 # Keyword Arguments
 * `statistic`: A summary statistic function to be applied to the non-missing values.
   This function should return a value of the same type as the input data `eltype`.
-  If this function isn't passed in then the [`defaultstats`](@ref) function is used to make
+  If this function isn't passed in then the [`Impute.defaultstats`](@ref) function is used to make
   a best guess.
 
 # Example
@@ -60,7 +60,7 @@ Substitute missing values with a weighted summary statistic over the non-missing
 # Keyword Arguments
 * `statistic`: A summary statistic function to be applied to the non-missing values.
   This function should return a value of the same type as the input data `eltype`.
-  If this function isn't passed in then the [`defaultstats`](@ref) function is used to make
+  If this function isn't passed in then the [`Impute.defaultstats`](@ref) function is used to make
   a best guess.
 * `weights`: A set of statistical weights to pass to the `statistic` function.
 
