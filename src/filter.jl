@@ -39,7 +39,7 @@ function apply(data::AbstractArray{Union{T, Missing}}, f::Filter; dims) where T
     return copy(selectdim(data, d, mask))
 end
 
-apply(data::AbstractArray, f::Filter) = disallowmissing(data)
+apply(data::AbstractArray, f::Filter; kwargs...) = disallowmissing(data)
 
 function apply(table, f::Filter; dims)
     istable(table) || throw(MethodError(apply, (table, f)))
