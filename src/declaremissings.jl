@@ -15,12 +15,12 @@ a `missing`.
 julia> using Impute: DeclareMissings, apply
 
 julia> M = [1.0 2.0 -9999.0 NaN 5.0; 1.1 2.2 3.3 0.0 5.5]
-2×5 Array{Float64,2}:
+2×5 Matrix{Float64}:
  1.0  2.0  -9999.0  NaN    5.0
  1.1  2.2      3.3    0.0  5.5
 
 julia> apply(M, DeclareMissings(; values=(NaN, -9999.0, 0.0)))
-2×5 Array{Union{Missing, Float64},2}:
+2×5 Matrix{Union{Missing, Float64}}:
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 ```

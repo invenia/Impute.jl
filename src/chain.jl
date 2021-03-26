@@ -32,14 +32,14 @@ Compose new chains with the composition operator
 julia> using Impute: Impute, Interpolate, NOCB, LOCF
 
 julia> M = [missing 2.0 missing missing 5.0; 1.1 2.2 missing 4.4 missing]
-2×5 Array{Union{Missing, Float64},2}:
+2×5 Matrix{Union{Missing, Float64}}:
   missing  2.0  missing   missing  5.0
  1.1       2.2  missing  4.4        missing
 
 julia> C = Interpolate() ∘ NOCB() ∘ LOCF();
 
 julia> C(M; dims=:rows)
-2×5 Array{Union{Missing, Float64},2}:
+2×5 Matrix{Union{Missing, Float64}}:
  2.0  2.0  3.0  4.0  5.0
  1.1  2.2  3.3  4.4  4.4
 ```
