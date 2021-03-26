@@ -6,6 +6,7 @@
 
     # We call collect to not have a wrapper type that references the same data.
     m = collect(reshape(a, 5, 4))
+    m_no_missing = reshape(1.0:1.0:20.0, 5, 4)
 
     aa = AxisArray(
         deepcopy(m),
@@ -38,6 +39,14 @@
         @test_throws UndefKeywordError apply(m, Filter())
         @test_throws UndefKeywordError Impute.filter(m)
         @test_throws MethodError Impute.filter!(m)
+
+        @testset "no missing" begin
+            result = apply(m_no_missing, Filter())
+            @test isequal(result, m_no_missing)
+
+            result = apply(m_no_missing, Filter(); kw=:foo)  # kwargs unused
+            @test isequal(result, m_no_missing)
+        end
 
         @testset "rows" begin
             result = apply(m, Filter(); dims=:rows)
