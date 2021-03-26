@@ -57,7 +57,7 @@ If this is not the desired behaviour then you should overload this method or spe
 julia> using Impute: Interpolate, impute
 
 julia> v = [1.0, 2.0, missing, missing, 5.0]
-5-element Array{Union{Missing, Float64},1}:
+5-element Vector{Union{Missing, Float64}}:
  1.0
  2.0
   missing
@@ -65,7 +65,7 @@ julia> v = [1.0, 2.0, missing, missing, 5.0]
  5.0
 
 julia> impute(v, Interpolate())
-5-element Array{Union{Missing, Float64},1}:
+5-element Vector{Union{Missing, Float64}}:
  1.0
  2.0
  3.0
@@ -106,17 +106,17 @@ Optionally, you can specify the dimension to impute along.
 julia> using Impute: Interpolate, impute!
 
 julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
-2×5 Array{Union{Missing, Float64},2}:
+2×5 Matrix{Union{Missing, Float64}}:
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
 julia> impute!(M, Interpolate(); dims=1)
-2×5 Array{Union{Missing, Float64},2}:
+2×5 Matrix{Union{Missing, Float64}}:
  1.0  2.0  3.0  4.0  5.0
  1.1  2.2  3.3  4.4  5.5
 
 julia> M
-2×5 Array{Union{Missing, Float64},2}:
+2×5 Matrix{Union{Missing, Float64}}:
  1.0  2.0  3.0  4.0  5.0
  1.1  2.2  3.3  4.4  5.5
 ```

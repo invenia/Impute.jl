@@ -14,17 +14,17 @@ Substitute missing values with a summary statistic over the non-missing values.
 julia> using Statistics; using Impute: Substitute, impute
 
 julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
-2×5 Array{Union{Missing, Float64},2}:
+2×5 Matrix{Union{Missing, Float64}}:
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
 julia> impute(M, Substitute(); dims=:rows)
-2×5 Array{Union{Missing, Float64},2}:
+2×5 Matrix{Union{Missing, Float64}}:
  1.0  2.0  2.0  2.0   5.0
  1.1  2.2  3.3  2.75  5.5
 
 julia> impute(M, Substitute(; statistic=mean); dims=:rows)
-2×5 Array{Union{Missing, Float64},2}:
+2×5 Matrix{Union{Missing, Float64}}:
  1.0  2.0  2.66667  2.66667  5.0
  1.1  2.2  3.3      3.025    5.5
 ```
@@ -69,14 +69,14 @@ Substitute missing values with a weighted summary statistic over the non-missing
 julia> using Statistics, StatsBase; using Impute: WeightedSubstitute, impute
 
 julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
-2×5 Array{Union{Missing, Float64},2}:
+2×5 Matrix{Union{Missing, Float64}}:
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
 julia> wv = weights([0.5, 0.2, 0.3, 0.1, 0.4]);
 
 julia> impute(M, WeightedSubstitute(; weights=wv); dims=:rows)
-2×5 Array{Union{Missing, Float64},2}:
+2×5 Matrix{Union{Missing, Float64}}:
  1.0  2.0  2.75  2.75     5.0
  1.1  2.2  3.3   3.11667  5.5
 ```

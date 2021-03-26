@@ -19,12 +19,12 @@ be handled independently.
 julia> using Impute: Fill, impute
 
 julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
-2×5 Array{Union{Missing, Float64},2}:
+2×5 Matrix{Union{Missing, Float64}}:
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
 julia> impute(M, Fill(); dims=:rows)
-2×5 Array{Union{Missing, Float64},2}:
+2×5 Matrix{Union{Missing, Float64}}:
  1.0  2.0  2.66667  2.66667  5.0
  1.1  2.2  3.3      3.025    5.5
 ```
@@ -105,7 +105,7 @@ provided.
 julia> using Impute: DropObs, impute
 
 julia> M = [1.0 1.1; 2.0 2.2; missing 3.3; missing missing; 5.0 5.5]
-5×2 Array{Union{Missing, Float64},2}:
+5×2 Matrix{Union{Missing, Float64}}:
  1.0       1.1
  2.0       2.2
   missing  3.3
@@ -113,7 +113,7 @@ julia> M = [1.0 1.1; 2.0 2.2; missing 3.3; missing missing; 5.0 5.5]
  5.0       5.5
 
 julia> impute(M, DropObs())
-3×2 Array{Union{Missing, Float64},2}:
+3×2 Matrix{Union{Missing, Float64}}:
  1.0  1.1
  2.0  2.2
  5.0  5.5
@@ -175,12 +175,12 @@ Finds variables with too many missing values in a `AbstractMatrix` or
 julia> using Impute: DropVars, impute
 
 julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
-2×5 Array{Union{Missing, Float64},2}:
+2×5 Matrix{Union{Missing, Float64}}:
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 
 julia> impute(M, DropVars())
-2×3 Array{Union{Missing, Float64},2}:
+2×3 Matrix{Union{Missing, Float64}}:
  1.0  2.0  5.0
  1.1  2.2  5.5
 ```

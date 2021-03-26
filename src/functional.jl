@@ -602,7 +602,7 @@ Imputation using k-Nearest Neighbor algorithm.
 julia> using Impute, Missings
 
 julia> data = allowmissing(reshape(sin.(1:20), 5, 4)); data[[2, 3, 7, 9, 13, 19]] .= missing; data
-5×4 Array{Union{Missing, Float64},2}:
+5×4 Matrix{Union{Missing, Float64}}:
   0.841471  -0.279415  -0.99999   -0.287903
    missing    missing  -0.536573  -0.961397
    missing   0.989358    missing  -0.750987
@@ -610,7 +610,7 @@ julia> data = allowmissing(reshape(sin.(1:20), 5, 4)); data[[2, 3, 7, 9, 13, 19]
  -0.958924  -0.544021   0.650288   0.912945
 
 julia> result = Impute.knn(data; dims=:cols)
-5×4 Array{Union{Missing, Float64},2}:
+5×4 Matrix{Union{Missing, Float64}}:
   0.841471  -0.279415  -0.99999   -0.287903
  -0.756802   0.989358  -0.536573  -0.961397
  -0.756802   0.989358  -0.536573  -0.750987
@@ -641,7 +641,7 @@ over low-rank SVD approximations.
 julia> using Impute, Missings
 
 julia> data = allowmissing(reshape(sin.(1:20), 5, 4)); data[[2, 3, 7, 9, 13, 19]] .= missing; data
-5×4 Array{Union{Missing, Float64},2}:
+5×4 Matrix{Union{Missing, Float64}}:
   0.841471  -0.279415  -0.99999   -0.287903
    missing    missing  -0.536573  -0.961397
    missing   0.989358    missing  -0.750987
@@ -649,7 +649,7 @@ julia> data = allowmissing(reshape(sin.(1:20), 5, 4)); data[[2, 3, 7, 9, 13, 19]
  -0.958924  -0.544021   0.650288   0.912945
 
 julia> result = Impute.svd(data; dims=:cols)
-5×4 Array{Union{Missing, Float64},2}:
+5×4 Matrix{Union{Missing, Float64}}:
   0.841471  -0.279415  -0.99999   -0.287903
   0.220258   0.555829  -0.536573  -0.961397
  -0.372745   0.989358   0.533193  -0.750987

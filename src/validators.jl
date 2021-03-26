@@ -31,7 +31,7 @@ provided is returned without mutation. See [`Validator`](@ref) for the minimum i
 julia> using Test; using Impute: Threshold, ThresholdError, validate
 
 julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
-2×5 Array{Union{Missing, Float64},2}:
+2×5 Matrix{Union{Missing, Float64}}:
  1.0  2.0   missing  missing  5.0
  1.1  2.2  3.3       missing  5.5
 

@@ -69,6 +69,6 @@ using Impute:
 
     # Start running doctests before we wrap up technical changes and work
     # on more documentation
-    # The doctests fail on x86, so only run them on 64-bit hardware
-    Sys.WORD_SIZE == 64 && doctest(Impute)
+    # The doctests fail on x86, so only run them on 64-bit hardware & Julia 1.6
+    Sys.WORD_SIZE == 64 && v"1.6" <= VERSION < v"1.7" && doctest(Impute)
 end
