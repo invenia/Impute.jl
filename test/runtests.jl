@@ -25,6 +25,7 @@ using Impute:
     Interpolate,
     Fill,
     KNN,
+    LimitedLOCF,
     LOCF,
     NOCB,
     Replace,
