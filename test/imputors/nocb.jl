@@ -15,6 +15,8 @@
         test_columntable(tester)
         test_rowtable(tester)
 
+        test_limited(tester)
+
         @testset "Cube" begin
             a = allowmissing(1.0:1.0:60.0)
             a[[2, 7, 18, 23, 34, 41, 55, 59, 60]] .= missing
@@ -48,6 +50,27 @@
         result = Impute.nocb(b)
         @test result[1] == 1.0
         @test ismissing(result[20])
+
+        # Test limiting
+        a[11:15] .= missing
+
+        expected = copy(a)
+        @test isequal(impute(a, NOCB(); limit=0), expected)
+
+        expected[2] = 4.0
+        expected[3] = 4.0
+        expected[7] = 8.0
+        expected[13:15] .= 16.0
+
+        @test isequal(impute(a, NOCB(); limit=3), expected)
+
+        expected = copy(a)
+        expected[3] = 4.0
+        expected[7] = 8.0
+        expected[11:15] .= 16.0
+
+        distances = vcat(1:9, 10:0.1:11)
+        @test isequal(impute(a, NOCB(); limit=1, index_values=distances), expected)
     end
 
     @testset "Ints" begin

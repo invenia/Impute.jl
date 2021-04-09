@@ -35,20 +35,6 @@ function _splitkwargs(::Type{Substitute}, kwargs...)
     return (Substitute(; kwdef...), rem)
 end
 
-function _splitkwargs(::Type{LimitedLOCF}, kwargs...)
-    rem = Dict(kwargs...)
-    kwdef = empty(rem)
-
-    for f in (:max_gap_size, :gap_axis)
-        if haskey(rem, f)
-            kwdef[f] = pop!(rem, f)
-        end
-    end
-
-    return (LimitedLOCF(; kwdef...), rem)
-end
-
-
 const global validation_methods = (
     threshold = Threshold,
     wthreshold = WeightedThreshold,
@@ -60,7 +46,6 @@ const global imputation_methods = (
     interp = Interpolate,
     interpolate = Interpolate,
     fill = Fill,
-    limitedlocf = LimitedLOCF,
     locf = LOCF,
     nocb = NOCB,
     replace = Replace,

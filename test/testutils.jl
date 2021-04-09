@@ -76,6 +76,74 @@ function test_equality(tester::ImputorTester)
     end
 end
 
+function test_limited(tester::ImputorTester)
+    @testset "Limited" begin
+        a = allowmissing(1.0:1.0:20.0)
+        a[[2, 3, 7, 11:15...]] .= missing
+
+        # Second half of `a` should be filled as long as limit >= 1
+        distances = vcat(1:9, 10:0.1:11)
+
+        all_imputed = impute(a, tester.imp(; tester.kwargs...))
+
+        @testset "Limit equals missings" begin
+            result = impute(a, tester.imp(; tester.kwargs...); limit=5)
+
+            @test count(ismissing, result) < count(ismissing, a)
+
+            @test isequal(result, all_imputed)
+            @test isequal(result, tester.f(a; tester.kwargs..., limit=5))
+        end
+
+        @testset "Limit less than missings" begin
+            result = impute(a, tester.imp(; tester.kwargs...); limit=2)
+
+            @test count(ismissing, result) < count(ismissing, a)
+            @test count(ismissing, all_imputed) < count(ismissing, result)
+
+            @test isequal(result, tester.f(a; tester.kwargs..., limit=2))
+        end
+
+        @testset "Uneven index_values" begin
+            result = impute(a, tester.imp(; tester.kwargs...); limit=1, index_values=distances)
+            no_index_result = impute(a, tester.imp(; tester.kwargs...); limit=1)
+
+            @test count(ismissing, result) < count(ismissing, a)
+            @test count(ismissing, all_imputed) < count(ismissing, result)
+            @test count(ismissing, result) < count(ismissing, no_index_result)
+
+            @test isequal(result, tester.f(a; tester.kwargs..., limit=1, index_values=distances))
+        end
+
+        @testset "Errors" begin
+            short_index = distances[1:end-1]
+            @test_throws(
+                DimensionMismatch,
+                impute(a, tester.imp(; tester.kwargs...); limit=1, index_values=short_index),
+            )
+
+            unsorted = 20:-1:1
+            @test_throws(
+                ArgumentError,
+                impute(a, tester.imp(; tester.kwargs...); limit=1, index_values=unsorted),
+            )
+        end
+
+        @testset "In-place" begin
+            # Test that the in-place function return the new results and logs whether it
+            # successfully did it in-place
+            a2 = deepcopy(a)
+            result = tester.f(a2; tester.kwargs..., limit=1, index_values=distances)
+
+            a2_ = tester.f!(a2; tester.kwargs..., limit=1, index_values=distances)
+            @test isequal(a2_, result)
+            if !isequal(a2, result)
+                @warn "$(tester.f!) did not mutate input data when limited"
+            end
+        end
+    end
+end
+
 function test_vector(tester::ImputorTester)
     @testset "Vector" begin
         if tester.imp != DropVars
