@@ -55,22 +55,14 @@
         a[11:15] .= missing
 
         expected = copy(a)
-        @test isequal(impute(a, NOCB(); limit=0), expected)
+        @test isequal(impute(a, NOCB(; limit=0)), expected)
 
         expected[2] = 4.0
         expected[3] = 4.0
         expected[7] = 8.0
         expected[13:15] .= 16.0
 
-        @test isequal(impute(a, NOCB(); limit=3), expected)
-
-        expected = copy(a)
-        expected[3] = 4.0
-        expected[7] = 8.0
-        expected[11:15] .= 16.0
-
-        distances = vcat(1:9, 10:0.1:11)
-        @test isequal(impute(a, NOCB(); limit=1, index_values=distances), expected)
+        @test isequal(impute(a, NOCB(; limit=3)), expected)
     end
 
     @testset "Ints" begin
