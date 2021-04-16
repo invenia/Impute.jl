@@ -52,14 +52,3 @@ function _mode(a::AbstractVector, wv::AbstractArray{T}) where T <: Real
 
     return mv
 end
-
-function _check_index(index_values, len)
-    index_length = length(index_values)
-    if index_length != len
-        throw(DimensionMismatch(
-            "Length of index_values ($index_length) must match length of data ($len)."
-        ))
-    end
-
-    !issorted(index_values) && throw(ArgumentError("index_values must be sorted."))
-end

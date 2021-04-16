@@ -1,5 +1,5 @@
 """
-    LOCF()
+    LOCF(; limit=nothing)
 
 Last observation carried forward (LOCF) iterates forwards through the `data` and fills
 missing data with the last existing observation. The current implementation is univariate,
@@ -13,11 +13,7 @@ existing observation to carry forward. As a result, this method does not guarant
 that all missing values will be imputed.
 
 # Keyword Arguments
-The following additional keyword arguments can be applied during impute:
-* `limit=Inf`: Limits the amount of consecutive missing values to replace.
-* `index_values::AbstractVector`: A sorted vector of index information for the data.
-  This is compared when using `limit` to limit replacement of data at irregular intervals
-  or by other types (eg: timestamps).
+* `limit::Union{UInt, Nothing}`: Optionally limits the amount of consecutive missing values to replace.
 
 # Example
 ```jldoctest

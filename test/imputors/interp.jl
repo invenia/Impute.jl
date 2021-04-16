@@ -50,6 +50,18 @@
         result = Impute.interp(b)
         @test ismissing(result[1])
         @test ismissing(result[20])
+
+        # Test limiting
+        c = allowmissing(1.0:1.0:20.0)
+        c[13:15] .= missing
+
+         # Limit too small for gap
+        expected = copy(c)
+        @test isequal(impute(c, Interpolate(; limit=2)), expected)
+
+        # Limit matches gap size
+        expected[13:15] .= [13.0, 14.0, 15.0]
+        @test isequal(impute(c, Interpolate(; limit=3)), expected)
     end
 
     @testset "Ints" begin
