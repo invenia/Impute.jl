@@ -15,6 +15,8 @@
         test_columntable(tester)
         test_rowtable(tester)
 
+        test_limited(tester)
+
         @testset "Cube" begin
             a = allowmissing(1.0:1.0:60.0)
             a[[2, 7, 18, 23, 34, 41, 55, 59, 60]] .= missing
@@ -48,6 +50,19 @@
         result = Impute.locf(b)
         @test ismissing(result[1])
         @test result[20] == 1.0
+
+        # Test limiting
+        a[11:15] .= missing
+
+        expected = copy(a)
+        @test isequal(impute(a, LOCF(; limit=0)), expected)
+
+        expected[2] = 1.0
+        expected[3] = 1.0
+        expected[7] = 6.0
+        expected[11:13] .= 10.0
+
+        @test isequal(impute(a, LOCF(; limit=3)), expected)
     end
 
     @testset "Ints" begin
