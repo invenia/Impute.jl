@@ -1,7 +1,7 @@
 name = "Impute"
 uuid = "f7bf1975-0170-51b9-8c5f-a992d46b9575"
 authors = ["Invenia Technical Computing"]
-version = "0.6.5"
+version = "0.6.6"
 
 [deps]
 BSON = "fbb218c0-5317-5bc6-957e-2ee96dd4b1f0"
