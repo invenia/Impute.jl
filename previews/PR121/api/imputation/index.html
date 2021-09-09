@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Imputation · Impute.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/invenia.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">Impute.jl</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Walkthroughs</span><ul><li><a class="tocitem" href="../../walkthroughs/spatiotemporal/">Spatiotemporal</a></li><li><a class="tocitem" href="../../walkthroughs/svd/">SVD</a></li></ul></li><li><span class="tocitem">API</span><ul><li><a class="tocitem" href="../declaremissings/">Declare Missings</a></li><li><a class="tocitem" href="../validation/">Validation</a></li><li><a class="tocitem" href="../filtering/">Filtering</a></li><li class="is-active"><a class="tocitem" href>Imputation</a><ul class="internal"><li><a class="tocitem" href="#Interpolation"><span>Interpolation</span></a></li><li><a class="tocitem" href="#K-Nearest-Neighbors-(KNN)"><span>K-Nearest Neighbors (KNN)</span></a></li><li><a class="tocitem" href="#Last-Observation-Carried-Forward-(LOCF)"><span>Last Observation Carried Forward (LOCF)</span></a></li><li><a class="tocitem" href="#Next-Observation-Carried-Backward-(NOCB)"><span>Next Observation Carried Backward (NOCB)</span></a></li><li><a class="tocitem" href="#Replacement"><span>Replacement</span></a></li><li><a class="tocitem" href="#Simple-Random-Sample-(SRS)"><span>Simple Random Sample (SRS)</span></a></li><li><a class="tocitem" href="#Substitute"><span>Substitute</span></a></li><li><a class="tocitem" href="#SVD"><span>SVD</span></a></li></ul></li><li><a class="tocitem" href="../chaining/">Chaining</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">API</a></li><li class="is-active"><a href>Imputation</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Imputation</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/invenia/Impute.jl/blob/master/docs/src/api/imputation.md#L" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Imputation"><a class="docs-heading-anchor" href="#Imputation">Imputation</a><a id="Imputation-1"></a><a class="docs-heading-anchor-permalink" href="#Imputation" title="Permalink"></a></h1><article class="docstring"><header><a class="docstring-binding" id="Impute.Imputor" href="#Impute.Imputor"><code>Impute.Imputor</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">Imputor</code></pre><p>An imputor stores information about imputing values in <code>AbstractArray</code>s and <code>Tables.table</code>s. New imputation methods are expected to subtype <code>Imputor</code> and, at minimum, implement the <code>_impute!(data::AbstractArrays, imp::&lt;MyImputor&gt;)</code> method.</p><p>While fallback <code>impute</code> and <code>impute!</code> methods are provided to extend your <code>_impute!</code> methods to n-dimensional arrays and tables, you can always override these methods to change the behaviour as necessary.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/imputors.jl#LL1-L11">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Impute.impute!-Tuple{AbstractArray, Impute.Imputor}" href="#Impute.impute!-Tuple{AbstractArray, Impute.Imputor}"><code>Impute.impute!</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia">impute!(data::AbstractArray, imp) -&gt; data</code></pre><p>Just returns the <code>data</code> when the array doesn&#39;t contain <code>missing</code>s</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/imputors.jl#LL162-L167">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Impute.impute!-Tuple{AbstractArray{Missing, N} where N, Impute.Imputor}" href="#Impute.impute!-Tuple{AbstractArray{Missing, N} where N, Impute.Imputor}"><code>Impute.impute!</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia">impute!(data::AbstractArray{Missing}, imp) -&gt; data</code></pre><p>Just return the <code>data</code> when the array only contains <code>missing</code>s</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/imputors.jl#LL170-L174">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Impute.impute!-Union{Tuple{A}, Tuple{T}, Tuple{A, Impute.Imputor}} where {T, A&lt;:(AbstractArray{Union{Missing, T}, N} where N)}" href="#Impute.impute!-Union{Tuple{A}, Tuple{T}, Tuple{A, Impute.Imputor}} where {T, A&lt;:(AbstractArray{Union{Missing, T}, N} where N)}"><code>Impute.impute!</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia">impute!(data::A, imp; dims=:, kwargs...) -&gt; A</code></pre><p>Impute the <code>missing</code> values in the array <code>data</code> using the imputor <code>imp</code>. Optionally, you can specify the dimension to impute along.</p><p><strong>Arguments</strong></p><ul><li><code>data::AbstractArray{Union{T, Missing}}</code>: the data to be impute along dimensions <code>dims</code></li><li><code>imp::Imputor</code>: the Imputor method to use</li></ul><p><strong>Keyword Arguments</strong></p><ul><li><code>dims=:</code>: The dimension to impute along. <code>:rows</code> and <code>:cols</code> are also supported for matrices.</li></ul><p><strong>Returns</strong></p><ul><li><code>AbstractArray{Union{T, Missing}}</code>: the input <code>data</code> with values imputed</li></ul><p><strong>NOTES</strong></p><ol><li>Matrices have a deprecated <code>dims=2</code> special case as <code>dims=:</code> is a breaking change</li><li>Mutation isn&#39;t guaranteed for all array types, hence we return the result</li><li><code>eachslice</code> is used internally which requires Julia 1.1</li></ol><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using Impute: Interpolate, impute!
+
+julia&gt; M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
+2×5 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0   missing  missing  5.0
+ 1.1  2.2  3.3       missing  5.5
+
+julia&gt; impute!(M, Interpolate(); dims=1)
+2×5 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0  3.0  4.0  5.0
+ 1.1  2.2  3.3  4.4  5.5
+
+julia&gt; M
+2×5 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0  3.0  4.0  5.0
+ 1.1  2.2  3.3  4.4  5.5</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/imputors.jl#LL83-L123">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Impute.impute!-Union{Tuple{T}, Tuple{T, Impute.Imputor}} where T" href="#Impute.impute!-Union{Tuple{T}, Tuple{T, Impute.Imputor}} where T"><code>Impute.impute!</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia">impute!(table, imp; cols=nothing) -&gt; table</code></pre><p>Imputes the data in a table by imputing the values 1 column at a time; if this is not the desired behaviour custom imputor methods should overload this method.</p><p><strong>Arguments</strong></p><ul><li><code>imp::Imputor</code>: the Imputor method to use</li><li><code>table</code>: the data to impute</li></ul><p><strong>Keyword Arguments</strong></p><ul><li><code>cols</code>: The columns to impute along (default is to impute all columns)</li></ul><p><strong>Returns</strong></p><ul><li>the input <code>data</code> with values imputed</li></ul><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames; using Impute: Interpolate, impute
+
+
+julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1.1, 2.2, 3.3, missing, 5.5])
+5×2 DataFrame
+ Row │ a          b
+     │ Float64?   Float64?
+─────┼──────────────────────
+   1 │       1.0        1.1
+   2 │       2.0        2.2
+   3 │ missing          3.3
+   4 │ missing    missing
+   5 │       5.0        5.5
+
+julia&gt; impute(df, Interpolate())
+5×2 DataFrame
+ Row │ a         b
+     │ Float64?  Float64?
+─────┼────────────────────
+   1 │      1.0       1.1
+   2 │      2.0       2.2
+   3 │      3.0       3.3
+   4 │      4.0       4.4
+   5 │      5.0       5.5</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/imputors.jl#LL178-L221">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Impute.impute!-Union{Tuple{T}, Tuple{T, Impute.Imputor}} where T&lt;:(AbstractVector{var&quot;#s2&quot;} where var&quot;#s2&quot;&lt;:NamedTuple)" href="#Impute.impute!-Union{Tuple{T}, Tuple{T, Impute.Imputor}} where T&lt;:(AbstractVector{var&quot;#s2&quot;} where var&quot;#s2&quot;&lt;:NamedTuple)"><code>Impute.impute!</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia">impute!(data::T, imp; kwargs...) -&gt; T where T &lt;: AbstractVector{&lt;:NamedTuple}</code></pre><p>Special case rowtables which are arrays, but we want to fallback to the tables method.</p></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/imputors.jl#LL153-L157">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Impute.impute-Tuple{Any, Impute.Imputor}" href="#Impute.impute-Tuple{Any, Impute.Imputor}"><code>Impute.impute</code></a> — <span class="docstring-category">Method</span></header><section><div><pre><code class="language-julia">impute(data::T, imp; kwargs...) -&gt; T</code></pre><p>Returns a new copy of the <code>data</code> with the missing data imputed by the imputor <code>imp</code>. For matrices and tables, data is imputed one variable/column at a time. If this is not the desired behaviour then you should overload this method or specify a different <code>dims</code> value.</p><p><strong>Arguments</strong></p><ul><li><code>data</code>: the data to be impute</li><li><code>imp::Imputor</code>: the Imputor method to use</li></ul><p><strong>Returns</strong></p><ul><li>the input <code>data</code> with values imputed</li></ul><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using Impute: Interpolate, impute
+
+julia&gt; v = [1.0, 2.0, missing, missing, 5.0]
+5-element Vector{Union{Missing, Float64}}:
+ 1.0
+ 2.0
+  missing
+  missing
+ 5.0
+
+julia&gt; impute(v, Interpolate())
+5-element Vector{Union{Missing, Float64}}:
+ 1.0
+ 2.0
+ 3.0
+ 4.0
+ 5.0</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/imputors.jl#LL41-L75">source</a></section></article><h2 id="Interpolation"><a class="docs-heading-anchor" href="#Interpolation">Interpolation</a><a id="Interpolation-1"></a><a class="docs-heading-anchor-permalink" href="#Interpolation" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="Impute.interp" href="#Impute.interp"><code>Impute.interp</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">Impute.interp(data; dims=1)</code></pre><p>Performs linear interpolation between the nearest values in an vector. See <a href="#Impute.Interpolate"><code>Impute.Interpolate</code></a> for details.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames; using Impute: Impute
+
+
+julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1.1, 2.2, 3.3, missing, 5.5])
+5×2 DataFrame
+ Row │ a          b
+     │ Float64?   Float64?
+─────┼──────────────────────
+   1 │       1.0        1.1
+   2 │       2.0        2.2
+   3 │ missing          3.3
+   4 │ missing    missing
+   5 │       5.0        5.5
+
+julia&gt; Impute.interp(df)
+5×2 DataFrame
+ Row │ a         b
+     │ Float64?  Float64?
+─────┼────────────────────
+   1 │      1.0       1.1
+   2 │      2.0       2.2
+   3 │      3.0       3.3
+   4 │      4.0       4.4
+   5 │      5.0       5.5</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/functional.jl#LL274-L307">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Impute.Interpolate" href="#Impute.Interpolate"><code>Impute.Interpolate</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">Interpolate(; limit=nothing)</code></pre><p>Performs linear interpolation between the nearest values in an vector. The current implementation is univariate, so each variable in a table or matrix will be handled independently.</p><p>!!! Missing values at the head or tail of the array cannot be interpolated if there are no existing values on both sides. As a result, this method does not guarantee that all missing values will be imputed.</p><p><strong>Keyword Arguments</strong></p><ul><li><code>limit::Union{UInt, Nothing}</code>: Optionally limit the gap sizes that can be interpolated.</li></ul><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using Impute: Interpolate, impute
+
+julia&gt; M = [1.0 2.0 missing missing missing 6.0; 1.1 missing missing 4.4 5.5 6.6]
+2×6 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0       missing   missing   missing  6.0
+ 1.1   missing  missing  4.4       5.5       6.6
+
+julia&gt; impute(M, Interpolate(); dims=:rows)
+2×6 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0  3.0  4.0  5.0  6.0
+ 1.1  2.2  3.3  4.4  5.5  6.6
+
+julia&gt; impute(M, Interpolate(; limit=2); dims=:rows)
+2×6 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0   missing   missing   missing  6.0
+ 1.1  2.2  3.3       4.4       5.5       6.6</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/imputors/interp.jl#LL1-L34">source</a></section></article><h2 id="K-Nearest-Neighbors-(KNN)"><a class="docs-heading-anchor" href="#K-Nearest-Neighbors-(KNN)">K-Nearest Neighbors (KNN)</a><a id="K-Nearest-Neighbors-(KNN)-1"></a><a class="docs-heading-anchor-permalink" href="#K-Nearest-Neighbors-(KNN)" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="Impute.knn" href="#Impute.knn"><code>Impute.knn</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">Impute.knn(; k=1, threshold=0.5, dist=Euclidean())</code></pre><p>Imputation using k-Nearest Neighbor algorithm.</p><p><strong>Keyword Arguments</strong></p><ul><li><code>k::Int</code>: number of nearest neighbors</li><li><code>dist::MinkowskiMetric</code>: distance metric suppports by <code>NearestNeighbors.jl</code> (Euclidean, Chebyshev, Minkowski and Cityblock)</li><li><code>threshold::AbsstractFloat</code>: thershold for missing neighbors</li></ul><p><strong>Reference</strong></p><ul><li>Troyanskaya, Olga, et al. &quot;Missing value estimation methods for DNA microarrays.&quot; Bioinformatics 17.6 (2001): 520-525.</li></ul><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using Impute, Missings
+
+julia&gt; data = allowmissing(reshape(sin.(1:20), 5, 4)); data[[2, 3, 7, 9, 13, 19]] .= missing; data
+5×4 Matrix{Union{Missing, Float64}}:
+  0.841471  -0.279415  -0.99999   -0.287903
+   missing    missing  -0.536573  -0.961397
+   missing   0.989358    missing  -0.750987
+ -0.756802    missing   0.990607    missing
+ -0.958924  -0.544021   0.650288   0.912945
+
+julia&gt; result = Impute.knn(data; dims=:cols)
+5×4 Matrix{Union{Missing, Float64}}:
+  0.841471  -0.279415  -0.99999   -0.287903
+ -0.756802   0.989358  -0.536573  -0.961397
+ -0.756802   0.989358  -0.536573  -0.750987
+ -0.756802  -0.544021   0.990607   0.912945
+ -0.958924  -0.544021   0.650288   0.912945</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/functional.jl#LL587-L620">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Impute.KNN" href="#Impute.KNN"><code>Impute.KNN</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">KNN(; kwargs...)</code></pre><p>Imputation using k-Nearest Neighbor algorithm.</p><p><strong>Keyword Arguments</strong></p><ul><li><code>k::Int</code>: number of nearest neighbors</li><li><code>dist::MinkowskiMetric</code>: distance metric suppports by <code>NearestNeighbors.jl</code> (Euclidean, Chebyshev, Minkowski and Cityblock)</li><li><code>threshold::AbstractFloat</code>: threshold for missing neighbors</li></ul><p><strong>Reference</strong></p><ul><li>Troyanskaya, Olga, et al. &quot;Missing value estimation methods for DNA microarrays.&quot; Bioinformatics 17.6 (2001): 520-525.</li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/imputors/knn.jl#LL1-L13">source</a></section></article><h2 id="Last-Observation-Carried-Forward-(LOCF)"><a class="docs-heading-anchor" href="#Last-Observation-Carried-Forward-(LOCF)">Last Observation Carried Forward (LOCF)</a><a id="Last-Observation-Carried-Forward-(LOCF)-1"></a><a class="docs-heading-anchor-permalink" href="#Last-Observation-Carried-Forward-(LOCF)" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="Impute.locf" href="#Impute.locf"><code>Impute.locf</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">Impute.locf(data; dims=1)</code></pre><p>Iterates forwards through the <code>data</code> and fills missing data with the last existing observation. See <a href="#Impute.LOCF"><code>Impute.LOCF</code></a> for details.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames; using Impute: Impute
+
+
+julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1.1, 2.2, 3.3, missing, 5.5])
+5×2 DataFrame
+ Row │ a          b
+     │ Float64?   Float64?
+─────┼──────────────────────
+   1 │       1.0        1.1
+   2 │       2.0        2.2
+   3 │ missing          3.3
+   4 │ missing    missing
+   5 │       5.0        5.5
+
+julia&gt; Impute.locf(df)
+5×2 DataFrame
+ Row │ a         b
+     │ Float64?  Float64?
+─────┼────────────────────
+   1 │      1.0       1.1
+   2 │      2.0       2.2
+   3 │      2.0       3.3
+   4 │      2.0       3.3
+   5 │      5.0       5.5</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/functional.jl#LL344-L377">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Impute.LOCF" href="#Impute.LOCF"><code>Impute.LOCF</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">LOCF(; limit=nothing)</code></pre><p>Last observation carried forward (LOCF) iterates forwards through the <code>data</code> and fills missing data with the last existing observation. The current implementation is univariate, so each variable in a table or matrix will be handled independently.</p><p>See also:</p><ul><li><a href="#Impute.NOCB"><code>Impute.NOCB</code></a>: Next Observation Carried Backward</li></ul><p>!!! Missing elements at the head of the array may not be imputed if there is no existing observation to carry forward. As a result, this method does not guarantee that all missing values will be imputed.</p><p><strong>Keyword Arguments</strong></p><ul><li><code>limit::Union{UInt, Nothing}</code>: Optionally limits the amount of consecutive missing values to replace.</li></ul><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using Impute: LOCF, impute
+
+julia&gt; M = [1.0 2.0 missing missing missing 6.0; 1.1 missing missing 4.4 5.5 6.6]
+2×6 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0       missing   missing   missing  6.0
+ 1.1   missing  missing  4.4       5.5       6.6
+
+julia&gt; impute(M, LOCF(); dims=:rows)
+2×6 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0  2.0  2.0  2.0  6.0
+ 1.1  1.1  1.1  4.4  5.5  6.6
+
+julia&gt; impute(M,  LOCF(; limit=2); dims=:rows)
+2×6 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0  2.0  2.0   missing  6.0
+ 1.1  1.1  1.1  4.4  5.5       6.6</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/imputors/locf.jl#LL1-L37">source</a></section></article><h2 id="Next-Observation-Carried-Backward-(NOCB)"><a class="docs-heading-anchor" href="#Next-Observation-Carried-Backward-(NOCB)">Next Observation Carried Backward (NOCB)</a><a id="Next-Observation-Carried-Backward-(NOCB)-1"></a><a class="docs-heading-anchor-permalink" href="#Next-Observation-Carried-Backward-(NOCB)" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="Impute.nocb" href="#Impute.nocb"><code>Impute.nocb</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">Impute.nocb(data; dims=1)</code></pre><p>Iterates backwards through the <code>data</code> and fills missing data with the next existing observation. See <a href="#Impute.NOCB"><code>Impute.NOCB</code></a> for details.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames; using Impute: Impute
+
+
+julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1.1, 2.2, 3.3, missing, 5.5])
+5×2 DataFrame
+ Row │ a          b
+     │ Float64?   Float64?
+─────┼──────────────────────
+   1 │       1.0        1.1
+   2 │       2.0        2.2
+   3 │ missing          3.3
+   4 │ missing    missing
+   5 │       5.0        5.5
+
+julia&gt; Impute.nocb(df)
+5×2 DataFrame
+ Row │ a         b
+     │ Float64?  Float64?
+─────┼────────────────────
+   1 │      1.0       1.1
+   2 │      2.0       2.2
+   3 │      5.0       3.3
+   4 │      5.0       5.5
+   5 │      5.0       5.5</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/functional.jl#LL379-L412">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Impute.NOCB" href="#Impute.NOCB"><code>Impute.NOCB</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">NOCB(; limit=nothing)</code></pre><p>Next observation carried backward (NOCB) iterates backwards through the <code>data</code> and fills missing data with the next existing observation.</p><p>See also:</p><ul><li><a href="#Impute.LOCF"><code>Impute.LOCF</code></a>: Last Observation Carried Forward</li></ul><p>!!! Missing elements at the tail of the array may not be imputed if there is no existing observation to carry backward. As a result, this method does not guarantee that all missing values will be imputed.</p><p><strong>Keyword Arguments</strong></p><ul><li><code>limit::Union{UInt, Nothing}</code>: Optionally limits the amount of consecutive missing values to replace.</li></ul><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using Impute: NOCB, impute
+
+julia&gt; M = [1.0 2.0 missing missing missing 6.0; 1.1 missing missing 4.4 5.5 6.6]
+2×6 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0       missing   missing   missing  6.0
+ 1.1   missing  missing  4.4       5.5       6.6
+
+julia&gt; impute(M, NOCB(); dims=:rows)
+2×6 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0  6.0  6.0  6.0  6.0
+ 1.1  4.4  4.4  4.4  5.5  6.6
+
+julia&gt; impute(M,  NOCB(; limit=2); dims=:rows)
+2×6 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0   missing  6.0  6.0  6.0
+ 1.1  4.4  4.4       4.4  5.5  6.6</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/imputors/nocb.jl#LL1-L36">source</a></section></article><h2 id="Replacement"><a class="docs-heading-anchor" href="#Replacement">Replacement</a><a id="Replacement-1"></a><a class="docs-heading-anchor-permalink" href="#Replacement" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="Impute.replace" href="#Impute.replace"><code>Impute.replace</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">Impute.replace(data; values)</code></pre><p>Replace <code>missing</code>s with one of the specified constant values, depending on the input type. If multiple values of the same type are provided then the first one will be used. If the input data is of a different type then the no replacement will be performed.</p><p><strong>Keyword Arguments</strong></p><ul><li><code>values::Tuple</code>: A scalar or tuple of different values that should be used to replace missings. Typically, one value per type you&#39;re considering imputing for.</li></ul><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames, Impute
+
+julia&gt; df = DataFrame(
+           :a =&gt; [1.1, 2.2, missing, missing, 5.5],
+           :b =&gt; [1, 2, 3, missing, 5],
+           :c =&gt; [&quot;v&quot;, &quot;w&quot;, &quot;x&quot;, &quot;y&quot;, missing],
+       )
+5×3 DataFrame
+ Row │ a          b        c
+     │ Float64?   Int64?   String?
+─────┼─────────────────────────────
+   1 │       1.1        1  v
+   2 │       2.2        2  w
+   3 │ missing          3  x
+   4 │ missing    missing  y
+   5 │       5.5        5  missing
+
+julia&gt; Impute.replace(df; values=(NaN, -9999, &quot;NULL&quot;))
+5×3 DataFrame
+ Row │ a         b       c
+     │ Float64?  Int64?  String?
+─────┼───────────────────────────
+   1 │      1.1       1  v
+   2 │      2.2       2  w
+   3 │    NaN         3  x
+   4 │    NaN     -9999  y
+   5 │      5.5       5  NULL</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/functional.jl#LL490-L531">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Impute.Replace" href="#Impute.Replace"><code>Impute.Replace</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">Replace(; value)</code></pre><p>Replace <code>missing</code>s with one of the specified constant values, depending on the input type. If multiple values of the same type are provided then the first one will be used. If the input data is of a different type then the no replacement will be performed.</p><p><strong>Keyword Arguments</strong></p><ul><li><code>values::Tuple</code>: A scalar or tuple of different values that should be used to replace missings. Typically, one value per type you&#39;re considering imputing for.</li></ul><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using Impute: Replace, impute
+
+julia&gt; M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
+2×5 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0   missing  missing  5.0
+ 1.1  2.2  3.3       missing  5.5
+
+julia&gt; impute(M, Replace(; values=0.0); dims=2)
+2×5 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0  0.0  0.0  5.0
+ 1.1  2.2  3.3  0.0  5.5</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/imputors/replace.jl#LL1-L26">source</a></section></article><h2 id="Simple-Random-Sample-(SRS)"><a class="docs-heading-anchor" href="#Simple-Random-Sample-(SRS)">Simple Random Sample (SRS)</a><a id="Simple-Random-Sample-(SRS)-1"></a><a class="docs-heading-anchor-permalink" href="#Simple-Random-Sample-(SRS)" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="Impute.srs" href="#Impute.srs"><code>Impute.srs</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">Impute.srs(data; rng=Random.GLOBAL_RNG)</code></pre><p>Simple Random Sampling (SRS) imputation is a method for imputing both continuous and categorical variables. Furthermore, it completes imputation while preserving the distributional properties of the variables (e.g., mean, standard deviation).</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames; using Random; using Impute: Impute
+
+julia&gt; df = DataFrame(:a =&gt; [1.0, 2.0, missing, missing, 5.0], :b =&gt; [1.1, 2.2, 3.3, missing, 5.5])
+5×2 DataFrame
+│ Row │ a        │ b        │
+│     │ Float64? │ Float64? │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ missing  │ 3.3      │
+│ 4   │ missing  │ missing  │
+│ 5   │ 5.0      │ 5.5      │
+
+julia&gt; Impute.srs(df; rng=MersenneTwister(1234))
+5×2 DataFrame
+│ Row │ a        │ b        │
+│     │ Float64? │ Float64? │
+├─────┼──────────┼──────────┤
+│ 1   │ 1.0      │ 1.1      │
+│ 2   │ 2.0      │ 2.2      │
+│ 3   │ 1.0      │ 3.3      │
+│ 4   │ 2.0      │ 3.3      │
+│ 5   │ 5.0      │ 5.5      │</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/functional.jl#LL414-L447">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Impute.SRS" href="#Impute.SRS"><code>Impute.SRS</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">SRS(; rng=Random.GLOBAL_RNG)</code></pre><p>Simple Random Sampling (SRS) imputation is a method for imputing both continuous and categorical variables. Furthermore, it completes imputation while preserving the distributional properties of the variables (e.g., mean, standard deviation).</p><p>The basic idea is that for a given variable, <code>x</code>, with missing data, we randomly draw from the observed values of <code>x</code> to impute the missing elements. Since the random draws from <code>x</code> for imputation are done in proportion to the frequency distribution of the values in <code>x</code>, the univariate distributional properties are generally not impacted; this is true for both categorical and continuous data.</p><p><strong>Keyword Arguments</strong></p><ul><li><code>rng::AbstractRNG</code>: A random number generator to use for observation selection</li></ul><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using Random; using Impute: SRS, impute
+
+julia&gt; M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
+2×5 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0   missing  missing  5.0
+ 1.1  2.2  3.3       missing  5.5
+
+julia&gt; impute(M, SRS(; rng=MersenneTwister(1234)); dims=:rows)
+2×5 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0  1.0  2.0  5.0
+ 1.1  2.2  3.3  3.3  5.5</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/imputors/srs.jl#LL8-L39">source</a></section></article><h2 id="Substitute"><a class="docs-heading-anchor" href="#Substitute">Substitute</a><a id="Substitute-1"></a><a class="docs-heading-anchor-permalink" href="#Substitute" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="Impute.substitute" href="#Impute.substitute"><code>Impute.substitute</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">Impute.substitute(data; statistic=nothing)
+Impute.substitute(data; weights=nothing)</code></pre><p>Substitute missing values with a summary statistic over the non-missing values.</p><p><strong>Keyword Arguments</strong></p><ul><li><code>statistic</code>: A summary statistic function to be applied to the non-missing values. This function should return a value of the same type as the input data <code>eltype</code>. If this function isn&#39;t passed in then the <code>defaultstats</code> function is used to make a best guess.</li><li><code>weights</code>: A set of statistical weights to apply to the <code>mean</code> or <code>median</code> in <code>defaultstats</code>.</li></ul><p>See <a href="#Substitute">Substitute</a> for details on substitution rules defined in <code>defaultstats</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using DataFrames, Impute
+
+
+julia&gt; df = DataFrame(
+                  :a =&gt; [8.9, 2.2, missing, missing, 1.3, 6.2, 3.7, 4.8],
+                  :b =&gt; [2, 6, 3, missing, 7, 1, 9, missing],
+                  :c =&gt; [true, false, true, true, false, missing, false, true],
+              )
+8×3 DataFrame
+ Row │ a          b        c
+     │ Float64?   Int64?   Bool?
+─────┼─────────────────────────────
+   1 │       8.9        2     true
+   2 │       2.2        6    false
+   3 │ missing          3     true
+   4 │ missing    missing     true
+   5 │       1.3        7    false
+   6 │       6.2        1  missing
+   7 │       3.7        9    false
+   8 │       4.8  missing     true
+
+julia&gt; Impute.substitute(df)
+8×3 DataFrame
+ Row │ a         b       c
+     │ Float64?  Int64?  Bool?
+─────┼─────────────────────────
+   1 │     8.9        2   true
+   2 │     2.2        6  false
+   3 │     4.25       3   true
+   4 │     4.25       4   true
+   5 │     1.3        7  false
+   6 │     6.2        1   true
+   7 │     3.7        9  false
+   8 │     4.8        4   true</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/functional.jl#LL533-L585">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Impute.Substitute" href="#Impute.Substitute"><code>Impute.Substitute</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">Substitute(; statistic=Impute.defaultstats)</code></pre><p>Substitute missing values with a summary statistic over the non-missing values.</p><p><strong>Keyword Arguments</strong></p><ul><li><code>statistic</code>: A summary statistic function to be applied to the non-missing values. This function should return a value of the same type as the input data <code>eltype</code>. If this function isn&#39;t passed in then the <a href="#Impute.defaultstats"><code>Impute.defaultstats</code></a> function is used to make a best guess.</li></ul><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using Statistics; using Impute: Substitute, impute
+
+julia&gt; M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
+2×5 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0   missing  missing  5.0
+ 1.1  2.2  3.3       missing  5.5
+
+julia&gt; impute(M, Substitute(); dims=:rows)
+2×5 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0  2.0  2.0   5.0
+ 1.1  2.2  3.3  2.75  5.5
+
+julia&gt; impute(M, Substitute(; statistic=mean); dims=:rows)
+2×5 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0  2.66667  2.66667  5.0
+ 1.1  2.2  3.3      3.025    5.5</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/imputors/substitute.jl#LL1-L31">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Impute.defaultstats" href="#Impute.defaultstats"><code>Impute.defaultstats</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">defaultstats(data[, wv])</code></pre><p>A set of default substitution rules using either <code>median</code> or <code>mode</code> based on the <code>eltype</code> of the input <code>data</code>. Specific rules are summarized as follows.</p><ul><li><code>Bool</code> elements use <code>mode</code></li><li><code>Real</code> elements use <code>median</code></li><li><code>Integer</code> elements where <code>nunique(data) / length(data) &lt; 0.25</code> use <code>mode</code> (ratings, categorical codings, etc)</li><li><code>Integer</code> elements with mostly unique values use <code>median</code></li><li><code>!Number</code> (non-numeric) elements use <code>mode</code> as the safest fallback</li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/imputors/substitute.jl#LL112-L124">source</a></section></article><h2 id="SVD"><a class="docs-heading-anchor" href="#SVD">SVD</a><a id="SVD-1"></a><a class="docs-heading-anchor-permalink" href="#SVD" title="Permalink"></a></h2><article class="docstring"><header><a class="docstring-binding" id="Impute.svd" href="#Impute.svd"><code>Impute.svd</code></a> — <span class="docstring-category">Function</span></header><section><div><pre><code class="language-julia">Impute.svd(; kwargs...)</code></pre><p>Imputes the missing values in a matrix using an expectation maximization (EM) algorithm over low-rank SVD approximations.</p><p><strong>Keyword Arguments</strong></p><ul><li><code>init::Imputor</code>: initialization method for missing values (default: Substitute())</li><li><code>rank::Union{Int, Nothing}</code>: rank of the SVD approximation (default: nothing meaning start and 0 and increase)</li><li><code>tol::Float64</code>: convergence tolerance (default: 1e-10)</li><li><code>maxiter::Int</code>: Maximum number of iterations if convergence is not achieved (default: 100)</li><li><code>limits::Unoin{Tuple{Float64, Float64}, Nothing}</code>: Bound the possible approximation values (default: nothing)</li><li><code>verbose::Bool</code>: Whether to display convergence progress (default: true)</li></ul><p><strong>References</strong></p><ul><li>Troyanskaya, Olga, et al. &quot;Missing value estimation methods for DNA microarrays.&quot; Bioinformatics 17.6 (2001): 520-525.</li></ul><p><strong>Example</strong></p><pre><code class="language-julia-repl">julia&gt; using Impute, Missings
+
+julia&gt; data = allowmissing(reshape(sin.(1:20), 5, 4)); data[[2, 3, 7, 9, 13, 19]] .= missing; data
+5×4 Matrix{Union{Missing, Float64}}:
+  0.841471  -0.279415  -0.99999   -0.287903
+   missing    missing  -0.536573  -0.961397
+   missing   0.989358    missing  -0.750987
+ -0.756802    missing   0.990607    missing
+ -0.958924  -0.544021   0.650288   0.912945
+
+julia&gt; result = Impute.svd(data; dims=:cols)
+5×4 Matrix{Union{Missing, Float64}}:
+  0.841471  -0.279415  -0.99999   -0.287903
+  0.220258   0.555829  -0.536573  -0.961397
+ -0.372745   0.989358   0.533193  -0.750987
+ -0.756802   0.253309   0.990607   0.32315
+ -0.958924  -0.544021   0.650288   0.912945</code></pre></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/functional.jl#LL622-L659">source</a></section></article><article class="docstring"><header><a class="docstring-binding" id="Impute.SVD" href="#Impute.SVD"><code>Impute.SVD</code></a> — <span class="docstring-category">Type</span></header><section><div><pre><code class="language-julia">SVD(; kwargs...)</code></pre><p>Imputes the missing values in a matrix using an expectation maximization (EM) algorithm over low-rank SVD approximations.</p><p><strong>Keyword Arguments</strong></p><ul><li><code>init::Imputor</code>: initialization method for missing values (default: Substitute())</li><li><code>rank::Union{Int, Nothing}</code>: rank of the SVD approximation (default: nothing meaning start and 0 and increase)</li><li><code>tol::Float64</code>: convergence tolerance (default: 1e-10)</li><li><code>maxiter::Int</code>: Maximum number of iterations if convergence is not achieved (default: 100)</li><li><code>limits::Unoin{Tuple{Float64, Float64}, Nothing}</code>: Bound the possible approximation values (default: nothing)</li><li><code>verbose::Bool</code>: Whether to display convergence progress (default: true)</li></ul><p><strong>References</strong></p><ul><li>Troyanskaya, Olga, et al. &quot;Missing value estimation methods for DNA microarrays.&quot; Bioinformatics 17.6 (2001): 520-525.</li></ul></div><a class="docs-sourcelink" target="_blank" href="https://github.com/invenia/Impute.jl/blob/418497a58640bbcfd4c5d57897fca23d291b9a98/src/imputors/svd.jl#LL1-L17">source</a></section></article></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../filtering/">« Filtering</a><a class="docs-footer-nextpage" href="../chaining/">Chaining »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 9 September 2021 00:43">Thursday 9 September 2021</span>. Using Julia version 1.6.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
