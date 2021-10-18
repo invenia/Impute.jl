@@ -37,7 +37,7 @@ So many cities are missing a lot of historical data.
 A common operation is to remove locations with too many missing historical observations.
 In our case, we also want to penalize observations closer to the present.
 
-Lets start be define a set of exponential weights for our observations:
+Let's start to define a set of exponential weights for our observations:
 ```@example st-example
 wv = eweights(1:length(data.time), 0.001)
 plot(wv);
