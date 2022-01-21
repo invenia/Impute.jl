@@ -2,6 +2,7 @@
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
+Manifest.toml
 # Documenter generated files
 /docs/build/
 /docs/site/

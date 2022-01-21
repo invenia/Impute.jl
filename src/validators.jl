@@ -37,7 +37,6 @@ julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
 
 julia> @test_throws ThresholdError validate(M, Threshold())
 Test Passed
-  Expression: validate(M, Threshold())
       Thrown: ThresholdError
 ```
 """
@@ -89,7 +88,6 @@ julia> df = DataFrame(:a => [1.0, 2.0, missing, missing, 5.0], :b => [1.1, 2.2, 
 
 julia> @test_throws ThresholdError validate(df, Threshold())
 Test Passed
-  Expression: validate(df, Threshold())
       Thrown: ThresholdError
 ```
 """
