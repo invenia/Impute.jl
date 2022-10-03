@@ -66,8 +66,8 @@
             knn_imputed = impute(copy(X), Impute.KNN(; k=4); dims=:cols)
             mean_imputed = impute(copy(X), Substitute(); dims=:cols)
 
-            knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(data', knn_imputed)) / i
-            mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(data', mean_imputed)) / i
+            knn_nrmsd = ((i - 1) * knn_nrmsd + nrmsd(knn_imputed, data')) / i
+            mean_nrmsd = ((i - 1) * mean_nrmsd + nrmsd(mean_imputed, data')) / i
         end
 
         # @show knn_nrmsd mean_nrmsd
