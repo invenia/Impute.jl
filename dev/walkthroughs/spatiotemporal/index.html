@@ -20,21 +20,21 @@ data = rename(data, :dt =&gt; :time, :City =&gt; :loc)</code></pre><pre class="d
 ↓   time ∈ 3239-element Vector{Dates.Date}
 →   loc ∈ 100-element Vector{InlineStrings.String31}
 And data, 3239×100 Matrix{Union{Missing, Float64}}:
-                        (&quot;Abidjan&quot;)  (&quot;Addis Abeba&quot;)  …  (&quot;Wuhan&quot;)  (&quot;Xian&quot;)
-   Date(&quot;1743-11-01&quot;)     missing      missing             missing    missing
-   Date(&quot;1743-12-01&quot;)     missing      missing             missing    missing
-   Date(&quot;1744-01-01&quot;)     missing      missing             missing    missing
-   Date(&quot;1744-02-01&quot;)     missing      missing             missing    missing
-   Date(&quot;1744-03-01&quot;)     missing      missing        …    missing    missing
-   Date(&quot;1744-04-01&quot;)     missing      missing             missing    missing
-   ⋮                                                  ⋱              ⋮
-   Date(&quot;2013-03-01&quot;)   29.129       21.18               13.527     10.11
-   Date(&quot;2013-04-01&quot;)   28.626       20.57               17.136     12.563
-   Date(&quot;2013-05-01&quot;)   27.652       19.774           …  23.173     18.979
-   Date(&quot;2013-06-01&quot;)   26.157       18.736              26.817     23.522
-   Date(&quot;2013-07-01&quot;)   24.951       18.148              31.171     25.251
-   Date(&quot;2013-08-01&quot;)   24.541       19.005              31.05      24.528
-   Date(&quot;2013-09-01&quot;)     missing      missing             missing    missing</pre><p>Okay, so let&#39;s take a look at how much temperature data is missing.</p><pre><code class="language-julia">heatmap(ismissing.(data); color=:greys);</code></pre><pre class="documenter-example-output">/home/runner/.julia/packages/GR/cRdXQ/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
+                         String31(&quot;Abidjan&quot;)   …   String31(&quot;Xian&quot;) 
+   Date(&quot;1743-11-01&quot;)     missing                   missing
+   Date(&quot;1743-12-01&quot;)     missing                   missing
+   Date(&quot;1744-01-01&quot;)     missing                   missing
+   Date(&quot;1744-02-01&quot;)     missing                   missing
+   Date(&quot;1744-03-01&quot;)     missing              …    missing
+   Date(&quot;1744-04-01&quot;)     missing                   missing
+   ⋮                                           ⋱   ⋮
+   Date(&quot;2013-03-01&quot;)   29.129                    10.11
+   Date(&quot;2013-04-01&quot;)   28.626                    12.563
+   Date(&quot;2013-05-01&quot;)   27.652                 …  18.979
+   Date(&quot;2013-06-01&quot;)   26.157                    23.522
+   Date(&quot;2013-07-01&quot;)   24.951                    25.251
+   Date(&quot;2013-08-01&quot;)   24.541                    24.528
+   Date(&quot;2013-09-01&quot;)     missing                   missing</pre><p>Okay, so let&#39;s take a look at how much temperature data is missing.</p><pre><code class="language-julia">heatmap(ismissing.(data); color=:greys);</code></pre><pre class="documenter-example-output">/home/runner/.julia/packages/GR/cRdXQ/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
 connect: Connection refused
 GKS: can&#39;t connect to GKS socket application
 
@@ -52,42 +52,42 @@ end</code></pre><pre class="documenter-example-output">2-dimensional NamedDimsAr
 ↓   time ∈ 3239-element Vector{Dates.Date}
 →   loc ∈ 76-element Vector{InlineStrings.String31}
 And data, 3239×76 Matrix{Union{Missing, Float64}}:
-                        (&quot;Ahmadabad&quot;)  …  (&quot;Toronto&quot;)  (&quot;Wuhan&quot;)  (&quot;Xian&quot;)
-   Date(&quot;1743-11-01&quot;)     missing         -0.106         missing    missing
-   Date(&quot;1743-12-01&quot;)     missing           missing      missing    missing
-   Date(&quot;1744-01-01&quot;)     missing           missing      missing    missing
-   Date(&quot;1744-02-01&quot;)     missing           missing      missing    missing
-   Date(&quot;1744-03-01&quot;)     missing      …    missing      missing    missing
-   Date(&quot;1744-04-01&quot;)     missing          5.892         missing    missing
-   ⋮                                   ⋱                ⋮         
-   Date(&quot;2013-03-01&quot;)   27.196            -1.862       13.527     10.11
-   Date(&quot;2013-04-01&quot;)   30.762             4.657       17.136     12.563
-   Date(&quot;2013-05-01&quot;)   33.856         …  13.818       23.173     18.979
-   Date(&quot;2013-06-01&quot;)   31.099            17.367       26.817     23.522
-   Date(&quot;2013-07-01&quot;)   28.073            20.46        31.171     25.251
-   Date(&quot;2013-08-01&quot;)   27.512            18.52        31.05      24.528
-   Date(&quot;2013-09-01&quot;)     missing         14.599         missing    missing</pre><p>Okay, so we removed almost 25% of the locations that didn&#39;t meet our missing data requirement. However, most of our observations from the 1700&#39;s are still mostly missing. Let&#39;s remove those rows that have more 50% of the locations missing.</p><pre><code class="language-julia">data = Impute.filter(data; dims=:rows) do v
+                         String31(&quot;Ahmadabad&quot;)   …   String31(&quot;Xian&quot;) 
+   Date(&quot;1743-11-01&quot;)     missing                     missing
+   Date(&quot;1743-12-01&quot;)     missing                     missing
+   Date(&quot;1744-01-01&quot;)     missing                     missing
+   Date(&quot;1744-02-01&quot;)     missing                     missing
+   Date(&quot;1744-03-01&quot;)     missing                …    missing
+   Date(&quot;1744-04-01&quot;)     missing                     missing
+   ⋮                                             ⋱  
+   Date(&quot;2013-03-01&quot;)   27.196                      10.11
+   Date(&quot;2013-04-01&quot;)   30.762                      12.563
+   Date(&quot;2013-05-01&quot;)   33.856                   …  18.979
+   Date(&quot;2013-06-01&quot;)   31.099                      23.522
+   Date(&quot;2013-07-01&quot;)   28.073                      25.251
+   Date(&quot;2013-08-01&quot;)   27.512                      24.528
+   Date(&quot;2013-09-01&quot;)     missing                     missing</pre><p>Okay, so we removed almost 25% of the locations that didn&#39;t meet our missing data requirement. However, most of our observations from the 1700&#39;s are still mostly missing. Let&#39;s remove those rows that have more 50% of the locations missing.</p><pre><code class="language-julia">data = Impute.filter(data; dims=:rows) do v
     mratio = count(ismissing, v) / length(v)
     return mratio &lt; 0.5
 end</code></pre><pre class="documenter-example-output">2-dimensional NamedDimsArray(KeyedArray(...)) with keys:
 ↓   time ∈ 2350-element Vector{Dates.Date}
 →   loc ∈ 76-element Vector{InlineStrings.String31}
 And data, 2350×76 Matrix{Union{Missing, Float64}}:
-                        (&quot;Ahmadabad&quot;)  …  (&quot;Toronto&quot;)  (&quot;Wuhan&quot;)  (&quot;Xian&quot;)
-   Date(&quot;1816-03-01&quot;)   24.87             -5.819         missing    missing
-   Date(&quot;1816-04-01&quot;)   29.427             3.296         missing    missing
-   Date(&quot;1816-05-01&quot;)   32.624            10.849         missing    missing
-   Date(&quot;1816-06-01&quot;)   30.632            14.691         missing    missing
-   Date(&quot;1816-07-01&quot;)   26.727         …  16.548         missing    missing
-   Date(&quot;1816-08-01&quot;)   26.131            17.241         missing    missing
-   ⋮                                   ⋱                ⋮         
-   Date(&quot;2013-02-01&quot;)   22.726            -6.743        7.2        2.362
-   Date(&quot;2013-03-01&quot;)   27.196            -1.862       13.527     10.11
-   Date(&quot;2013-04-01&quot;)   30.762         …   4.657       17.136     12.563
-   Date(&quot;2013-05-01&quot;)   33.856            13.818       23.173     18.979
-   Date(&quot;2013-06-01&quot;)   31.099            17.367       26.817     23.522
-   Date(&quot;2013-07-01&quot;)   28.073            20.46        31.171     25.251
-   Date(&quot;2013-08-01&quot;)   27.512            18.52        31.05      24.528</pre><p>Now let&#39;s take a look at what data remains.</p><pre><code class="language-julia">heatmap(ismissing.(data); color=:greys);</code></pre><pre class="documenter-example-output">/home/runner/.julia/packages/GR/cRdXQ/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
+                         String31(&quot;Ahmadabad&quot;)   …   String31(&quot;Xian&quot;) 
+   Date(&quot;1816-03-01&quot;)   24.87                         missing
+   Date(&quot;1816-04-01&quot;)   29.427                        missing
+   Date(&quot;1816-05-01&quot;)   32.624                        missing
+   Date(&quot;1816-06-01&quot;)   30.632                        missing
+   Date(&quot;1816-07-01&quot;)   26.727                   …    missing
+   Date(&quot;1816-08-01&quot;)   26.131                        missing
+   ⋮                                             ⋱  
+   Date(&quot;2013-02-01&quot;)   22.726                       2.362
+   Date(&quot;2013-03-01&quot;)   27.196                      10.11
+   Date(&quot;2013-04-01&quot;)   30.762                   …  12.563
+   Date(&quot;2013-05-01&quot;)   33.856                      18.979
+   Date(&quot;2013-06-01&quot;)   31.099                      23.522
+   Date(&quot;2013-07-01&quot;)   28.073                      25.251
+   Date(&quot;2013-08-01&quot;)   27.512                      24.528</pre><p>Now let&#39;s take a look at what data remains.</p><pre><code class="language-julia">heatmap(ismissing.(data); color=:greys);</code></pre><pre class="documenter-example-output">/home/runner/.julia/packages/GR/cRdXQ/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
 connect: Connection refused
 GKS: can&#39;t connect to GKS socket application
 
@@ -103,4 +103,4 @@ connect: Connection refused
 GKS: can&#39;t connect to GKS socket application
 
 GKS: Open failed in routine OPEN_WS
-GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</pre><p><img src="../st-knn-plot.svg" alt/></p><p>This method appears to have removed the artifacts found with the basic NOCB method alone. Now we have a complete dataset ready for downstream processing :)</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../svd/">SVD »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Wednesday 19 October 2022 20:36">Wednesday 19 October 2022</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</pre><p><img src="../st-knn-plot.svg" alt/></p><p>This method appears to have removed the artifacts found with the basic NOCB method alone. Now we have a complete dataset ready for downstream processing :)</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../svd/">SVD »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Thursday 3 November 2022 17:59">Thursday 3 November 2022</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
