@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Spatiotemporal · Impute.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script><link href="../../assets/invenia.css" rel="stylesheet" type="text/css"/></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">Impute.jl</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><span class="tocitem">Walkthroughs</span><ul><li class="is-active"><a class="tocitem" href>Spatiotemporal</a></li><li><a class="tocitem" href="../svd/">SVD</a></li></ul></li><li><span class="tocitem">API</span><ul><li><a class="tocitem" href="../../api/declaremissings/">Declare Missings</a></li><li><a class="tocitem" href="../../api/validation/">Validation</a></li><li><a class="tocitem" href="../../api/filtering/">Filtering</a></li><li><a class="tocitem" href="../../api/imputation/">Imputation</a></li><li><a class="tocitem" href="../../api/chaining/">Chaining</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Walkthroughs</a></li><li class="is-active"><a href>Spatiotemporal</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Spatiotemporal</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/invenia/Impute.jl/blob/master/docs/src/walkthroughs/spatiotemporal.md#L" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Spatiotemporal-Panel-Datasets"><a class="docs-heading-anchor" href="#Spatiotemporal-Panel-Datasets">Spatiotemporal Panel Datasets</a><a id="Spatiotemporal-Panel-Datasets-1"></a><a class="docs-heading-anchor-permalink" href="#Spatiotemporal-Panel-Datasets" title="Permalink"></a></h1><p>We often also need to missing data in spatiotemporal data. For this example, we&#39;ll use daily temperature values from major cities around the world.</p><p>TODO: Give a different workflow/example using a DataFrame.</p><pre><code class="language-julia">using AxisKeys, Impute, NamedDims, Plots, Statistics, StatsBase
+
+# So NamedDimsArray is the outer wrapper
+AxisKeys.nameouter() = true
+
+# Construct a KeyedArray of our dataset as we want to track gaps (or missing rows)
+# in the source CSV data.
+data = wrapdims(
+    Impute.dataset(&quot;test/table/temperature&quot;),
+    :AverageTemperature,
+    :dt,
+    :City;
+    default=missing,
+    sort=true,
+)
+
+# Rename our dims
+data = rename(data, :dt =&gt; :time, :City =&gt; :loc)</code></pre><pre class="documenter-example-output">2-dimensional NamedDimsArray(KeyedArray(...)) with keys:
+↓   time ∈ 3239-element Vector{Dates.Date}
+→   loc ∈ 100-element Vector{InlineStrings.String31}
+And data, 3239×100 Matrix{Union{Missing, Float64}}:
+                         String31(&quot;Abidjan&quot;)   …   String31(&quot;Xian&quot;) 
+   Date(&quot;1743-11-01&quot;)     missing                   missing
+   Date(&quot;1743-12-01&quot;)     missing                   missing
+   Date(&quot;1744-01-01&quot;)     missing                   missing
+   Date(&quot;1744-02-01&quot;)     missing                   missing
+   Date(&quot;1744-03-01&quot;)     missing              …    missing
+   Date(&quot;1744-04-01&quot;)     missing                   missing
+   ⋮                                           ⋱   ⋮
+   Date(&quot;2013-03-01&quot;)   29.129                    10.11
+   Date(&quot;2013-04-01&quot;)   28.626                    12.563
+   Date(&quot;2013-05-01&quot;)   27.652                 …  18.979
+   Date(&quot;2013-06-01&quot;)   26.157                    23.522
+   Date(&quot;2013-07-01&quot;)   24.951                    25.251
+   Date(&quot;2013-08-01&quot;)   24.541                    24.528
+   Date(&quot;2013-09-01&quot;)     missing                   missing</pre><p>Okay, so let&#39;s take a look at how much temperature data is missing.</p><pre><code class="language-julia">heatmap(ismissing.(data); color=:greys);</code></pre><pre class="documenter-example-output">/home/runner/.julia/packages/GR/cRdXQ/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
+connect: Connection refused
+GKS: can&#39;t connect to GKS socket application
+
+GKS: Open failed in routine OPEN_WS
+GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</pre><p><img src="../st-missing-plot.svg" alt/></p><p>So many cities are missing a lot of historical data. A common operation is to remove locations with too many missing historical observations. In our case, we also want to penalize observations closer to the present.</p><p>Let&#39;s start to define a set of exponential weights for our observations:</p><pre><code class="language-julia">wv = eweights(1:length(data.time), 0.001)
+plot(wv);</code></pre><pre class="documenter-example-output">/home/runner/.julia/packages/GR/cRdXQ/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
+connect: Connection refused
+GKS: can&#39;t connect to GKS socket application
+
+GKS: Open failed in routine OPEN_WS
+GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</pre><p><img src="../st-wv-plot.svg" alt/></p><p>Now we want to filter out locations (columns) according to those weights. For now, we&#39;ll say that a location should be removed if the weighted ratio exceeds <code>0.1</code>.</p><pre><code class="language-julia">data = Impute.filter(data; dims=:cols) do v
+    mratio = sum(wv[ismissing.(v)]) / sum(wv)
+    return mratio &lt; 0.1
+end</code></pre><pre class="documenter-example-output">2-dimensional NamedDimsArray(KeyedArray(...)) with keys:
+↓   time ∈ 3239-element Vector{Dates.Date}
+→   loc ∈ 76-element Vector{InlineStrings.String31}
+And data, 3239×76 Matrix{Union{Missing, Float64}}:
+                         String31(&quot;Ahmadabad&quot;)   …   String31(&quot;Xian&quot;) 
+   Date(&quot;1743-11-01&quot;)     missing                     missing
+   Date(&quot;1743-12-01&quot;)     missing                     missing
+   Date(&quot;1744-01-01&quot;)     missing                     missing
+   Date(&quot;1744-02-01&quot;)     missing                     missing
+   Date(&quot;1744-03-01&quot;)     missing                …    missing
+   Date(&quot;1744-04-01&quot;)     missing                     missing
+   ⋮                                             ⋱  
+   Date(&quot;2013-03-01&quot;)   27.196                      10.11
+   Date(&quot;2013-04-01&quot;)   30.762                      12.563
+   Date(&quot;2013-05-01&quot;)   33.856                   …  18.979
+   Date(&quot;2013-06-01&quot;)   31.099                      23.522
+   Date(&quot;2013-07-01&quot;)   28.073                      25.251
+   Date(&quot;2013-08-01&quot;)   27.512                      24.528
+   Date(&quot;2013-09-01&quot;)     missing                     missing</pre><p>Okay, so we removed almost 25% of the locations that didn&#39;t meet our missing data requirement. However, most of our observations from the 1700&#39;s are still mostly missing. Let&#39;s remove those rows that have more 50% of the locations missing.</p><pre><code class="language-julia">data = Impute.filter(data; dims=:rows) do v
+    mratio = count(ismissing, v) / length(v)
+    return mratio &lt; 0.5
+end</code></pre><pre class="documenter-example-output">2-dimensional NamedDimsArray(KeyedArray(...)) with keys:
+↓   time ∈ 2350-element Vector{Dates.Date}
+→   loc ∈ 76-element Vector{InlineStrings.String31}
+And data, 2350×76 Matrix{Union{Missing, Float64}}:
+                         String31(&quot;Ahmadabad&quot;)   …   String31(&quot;Xian&quot;) 
+   Date(&quot;1816-03-01&quot;)   24.87                         missing
+   Date(&quot;1816-04-01&quot;)   29.427                        missing
+   Date(&quot;1816-05-01&quot;)   32.624                        missing
+   Date(&quot;1816-06-01&quot;)   30.632                        missing
+   Date(&quot;1816-07-01&quot;)   26.727                   …    missing
+   Date(&quot;1816-08-01&quot;)   26.131                        missing
+   ⋮                                             ⋱  
+   Date(&quot;2013-02-01&quot;)   22.726                       2.362
+   Date(&quot;2013-03-01&quot;)   27.196                      10.11
+   Date(&quot;2013-04-01&quot;)   30.762                   …  12.563
+   Date(&quot;2013-05-01&quot;)   33.856                      18.979
+   Date(&quot;2013-06-01&quot;)   31.099                      23.522
+   Date(&quot;2013-07-01&quot;)   28.073                      25.251
+   Date(&quot;2013-08-01&quot;)   27.512                      24.528</pre><p>Now let&#39;s take a look at what data remains.</p><pre><code class="language-julia">heatmap(ismissing.(data); color=:greys);</code></pre><pre class="documenter-example-output">/home/runner/.julia/packages/GR/cRdXQ/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
+connect: Connection refused
+GKS: can&#39;t connect to GKS socket application
+
+GKS: Open failed in routine OPEN_WS
+GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</pre><p><img src="../st-missing-reduced-plot.svg" alt/></p><p>Alright, we can work with the remaining missing values now. Now we could try simply imputing the values columnwise for each city using something like <code>Impute.nocb</code></p><pre><code class="language-julia">heatmap(Impute.nocb(data; dims=:cols));</code></pre><pre class="documenter-example-output">/home/runner/.julia/packages/GR/cRdXQ/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
+connect: Connection refused
+GKS: can&#39;t connect to GKS socket application
+
+GKS: Open failed in routine OPEN_WS
+GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</pre><p><img src="../st-nocb-plot.svg" alt/></p><p>But, this looks rather crude and creates clear artifacts in the dataset. Since we suspect that observations in similar locations would have had similar recordings we could use <code>Impute.svd</code> or <code>Impute.knn</code> to find similarities across multiple locations.</p><pre><code class="language-julia">data = Impute.knn(data; dims=:cols, k=4);
+heatmap(data);</code></pre><pre class="documenter-example-output">/home/runner/.julia/packages/GR/cRdXQ/src/../deps/gr/bin/gksqt: error while loading shared libraries: libQt5Widgets.so.5: cannot open shared object file: No such file or directory
+connect: Connection refused
+GKS: can&#39;t connect to GKS socket application
+
+GKS: Open failed in routine OPEN_WS
+GKS: GKS not in proper state. GKS must be either in the state WSOP or WSAC in routine ACTIVATE_WS</pre><p><img src="../st-knn-plot.svg" alt/></p><p>This method appears to have removed the artifacts found with the basic NOCB method alone. Now we have a complete dataset ready for downstream processing :)</p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../svd/">SVD »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 19 December 2022 20:00">Monday 19 December 2022</span>. Using Julia version 1.6.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
