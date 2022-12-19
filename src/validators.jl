@@ -103,4 +103,6 @@ function validate(table, v::Validator; cols=nothing, kwargs...)
     return table
 end
 
+# _validate(data::AbstractArray, v::Validator; kwargs...) = disallowmissing(data)
+
 include("validators/threshold.jl")
