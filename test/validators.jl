@@ -45,7 +45,7 @@
 
         # Test type edge cases
         @test_throws ThresholdError validate(fill(missing, 10), t)
-        @test_throws MethodError validate(ones(10), t)
+        @test validate(ones(10), t) == ones(10)
     end
 
     @testset "Weighted" begin
@@ -72,7 +72,7 @@
         @test_throws DimensionMismatch validate(m[1:3, :], t; dims=:cols)
 
         @test_throws ThresholdError validate(fill(missing, 5), t)
-        @test_throws MethodError validate(ones(5), t)
+        @test validate(ones(5), t) == ones(5)
     end
 
     @testset "functional" begin
