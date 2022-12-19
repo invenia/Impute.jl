@@ -9,7 +9,7 @@ over low-rank SVD approximations.
 * `rank::Union{Int, Nothing}`: rank of the SVD approximation (default: nothing meaning start and 0 and increase)
 * `tol::Float64`: convergence tolerance (default: 1e-10)
 * `maxiter::Int`: Maximum number of iterations if convergence is not achieved (default: 100)
-* `limits::Unoin{Tuple{Float64, Float64}, Nothing}`: Bound the possible approximation values (default: nothing)
+* `limits::Union{Tuple{Float64, Float64}, Nothing}`: Bound the possible approximation values (default: nothing)
 * `verbose::Bool`: Whether to display convergence progress (default: true)
 
 # References
