@@ -46,6 +46,7 @@
         # Test type edge cases
         @test_throws ThresholdError validate(fill(missing, 10), t)
         @test validate(ones(10), t) == ones(10)
+        @test validate(ones(10), t) isa Vector{Float64}
     end
 
     @testset "Weighted" begin
@@ -73,6 +74,7 @@
 
         @test_throws ThresholdError validate(fill(missing, 5), t)
         @test validate(ones(5), t) == ones(5)
+        @test validate(ones(5), t) isa Vector{Float64}
     end
 
     @testset "functional" begin
