@@ -3,9 +3,10 @@ function register_datadep()
         DataDep(
             "impute-v1.0.0",
             "Datasets for testing and demonstrating Impute.jl",
-            "https://invenia-public-datasets.s3.amazonaws.com/Impute/v1.0.0/datasets.tar.gz",
-            "938b3705752eb73141476a2abc7a36cfdaba9ec45f99f0796f44e0870e006e1c",
-            post_fetch_method=unpack,
+            "https://www.dropbox.com/scl/fi/bgtfqea9qqoug42gcnnsl/datasets.tar.gz?rlkey=11xsae0wi32m8gcfxhbqgo030&dl=0",
+            "cf1fff2e7f3ce28eb4264060bc7b9ee561bccfce2c5915c4cf758ec48477ddfe",
+            fetch_method=DataDeps.fetch_base,
+            post_fetch_method=DataDeps.unpack,
         )
     )
 end
