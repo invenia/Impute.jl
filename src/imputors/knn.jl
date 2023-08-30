@@ -73,13 +73,16 @@ function impute!(data::AbstractMatrix{Union{T, Missing}}, imp::KNN; dims=nothing
 
             # Weight valid neighbors based on inverse distance
             neighbor_dists = dists[.!neighbor_mask]
-            wv = weights(1.0 ./ neighbor_dists)
+
+            # Delay creating Weights as they don't support Inf or NaN anymore.
+            wv = 1.0 ./ neighbor_dists
+            Σ = sum(wv)
 
             # Only fill with the weighted mean of neighbors if the sum of the weights are
             # non-zero and finite.
-            if isfinite(sum(wv)) && !iszero(sum(wv))
+            if isfinite(Σ) && !iszero(Σ)
                 neighbor_vals = X[i, idxs[.!neighbor_mask]]
-                X[i, j] = mean(neighbor_vals, wv)
+                X[i, j] = mean(neighbor_vals, Weights(wv, Σ))
             end
         end
     end
