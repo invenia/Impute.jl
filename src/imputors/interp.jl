@@ -72,3 +72,9 @@ function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) w
 
     return data
 end
+
+function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) where {T<:Union{Signed, Unsigned}}
+    dataf = _impute!(float(data), imp)
+    data .= round.(Union{T, Missing}, dataf)
+    return data
+end
