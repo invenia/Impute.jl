@@ -90,10 +90,35 @@
         @test ismissing(result[1])
         @test ismissing(result[20])
 
-        # Test inexact error
+        # Test with UInt
+        c = [0x1, missing, 0x3, 0x4]
+        @test Impute.interp(c) == [0x1, 0x2, 0x3, 0x4]
+
+        # Test reverse case where the increment is negative
+        @test Impute.interp(reverse(c)) == [0x4, 0x3, 0x2, 0x1]
+
+        # Test inexact error (no rounding mode provided)
         # https://github.com/invenia/Impute.jl/issues/71
         c = [1, missing, 2, 3]
         @test_throws InexactError Impute.interp(c)
+
+        # Test with UInt
+        c = [0x1, missing, 0x2, 0x3]
+        @test_throws InexactError Impute.interp(c)
+
+        # Test reverse case where the increment is negative
+        @test_throws InexactError Impute.interp(reverse(c))
+
+        # Test inexact cases with a rounding mode
+        c = [1, missing, 2, 3]
+        Impute.interp(c; r=RoundToZero) == [1, 1, 2, 3]
+
+        # Test with UInt
+        c = [0x1, missing, 0x2, 0x3]
+        Impute.interp(c; r=RoundNearest) == [0x1, 0x2, 0x2, 0x3]
+
+        # Test reverse case where the increment is negative
+        Impute.interp(reverse(c); r=RoundUp) == [0x3, 0x2, 0x1, 0x1]
     end
 
     # TODO Test error cases on non-numeric types

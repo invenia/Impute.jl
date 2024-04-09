@@ -1,5 +1,5 @@
 """
-    Interpolate(; limit=nothing)
+    Interpolate(; limit=nothing, r=nothing)
 
 Performs linear interpolation between the nearest values in an vector.
 The current implementation is univariate, so each variable in a table or matrix will
@@ -11,6 +11,8 @@ that all missing values will be imputed.
 
 # Keyword Arguments
 * `limit::Union{UInt, Nothing}`: Optionally limit the gap sizes that can be interpolated.
+* `r::Union{RoundingMode, Nothing}`: Optionally specify a rounding mode.
+    Avoids `InexactError`s when interpolating over integers.
 
 # Example
 ```jldoctest
@@ -34,9 +36,10 @@ julia> impute(M, Interpolate(; limit=2); dims=:rows)
 """
 struct Interpolate <: Imputor
     limit::Union{UInt, Nothing}
+    r::Union{RoundingMode, Nothing}
 end
 
-Interpolate(; limit=nothing) = Interpolate(limit)
+Interpolate(; limit=nothing, r=nothing) = Interpolate(limit, r)
 
 function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) where T
     @assert !all(ismissing, data)
@@ -51,8 +54,7 @@ function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) w
                 gap_sz = (next_idx - prev_idx) - 1
 
                 if imp.limit === nothing || gap_sz <= imp.limit
-                    diff = data[next_idx] - data[prev_idx]
-                    incr = diff / T(gap_sz + 1)
+                    incr = _calculate_increment(data[prev_idx], data[next_idx], gap_sz + 1, imp.r)
                     val = data[prev_idx] + incr
 
                     # Iteratively fill in the values
@@ -73,8 +75,10 @@ function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) w
     return data
 end
 
-function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) where {T<:Union{Signed, Unsigned}}
-    dataf = _impute!(float(data), imp)
-    data .= round.(Union{T, Missing}, dataf)
-    return data
-end
+# Default cases where no rounding behaviour is specified
+_calculate_increment(a, b, n, ::Nothing) = (b - a) / n
+_calculate_increment(a::Unsigned, b::Unsigned, n, r::Nothing) = _calculate_increment(Int(a), Int(b), n, r)
+
+# Pass a rounding mode to `div`
+_calculate_increment(a, b, n, r) = div(b - a, n, r)
+_calculate_increment(a::Unsigned, b::Unsigned, n, r) = _calculate_increment(Int(a), Int(b), n, r)
