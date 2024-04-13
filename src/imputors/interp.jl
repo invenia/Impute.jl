@@ -54,12 +54,18 @@ function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) w
                 gap_sz = (next_idx - prev_idx) - 1
 
                 if imp.limit === nothing || gap_sz <= imp.limit
-                    incr = _calculate_increment(data[prev_idx], data[next_idx], gap_sz + 1, imp.r)
-                    val = data[prev_idx] + incr
+                    prev = data[prev_idx]
+                    next = data[next_idx]
+                    incr = _calculate_increment(prev, next, gap_sz + 1, imp.r)
+                    val = prev + incr
 
                     # Iteratively fill in the values
+                    # Determine hi and lo values for clamping in the loop
+                    # According to @benchmark calling extrema with a tuple has the same
+                    # performance as calling min/max individually.
+                    lo, hi = extrema((prev, next))
                     for j in i:(next_idx - 1)
-                        data[j] = val
+                        data[j] = clamp(val, lo, hi)
                         val += incr
                     end
                 end

@@ -121,10 +121,10 @@
         @test Impute.interp(reverse(c); r=RoundUp) == [0x3, 0x2, 0x2, 0x1]
 
         # Test rounding doesn't cause values to exceed endpoint values
-        @test Impute.interp([1, missing, missing, 2]; r=RoundUp) == [1, 2, 3, 2]
+        @test Impute.interp([1, missing, missing, 2]; r=RoundUp) == [1, 2, 2, 2]
         @test Impute.interp([2, missing, missing, 1]; r=RoundUp) == [2, 2, 2, 1]
-        @test Impute.interp([1, missing, missing, 0]; r=RoundDown) == [1, 0, -1, 0]
-        @test_throws InexactError Impute.interp([0x1, missing, missing, 0x0]; r=RoundDown)
+        @test Impute.interp([1, missing, missing, 0]; r=RoundDown) == [1, 0, 0, 0]
+        @test Impute.interp([0x1, missing, missing, 0x0]; r=RoundDown) == [0x1, 0x0, 0x0, 0x0]
     end
 
     # TODO Test error cases on non-numeric types
