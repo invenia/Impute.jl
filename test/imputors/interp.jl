@@ -111,14 +111,20 @@
 
         # Test inexact cases with a rounding mode
         c = [1, missing, 2, 3]
-        Impute.interp(c; r=RoundToZero) == [1, 1, 2, 3]
+        @test Impute.interp(c; r=RoundToZero) == [1, 1, 2, 3]
 
         # Test with UInt
         c = [0x1, missing, 0x2, 0x3]
-        Impute.interp(c; r=RoundNearest) == [0x1, 0x2, 0x2, 0x3]
+        @test Impute.interp(c; r=RoundNearest) == [0x1, 0x1, 0x2, 0x3]
 
         # Test reverse case where the increment is negative
-        Impute.interp(reverse(c); r=RoundUp) == [0x3, 0x2, 0x1, 0x1]
+        @test Impute.interp(reverse(c); r=RoundUp) == [0x3, 0x2, 0x2, 0x1]
+
+        # Test rounding doesn't cause values to exceed endpoint values
+        @test Impute.interp([1, missing, missing, 2]; r=RoundUp) == [1, 2, 3, 2]
+        @test Impute.interp([2, missing, missing, 1]; r=RoundUp) == [2, 2, 2, 1]
+        @test Impute.interp([1, missing, missing, 0]; r=RoundDown) == [1, 0, -1, 0]
+        @test_throws InexactError Impute.interp([0x1, missing, missing, 0x0]; r=RoundDown)
     end
 
     # TODO Test error cases on non-numeric types
