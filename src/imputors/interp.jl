@@ -54,16 +54,9 @@ function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) w
                 gap_sz = (next_idx - prev_idx) - 1
 
                 if imp.limit === nothing || gap_sz <= imp.limit
-                    prev = data[prev_idx]
-                    next = data[next_idx]
-                    incr = _calculate_increment(prev, next, gap_sz + 1)
-                    val = prev + incr
-
-                    # Iteratively fill in the values
-                    for j in i:(next_idx - 1)
-                        _setindex!(data, val, j, imp.r)
-                        val += incr
-                    end
+                    inc = _calculate_increment(data[prev_idx], data[next_idx], gap_sz+1)
+                    gen = _gen_interp(data[prev_idx], inc, gap_sz+1, imp.r)
+                    _gen_set!(data, prev_idx, gen)
                 end
 
                 i = next_idx
@@ -77,14 +70,16 @@ function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) w
     return data
 end
 
-# Calculating an increment value
-_calculate_increment(a, b, n) = (b - a) / n
-# Special case for unsigned to avoid integer overflow
-_calculate_increment(a::T, b::T, n) where {T<:Unsigned} = _calculate_increment(Int(a), Int(b), n)
-
-# For handling rounding on insertions
-_setindex!(data, val, i, r) = setindex!(data, val, i)
-# Special case for rounding non-integer values on insertion into integer arrays.
-function _setindex!(data::AbstractVector{<:Union{T, Missing}}, val::S, i, r::RoundingMode) where {T <: Integer, S}
-    T === S ? setindex!(data, val, i) : setindex!(data, round(T, val, r), i)
+# sets vector slice via a generator (faster)
+function _gen_set!(v::AbstractVector, after::Integer, gen)
+    for (i, val) in enumerate(gen)
+       v[after+i] = val
+    end
 end
+
+# generator of interpolated values
+_gen_interp(a, inc, n, r) = (a + inc*i for i=1:n)
+_gen_interp(a::T, inc, n, r::RoundingMode) where {T<:Integer} = (round(T, a + inc*i, r) for i=1:n)
+
+_calculate_increment(a, b, n) = (b - a) / n
+_calculate_increment(a::T, b::T, n) where {T<:Unsigned} = _calculate_increment(Int(a), Int(b), n)
