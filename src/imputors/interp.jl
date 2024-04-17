@@ -54,20 +54,8 @@ function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) w
                 gap_sz = (next_idx - prev_idx) - 1
 
                 if imp.limit === nothing || gap_sz <= imp.limit
-                    prev = data[prev_idx]
-                    next = data[next_idx]
-                    incr = _calculate_increment(prev, next, gap_sz + 1, imp.r)
-                    val = prev + incr
-
-                    # Iteratively fill in the values
-                    # Determine hi and lo values for clamping in the loop
-                    # According to @benchmark calling extrema with a tuple has the same
-                    # performance as calling min/max individually.
-                    lo, hi = extrema((prev, next))
-                    for j in i:(next_idx - 1)
-                        data[j] = clamp(val, lo, hi)
-                        val += incr
-                    end
+                    gen = _gen_interp(data[prev_idx], data[next_idx], gap_sz+1, imp.r)
+                    _gen_set!(data, prev_idx, gen)
                 end
 
                 i = next_idx
@@ -81,10 +69,41 @@ function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) w
     return data
 end
 
-# Default cases where no rounding behaviour is specified
-_calculate_increment(a, b, n, ::Nothing) = (b - a) / n
-_calculate_increment(a::Unsigned, b::Unsigned, n, r::Nothing) = _calculate_increment(Int(a), Int(b), n, r)
+"""
+Set a vector slice over the values of a generator, starting from `after+1`
+"""
+function _gen_set!(v::AbstractVector, after::Integer, gen)
+    for (i, val) in enumerate(gen)
+       v[after+i] = val
+    end
+end
 
-# Pass a rounding mode to `div`
-_calculate_increment(a, b, n, r) = div(b - a, n, r)
-_calculate_increment(a::Unsigned, b::Unsigned, n, r) = _calculate_increment(Int(a), Int(b), n, r)
+"""
+Return generator over interpolated values.
+"""
+function _gen_interp(a, b, n, ::Nothing)
+    inc = _calculate_increment(a, b, n)
+    (a + inc*i for i=1:n)
+end
+
+function _gen_interp(a, b, n, r::RoundingMode)
+    inc = _calculate_increment(a, b, n)
+    (round(a + inc*i, r) for i=1:n)
+end
+
+function _gen_interp(a::T, b::T, n, ::Nothing) where {T<:Integer}
+    inc = _calculate_increment(a, b, n)
+    (convert(T, a + inc*i) for i=1:n)
+end
+
+function _gen_interp(a::T, b::T, n, r::RoundingMode) where {T<:Integer}
+    inc = _calculate_increment(a, b, n)
+    (round(T, a + inc*i, r) for i=1:n)
+end
+
+_calculate_increment(a, b, n) = (b - a) / n
+
+function _calculate_increment(a::T, b::T, n) where {T<:Integer}
+    _calculate_increment(float(a), float(b), n)
+end
+
