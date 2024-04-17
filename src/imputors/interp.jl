@@ -54,8 +54,16 @@ function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) w
                 gap_sz = (next_idx - prev_idx) - 1
 
                 if imp.limit === nothing || gap_sz <= imp.limit
-                    gen = _gen_interp(data[prev_idx], data[next_idx], gap_sz+1, imp.r)
-                    _gen_set!(data, prev_idx, gen)
+                    prev = data[prev_idx]
+                    next = data[next_idx]
+                    incr = _calculate_increment(prev, next, gap_sz + 1)
+                    val = prev + incr
+
+                    # Iteratively fill in the values
+                    for j in i:(next_idx - 1)
+                        _setindex!(data, val, j, imp.r)
+                        val += incr
+                    end
                 end
 
                 i = next_idx
@@ -69,38 +77,14 @@ function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) w
     return data
 end
 
-"""
-Set a vector slice over the values of a generator, starting from `after+1`
-"""
-function _gen_set!(v::AbstractVector, after::Integer, gen)
-    for (i, val) in enumerate(gen)
-       v[after+i] = val
-    end
-end
-
-"""
-Return generator over interpolated values.
-"""
-function _gen_interp(a, b, n, ::Nothing)
-    inc = _calculate_increment(a, b, n)
-    (a + inc*i for i=1:n)
-end
-
-_gen_interp(a, b, n, r::RoundingMode) = _gen_interp(a, b, n, nothing) 
-
-function _gen_interp(a::T, b::T, n, ::Nothing) where {T<:Integer}
-    inc = _calculate_increment(a, b, n)
-    (convert(T, a + inc*i) for i=1:n)
-end
-
-function _gen_interp(a::T, b::T, n, r::RoundingMode) where {T<:Integer}
-    inc = _calculate_increment(a, b, n)
-    (round(T, a + inc*i, r) for i=1:n)
-end
-
+# Calculating an increment value
 _calculate_increment(a, b, n) = (b - a) / n
+# Special case for unsigned to avoid integer overflow
+_calculate_increment(a::T, b::T, n) where {T<:Unsigned} = _calculate_increment(Int(a), Int(b), n)
 
-function _calculate_increment(a::T, b::T, n) where {T<:Integer}
-    _calculate_increment(float(a), float(b), n)
+# For handling rounding on insertions
+_setindex!(data, val, i, r) = setindex!(data, val, i)
+# Special case for rounding non-integer values on insertion into integer arrays.
+function _setindex!(data::AbstractVector{<:Union{T, Missing}}, val::S, i, r::RoundingMode) where {T <: Integer, S}
+    T === S ? setindex!(data, val, i) : setindex!(data, round(T, val, r), i)
 end
-
