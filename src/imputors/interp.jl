@@ -86,10 +86,7 @@ function _gen_interp(a, b, n, ::Nothing)
     (a + inc*i for i=1:n)
 end
 
-function _gen_interp(a, b, n, r::RoundingMode)
-    inc = _calculate_increment(a, b, n)
-    (round(a + inc*i, r) for i=1:n)
-end
+_gen_interp(a, b, n, r::RoundingMode) = _gen_interp(a, b, n, nothing) 
 
 function _gen_interp(a::T, b::T, n, ::Nothing) where {T<:Integer}
     inc = _calculate_increment(a, b, n)
