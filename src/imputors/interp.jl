@@ -47,19 +47,14 @@ function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) w
 
     while i < lastindex(data)
         if ismissing(data[i])
-            prev_idx = i - 1
-            next_idx = findnext(!ismissing, data, i + 1)
+            j = _findnext(data, i + 1)
 
-            if next_idx !== nothing
-                gap_sz = (next_idx - prev_idx) - 1
-
-                if imp.limit === nothing || gap_sz <= imp.limit
-                    inc = _calculate_increment(data[prev_idx], data[next_idx], gap_sz+1)
-                    gen = _gen_interp(data[prev_idx], inc, gap_sz+1, imp.r)
-                    _gen_set!(data, prev_idx, gen)
+            if j !== nothing
+                if imp.limit === nothing || j - i + 1 <= imp.limit
+                    _interpolate!(data, i:j, data[i - 1], data[j + 1], imp.r)
                 end
 
-                i = next_idx
+                i = j + 1
             else
                 break
             end
@@ -70,16 +65,30 @@ function _impute!(data::AbstractVector{<:Union{T, Missing}}, imp::Interpolate) w
     return data
 end
 
-# sets vector slice via a generator (faster)
-function _gen_set!(v::AbstractVector, after::Integer, gen)
-    for (i, val) in enumerate(gen)
-       v[after+i] = val
+# Our kernel function used to avoid type instability issues.
+# https://docs.julialang.org/en/v1/manual/performance-tips/#kernel-functions
+function _interpolate!(data, indices, prev, next, r)
+    incr = _calculate_increment(prev, next, length(indices) + 1)
+
+    for (i, k) in enumerate(indices)
+        data[k] = _calculate_value(prev, incr, i, r)
     end
 end
 
-# generator of interpolated values
-_gen_interp(a, inc, n, r) = (a + inc*i for i=1:n)
-_gen_interp(a::T, inc, n, r::RoundingMode) where {T<:Integer} = (round(T, a + inc*i, r) for i=1:n)
+# Utility function for finding the last index within a missing data block
+function _findnext(data, i)
+    j = findnext(!ismissing, data, i)
+    j === nothing && return j
+    return j - 1
+end
 
+# Calculates the increment for interpolation
 _calculate_increment(a, b, n) = (b - a) / n
+# Special case for avoiding integer overflow
 _calculate_increment(a::T, b::T, n) where {T<:Unsigned} = _calculate_increment(Int(a), Int(b), n)
+
+# Calculates the interpolated value for a given iteration i
+# Default case of simply prev + incr * i
+_calculate_value(prev, incr, i, r) = prev + incr * i
+# Special case for rounding integers
+_calculate_value(prev::T, incr, i, r::RoundingMode) where {T<:Integer} = round(T, prev + incr * i, r)
