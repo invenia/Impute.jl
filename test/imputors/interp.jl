@@ -90,10 +90,59 @@
         @test ismissing(result[1])
         @test ismissing(result[20])
 
-        # Test inexact error
+        # Test with UInt
+        c = [0x1, missing, 0x3, 0x4]
+        @test Impute.interp(c) == [0x1, 0x2, 0x3, 0x4]
+
+        # Test reverse case where the increment is negative
+        @test Impute.interp(reverse(c)) == [0x4, 0x3, 0x2, 0x1]
+
+        # Test inexact error (no rounding mode provided)
         # https://github.com/invenia/Impute.jl/issues/71
         c = [1, missing, 2, 3]
         @test_throws InexactError Impute.interp(c)
+
+        # Test with UInt
+        c = [0x1, missing, 0x2, 0x3]
+        @test_throws InexactError Impute.interp(c)
+
+        # Test reverse case where the increment is negative
+        @test_throws InexactError Impute.interp(reverse(c))
+
+        # Test inexact cases with a rounding mode
+        c = [1, missing, 2, 3]
+        @test Impute.interp(c; r=RoundToZero) == [1, 1, 2, 3]
+
+        # Test with UInt
+        c = [0x1, missing, 0x2, 0x3]
+        @test Impute.interp(c; r=RoundNearest) == [0x1, 0x2, 0x2, 0x3]
+
+        # Test reverse case where the increment is negative
+        @test Impute.interp(reverse(c); r=RoundUp) == [0x3, 0x2, 0x2, 0x1]
+
+        # Test rounding doesn't cause values to exceed endpoint values
+        @test Impute.interp([1, missing, missing, 2]; r=RoundUp) == [1, 2, 2, 2]
+        @test Impute.interp([2, missing, missing, 1]; r=RoundUp) == [2, 2, 2, 1]
+        @test Impute.interp([1, missing, missing, 0]; r=RoundDown) == [1, 0, 0, 0]
+        @test Impute.interp([0x1, missing, missing, 0x0]; r=RoundDown) == [0x1, 0x0, 0x0, 0x0]
+
+        # Test long gaps (above .5 increment)
+        @test Impute.interp([2, fill(missing, 10)..., 8]; r=RoundNearest) == [2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8]
+        @test Impute.interp([0x2, fill(missing, 10)..., 0x8]; r=RoundNearest) == [0x2, 0x3, 0x3, 0x4, 0x4, 0x5, 0x5, 0x6, 0x6, 0x7, 0x7, 0x8]
+        @test Impute.interp([8, fill(missing, 10)..., 2]; r=RoundNearest) == [8, 7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2]
+        @test Impute.interp([0x8, fill(missing, 10)..., 0x2]; r=RoundNearest) == [0x8, 0x7, 0x7, 0x6, 0x6, 0x5, 0x5, 0x4, 0x4, 0x3, 0x3, 0x2]
+
+        # Test long gaps (at .5 increment)
+        @test Impute.interp([2, fill(missing, 11)..., 8]; r=RoundNearest) == [2, 2, 3, 4, 4, 4, 5, 6, 6, 6, 7, 8, 8]
+        @test Impute.interp([0x2, fill(missing, 11)..., 0x8]; r=RoundNearest) == [0x2, 0x2, 0x3, 0x4, 0x4, 0x4, 0x5, 0x6, 0x6, 0x6, 0x7, 0x8, 0x8]
+        @test Impute.interp([8, fill(missing, 11)..., 2]; r=RoundNearest) == [8, 8, 7, 6, 6, 6, 5, 4, 4, 4, 3, 2, 2]
+        @test Impute.interp([0x8, fill(missing, 11)..., 0x2]; r=RoundNearest) == [0x8, 0x8, 0x7, 0x6, 0x6, 0x6, 0x5, 0x4, 0x4, 0x4, 0x3, 0x2, 0x2]
+
+        # Test long gaps (below .5 increment)
+        @test Impute.interp([2, fill(missing, 12)..., 8]; r=RoundNearest) == [2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8]
+        @test Impute.interp([0x2, fill(missing, 12)..., 0x8]; r=RoundNearest) == [0x2, 0x2, 0x3, 0x3, 0x4, 0x4, 0x5, 0x5, 0x6, 0x6, 0x7, 0x7, 0x8, 0x8]
+        @test Impute.interp([8, fill(missing, 12)..., 2]; r=RoundNearest) == [8, 8, 7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2]
+        @test Impute.interp([0x8, fill(missing, 12)..., 0x2]; r=RoundNearest) == [0x8, 0x8, 0x7, 0x7, 0x6, 0x6, 0x5, 0x5, 0x4, 0x4, 0x3, 0x3, 0x2, 0x2]
     end
 
     # TODO Test error cases on non-numeric types
