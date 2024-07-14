@@ -38,24 +38,40 @@ function Base.:(==)(a::T, b::T) where T <: Imputor
     return result
 end
 
-"""
-    impute(data::T, imp; kwargs...) -> T
+impute_docstring = """
+    impute(data::T, imp; dims=:, kwargs...) -> T
+    impute!(data::A, imp; dims=:, kwargs...) -> A
 
-Returns a new copy of the `data` with the missing data imputed by the imputor `imp`.
-For matrices and tables, data is imputed one variable/column at a time.
-If this is not the desired behaviour then you should overload this method or specify a different `dims` value.
+Returns a new copy of the `data` with the missing data imputed by the imputor `imp`. If the mutating version
+`impute!` is used, it will also update the missing values in-place.
+
+By default, `data` is assumed to be laid out like a `DataFrame`, with each column representing a variable and
+each row representing one observation. Other layouts can be handled via the `dims` keyword argument.
 
 # Arguments
 * `data`: the data to be impute
 * `imp::Imputor`: the Imputor method to use
 
+# Keyword arguments
+* `dims = :`: The dimensions to impute along, either `:cols` or `:rows`. If data are in `DataFrame` format,
+with variables in columns and observations in rows, use `dims = :cols`. If it is transposed, with variables
+in rows and observations in columns, use `dims=:rows`.
+
 # Returns
-* the input `data` with values imputed
+* `AbstractArray{Union{T, Missing}}`: the input `data` with values imputed. (Mutation isn't guaranteed for 
+all array types, so we always return the result).
 
-# Example
+# NOTES
+1. Matrices have a deprecated `dims=2` special case as `dims=:` is a breaking change
+2. `eachslice` is used internally which requires Julia 1.1
+
+# Examples
 ```jldoctest
-julia> using Impute: Interpolate, impute
+julia> using Impute: Interpolate, Substitute, impute, impute!
 
+julia> using Statistics: mean
+
+# Linear interpolation in a vector
 julia> v = [1.0, 2.0, missing, missing, 5.0]
 5-element Vector{Union{Missing, Float64}}:
  1.0
@@ -71,7 +87,62 @@ julia> impute(v, Interpolate())
  3.0
  4.0
  5.0
-```
+`
+# Usage of the `dims` keyword argument
+
+julia> x = [1.0 missing; missing 2.0]
+2×2 Matrix{Union{Missing, Float64}}:
+ 1.0        missing
+  missing  2.0
+
+julia> imp = Substitute(statistic = mean)
+Substitute{typeof(mean)}(Statistics.mean)
+
+# Variables in columns, each row is an observation (like a DataFrame)
+julia> impute(x, imp, dims=:cols)
+2×2 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0
+ 1.0  2.0
+
+# Variables in rows, each column is an observation
+julia> impute(x, imp, dims=:rows)
+2×2 Matrix{Union{Missing, Float64}}:
+ 1.0  1.0
+ 2.0  2.0
+
+# Impute over all dimensions
+julia> impute(x, imp, dims=:)
+2×2 Matrix{Union{Missing, Float64}}:
+ 1.0  1.5
+ 1.5  2.0
+
+# Default is `dims = :cols`
+julia> impute(x, imp)
+2×2 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0
+ 1.0  2.0
+
+# In-place imputation
+
+julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
+2×5 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0   missing  missing  5.0
+ 1.1  2.2  3.3       missing  5.5
+
+julia> impute!(M, Interpolate(), dims=:rows)
+2×5 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0  3.0  4.0  5.0
+ 1.1  2.2  3.3  4.4  5.5
+
+julia> M
+2×5 Matrix{Union{Missing, Float64}}:
+ 1.0  2.0  3.0  4.0  5.0
+ 1.1  2.2  3.3  4.4  5.5
+"""
+
+
+"""
+$impute_docstring
 """
 function impute(data, imp::Imputor; kwargs...)
     # NOTE: We don't use a return type declaration here because `trycopy` isn't guaranteed
@@ -81,45 +152,7 @@ function impute(data, imp::Imputor; kwargs...)
 end
 
 """
-    impute!(data::A, imp; dims=:, kwargs...) -> A
-
-Impute the `missing` values in the array `data` using the imputor `imp`.
-Optionally, you can specify the dimension to impute along.
-
-# Arguments
-* `data::AbstractArray{Union{T, Missing}}`: the data to be impute along dimensions `dims`
-* `imp::Imputor`: the Imputor method to use
-
-# Keyword Arguments
-* `dims=:`: The dimension to impute along. `:rows` and `:cols` are also supported for matrices.
-
-# Returns
-* `AbstractArray{Union{T, Missing}}`: the input `data` with values imputed
-
-# NOTES
-1. Matrices have a deprecated `dims=2` special case as `dims=:` is a breaking change
-2. Mutation isn't guaranteed for all array types, hence we return the result
-3. `eachslice` is used internally which requires Julia 1.1
-
-# Example
-```jldoctest
-julia> using Impute: Interpolate, impute!
-
-julia> M = [1.0 2.0 missing missing 5.0; 1.1 2.2 3.3 missing 5.5]
-2×5 Matrix{Union{Missing, Float64}}:
- 1.0  2.0   missing  missing  5.0
- 1.1  2.2  3.3       missing  5.5
-
-julia> impute!(M, Interpolate(); dims=1)
-2×5 Matrix{Union{Missing, Float64}}:
- 1.0  2.0  3.0  4.0  5.0
- 1.1  2.2  3.3  4.4  5.5
-
-julia> M
-2×5 Matrix{Union{Missing, Float64}}:
- 1.0  2.0  3.0  4.0  5.0
- 1.1  2.2  3.3  4.4  5.5
-```
+$impute_docstring
 """
 function impute!(
     data::A, imp::Imputor; dims=:, kwargs...
