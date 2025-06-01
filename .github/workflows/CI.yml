@@ -54,6 +54,11 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
   docs:
     name: Documentation
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: read
+      statuses: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -61,14 +66,16 @@ jobs:
           persist-credentials: false
       - uses: julia-actions/setup-julia@v2
         with:
-          version: "1.6"
+          version: "1"
       - uses: julia-actions/cache@v2
-      - shell: julia --color=yes --project=docs {0}
+      - name: Install dependencies
+        shell: julia --color=yes --project=docs {0}
         run: |
           using Pkg
           Pkg.develop(PackageSpec(path=pwd()))
           Pkg.instantiate()
-          include("docs/make.jl")
+      - name: Build and deploy
+        run: julia --color=yes --project=docs docs/make.jl
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
