@@ -83,12 +83,13 @@ savefig("st-nocb-plot.svg"); nothing # hide
 But, this looks rather crude and creates clear artifacts in the dataset.
 Since we suspect that observations in similar locations would have had similar recordings
 we could use `Impute.svd` or `Impute.knn` to find similarities across multiple locations.
-```@example st-example
+```
+# TODO: Fix error in this section (as usual ambiguities introduced in the Julia ecosystem broke things)
 data = Impute.knn(data; dims=:cols, k=4);
 heatmap(data);
 savefig("st-knn-plot.svg"); nothing # hide
+# TODO: Re-add ![](st-knn-plot.svg) below when fixed
 ```
-![](st-knn-plot.svg)
 
 This method appears to have removed the artifacts found with the basic NOCB method alone.
 Now we have a complete dataset ready for downstream processing :)
