@@ -1,8 +1,11 @@
 name: CompatHelper
 on:
   schedule:
-    - cron: '0 0 * * *'  # Everyday at midnight
+    - cron: "0 0 * * *" # Everyday at midnight
   workflow_dispatch:
+
+permissions: {}
+
 jobs:
   CompatHelper:
     runs-on: ubuntu-latest

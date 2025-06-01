@@ -2,11 +2,14 @@ name: CI
 # Run on master, tags, or any pull request
 on:
   schedule:
-    - cron: '0 2 * * *'  # Daily at 2 AM UTC (8 PM CST)
+    - cron: "0 2 * * *" # Daily at 2 AM UTC (8 PM CST)
   push:
     branches: [master]
     tags: ["*"]
   pull_request:
+
+permissions: {}
+
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
@@ -15,7 +18,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - "1"  # Latest Release
+          - "1" # Latest Release
         os:
           - ubuntu-latest
         arch:
@@ -33,6 +36,8 @@ jobs:
             arch: x64
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.version }}
@@ -47,31 +52,16 @@ jobs:
         with:
           files: lcov.info
           token: ${{ secrets.CODECOV_TOKEN }}
-
-  slack:
-    name: Notify Slack Failure
-    needs: test
-    runs-on: ubuntu-latest
-    if: always() && github.event_name == 'schedule'
-    steps:
-      - uses: technote-space/workflow-conclusion-action@v2
-      - uses: voxmedia/github-action-slack-notify-build@v1
-        if: env.WORKFLOW_CONCLUSION == 'failure'
-        with:
-          channel: nightly-dev
-          status: FAILED
-          color: danger
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.DEV_SLACK_BOT_TOKEN }}
-
   docs:
     name: Documentation
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: julia-actions/setup-julia@v2
         with:
-          version: '1.6'
+          version: "1.6"
       - uses: julia-actions/cache@v2
       - shell: julia --color=yes --project=docs {0}
         run: |
