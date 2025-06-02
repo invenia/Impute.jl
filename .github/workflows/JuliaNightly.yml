@@ -2,13 +2,18 @@ name: JuliaNightly
 # Nightly Scheduled Julia Nightly Run
 on:
   schedule:
-    - cron: '0 2 * * *'  # Daily at 2 AM UTC (8 PM CST)
+    - cron: "0 2 * * *" # Daily at 2 AM UTC (8 PM CST)
+
+permissions: {}
+
 jobs:
   test:
     name: Julia Nightly - Ubuntu - x64
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: julia-actions/setup-julia@v2
         with:
           version: nightly

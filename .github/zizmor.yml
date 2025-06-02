@@ -1,0 +1,10 @@
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        actions/checkout: ref-pin
+        julia-actions/*: ref-pin
+        JuliaRegistries/TagBot: ref-pin
+        codecov/*: ref-pin
+        astral-sh/*: ref-pin
+        github/*: ref-pin

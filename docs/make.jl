@@ -6,7 +6,7 @@ makedocs(
     pages=[
         "Home" => "index.md",
         "Walkthroughs" => [
-            "Spatiotemporal" => "walkthroughs/spatiotemporal.md",
+            # "Spatiotemporal" => "walkthroughs/spatiotemporal.md",
             "SVD" => "walkthroughs/svd.md",
         ],
         "API" => [
@@ -20,7 +20,6 @@ makedocs(
     repo="https://github.com/invenia/Impute.jl/blob/{commit}{path}#L{line}",
     sitename="Impute.jl",
     authors="Invenia Technical Computing Corporation",
-    strict=true,
     checkdocs=:exports,
 )
 
