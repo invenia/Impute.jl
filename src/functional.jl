@@ -43,6 +43,7 @@ const global validation_methods = (
 const global imputation_methods = (
     dropobs = DropObs,
     dropvars = DropVars,
+    extrapolate = Extrapolate,
     interp = Interpolate,
     interpolate = Interpolate,
     fill = Fill,
