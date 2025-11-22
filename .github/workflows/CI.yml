@@ -66,7 +66,7 @@ jobs:
           persist-credentials: false
       - uses: julia-actions/setup-julia@v2
         with:
-          version: "1"
+          version: "1.11"
       - uses: julia-actions/cache@v2
       - name: Install dependencies
         shell: julia --color=yes --project=docs {0}
