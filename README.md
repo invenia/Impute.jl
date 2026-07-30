@@ -11,10 +11,24 @@ Impute.jl provides various methods for handling missing data in Vectors, Matrice
 julia> using Pkg; Pkg.add("Impute")
 ```
 
+### Optional Dataset Dependencies
+
+> **⚠️ Breaking Change (v0.7+):** The built-in test datasets now require explicit installation of optional dependencies. If you use `Impute.dataset()` or `Impute.datasets()`, you must install and load DataDeps, CSV, and BSON.
+
+The built-in test datasets (accessed via `Impute.dataset()` and `Impute.datasets()`) require optional dependencies. To use them, install:
+
+```julia
+julia> using Pkg
+julia> Pkg.add(["DataDeps", "CSV", "BSON"])
+```
+
+These packages are **weak dependencies** (Julia 1.9+) and only need to be installed if you want to use the test datasets. All other Impute.jl functionality works without them.
+
 ## Quickstart
 Let's start by loading our dependencies:
 ```julia
 julia> using DataFrames, Impute
+julia> using DataDeps, CSV, BSON  # Required for test datasets
 ```
 
 We'll also want some test data containing missings to work with:

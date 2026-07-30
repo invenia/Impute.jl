@@ -1,7 +1,9 @@
 using AxisArrays
 using AxisKeys
-using CSV
+using BSON
 using Combinatorics
+using CSV
+using DataDeps
 using DataFrames
 using Dates
 using Distances
