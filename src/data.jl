@@ -1,3 +1,13 @@
+@static if DataDeps.fetch !== Base.fetch
+    @inline function fetch_without_logs(remote_path, local_dir)
+        DataDeps.fetch(remote_path, local_dir; update_period=Inf)
+    end
+else
+    @inline function fetch_without_logs(remote_path, local_dir)
+        DataDeps.fetch_base(remote_path, local_dir)
+    end
+end
+
 function register_datadep()
     register(
         DataDep(
@@ -5,7 +15,7 @@ function register_datadep()
             "Datasets for testing and demonstrating Impute.jl",
             "https://www.dropbox.com/scl/fi/bgtfqea9qqoug42gcnnsl/datasets.tar.gz?rlkey=11xsae0wi32m8gcfxhbqgo030&dl=0",
             "cf1fff2e7f3ce28eb4264060bc7b9ee561bccfce2c5915c4cf758ec48477ddfe",
-            fetch_method=DataDeps.fetch_base,
+            fetch_method=fetch_without_logs,
             post_fetch_method=DataDeps.unpack,
         )
     )
