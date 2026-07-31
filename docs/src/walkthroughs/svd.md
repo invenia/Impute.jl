@@ -16,6 +16,7 @@ TODO: Update example with more a realistic dataset like some microarray data
 
 ```@example svd-example
 using Distances, Impute, Plots, Statistics
+using DataDeps, CSV, BSON  # Required for Impute.dataset()
 mnist = Impute.dataset("test/matrix/mnist");
 completed, incomplete = mnist[0.0], mnist[0.25];
 ```
