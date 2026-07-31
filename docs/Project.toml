@@ -13,5 +13,13 @@ Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
+AxisKeys = "0.2"
+BSON = "0.3"
+CSV = "0.10"
+DataDeps = "1"
 DataFrames = "1"
+Distances = "0.10"
 Documenter = "1"
+Missings = "1.0"
+NamedDims = "1"
+StatsBase = "0.34"
