@@ -30,4 +30,23 @@
             rm(testdir; recursive=true, force=true)
         end
     end
+
+    # Test fetch_without_logs function directly
+    @testset "fetch_without_logs" begin
+        mktempdir() do tmpdir
+            # Create a simple file to download
+            test_file = joinpath(tmpdir, "source.txt")
+            write(test_file, "test content")
+
+            # Test that fetch_without_logs works
+            dest_dir = joinpath(tmpdir, "dest")
+            mkpath(dest_dir)
+
+            # Call fetch_without_logs - it should copy/fetch the file
+            result = Impute.fetch_without_logs("file://" * test_file, dest_dir)
+
+            # Verify the file was fetched
+            @test isfile(joinpath(dest_dir, "source.txt"))
+        end
+    end
 end
