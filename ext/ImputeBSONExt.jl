@@ -3,8 +3,6 @@ module ImputeBSONExt
 using Impute
 using BSON
 
-function Impute.load_bson(fullpath::AbstractString)
-    return BSON.load(fullpath)
-end
+Impute.load_bson(fullpath) = BSON.load(fullpath)
 
 end  # module
