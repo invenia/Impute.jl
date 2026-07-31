@@ -13,10 +13,15 @@ julia> using Pkg; Pkg.add("Impute")
 
 ### Optional Dataset Dependencies
 
-> **⚠️ Breaking Change (v0.7+):** The built-in test datasets now require explicit installation of optional dependencies. If you use `Impute.dataset()` or `Impute.datasets()`, you must install and load DataDeps, CSV, and BSON.
+> **⚠️ Breaking Change (v0.7+):** The built-in test datasets now require explicit installation of optional dependencies.
 
-The built-in test datasets (accessed via `Impute.dataset()` and `Impute.datasets()`) require optional dependencies. To use them, install:
+The built-in test datasets (accessed via `Impute.dataset()` and `Impute.datasets()`) require optional dependencies:
 
+- **DataDeps** - Required for all dataset functionality
+- **CSV** - Required to load `.csv` datasets (optional, only if you use CSV datasets)
+- **BSON** - Required to load `.bson` datasets (optional, only if you use BSON datasets)
+
+To install all dataset dependencies:
 ```julia
 julia> using Pkg
 julia> Pkg.add(["DataDeps", "CSV", "BSON"])
@@ -28,7 +33,7 @@ These packages are **weak dependencies** (Julia 1.9+) and only need to be instal
 Let's start by loading our dependencies:
 ```julia
 julia> using DataFrames, Impute
-julia> using DataDeps, CSV, BSON  # Required for test datasets
+julia> using DataDeps, CSV, BSON  # Required to load test datasets
 ```
 
 We'll also want some test data containing missings to work with:
