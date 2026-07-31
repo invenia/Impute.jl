@@ -13,7 +13,6 @@ julia> using Pkg; Pkg.add("Impute")
 
 ### Optional Dataset Dependencies
 
-> **⚠️ Breaking Change (v0.7+):** The built-in test datasets now require explicit installation of optional dependencies.
 
 The built-in test datasets (accessed via `Impute.dataset()` and `Impute.datasets()`) require optional dependencies:
 
@@ -139,3 +138,7 @@ julia> Impute.interp(df) |> Impute.locf() |> Impute.nocb()
   In the future, it may be possible to detect whether in-place operations are permitted on an array or table using traits:
     - https://github.com/JuliaData/Tables.jl/issues/116
     - https://github.com/JuliaDiffEq/ArrayInterface.jl/issues/22
+
+## Changelog
+
+Notable changes are tracked in `CHANGELOG.md`.
