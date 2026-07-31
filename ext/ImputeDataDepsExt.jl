@@ -10,9 +10,11 @@ using Base.Iterators
         DataDeps.fetch(remote_path, local_dir; update_period=Inf)
     end
 else
+    # COV_EXCL_START
     @inline function fetch_without_logs(remote_path, local_dir)
         DataDeps.fetch_base(remote_path, local_dir)
     end
+    # COV_EXCL_STOP
 end
 
 function Impute.register_datadep()
@@ -54,7 +56,9 @@ function Impute.dataset(name)
     elseif ext == ".bson"
         return Impute.load_bson(fullpath)
     else
+        # COV_EXCL_START
         throw(ArgumentError("Unsupported file type $ext."))
+        # COV_EXCL_STOP
     end
 end
 
