@@ -1,8 +1,5 @@
 module Impute
 
-using BSON
-using CSV
-using DataDeps
 using Distances
 using IterTools
 using Missings
@@ -27,8 +24,13 @@ include("chain.jl")
 include("deprecated.jl")
 
 include("functional.jl")
-include("data.jl")
 
-__init__() = register_datadep()
+# Stub functions for extension - these will be defined when DataDeps, CSV, and BSON are loaded
+function register_datadep end
+function datasets end
+function dataset end
+function fetch_without_logs end
+function load_csv end
+function load_bson end
 
 end  # module

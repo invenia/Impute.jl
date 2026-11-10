@@ -236,6 +236,7 @@ function impute!(table::T, imp::Imputor; cols=nothing)::T where T
 end
 
 files = [
+    "extrap.jl",
     "interp.jl",
     "knn.jl",
     "locf.jl",

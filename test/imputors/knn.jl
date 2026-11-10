@@ -43,7 +43,7 @@
     @testset "Data match" begin
         data = mapreduce(hcat, 1:1000) do i
             seeds = [sin(i), cos(i), tan(i), atan(i)]
-            mapreduce(vcat, combinations(seeds)) do args
+            mapreduce(vcat, Iterators.filter(!isempty, combinations(seeds))) do args
                 [
                     +(args...),
                     *(args...),

@@ -22,6 +22,11 @@
         # Test we haven't mutated the data
         @test isequal(orig, data)
 
+        # Example using Interpolate() and Extrapolate()
+        result = Impute.interpolate(data) |> Impute.extrapolate!()
+        @test all(!ismissing, Matrix(result))
+        @test isequal(orig, data)
+
         @testset "GroupedDataFrame" begin
             T = NamedTuple{(:hod, :obj, :val), Tuple{Int, Int, Union{Float64, Missing}}}
 

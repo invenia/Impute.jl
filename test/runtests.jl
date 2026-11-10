@@ -1,7 +1,9 @@
 using AxisArrays
 using AxisKeys
-using CSV
+using BSON
 using Combinatorics
+using CSV
+using DataDeps
 using DataFrames
 using Dates
 using Distances
@@ -22,6 +24,7 @@ using Impute:
     Chain,
     DropObs,
     DropVars,
+    Extrapolate,
     Interpolate,
     Fill,
     KNN,
@@ -57,6 +60,7 @@ using Impute:
     include("data.jl")
     include("deprecated.jl")
     include("filter.jl")
+    include("imputors/extrap.jl")
     include("imputors/interp.jl")
     include("imputors/knn.jl")
     include("imputors/locf.jl")

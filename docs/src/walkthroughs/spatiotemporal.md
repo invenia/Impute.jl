@@ -7,6 +7,7 @@ TODO: Give a different workflow/example using a DataFrame.
 
 ```@example st-example
 using AxisKeys, Impute, NamedDims, Plots, Statistics, StatsBase
+using DataDeps, CSV, BSON  # Required for Impute.dataset()
 
 # So NamedDimsArray is the outer wrapper
 AxisKeys.nameouter() = true

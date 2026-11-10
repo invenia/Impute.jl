@@ -11,10 +11,28 @@ Impute.jl provides various methods for handling missing data in Vectors, Matrice
 julia> using Pkg; Pkg.add("Impute")
 ```
 
+### Optional Dataset Dependencies
+
+
+The built-in test datasets (accessed via `Impute.dataset()` and `Impute.datasets()`) require optional dependencies:
+
+- **DataDeps** - Required for all dataset functionality
+- **CSV** - Required to load `.csv` datasets (optional, only if you use CSV datasets)
+- **BSON** - Required to load `.bson` datasets (optional, only if you use BSON datasets)
+
+To install all dataset dependencies:
+```julia
+julia> using Pkg
+julia> Pkg.add(["DataDeps", "CSV", "BSON"])
+```
+
+These packages are **weak dependencies** (Julia 1.9+) and only need to be installed if you want to use the test datasets. All other Impute.jl functionality works without them.
+
 ## Quickstart
 Let's start by loading our dependencies:
 ```julia
 julia> using DataFrames, Impute
+julia> using DataDeps, CSV, BSON  # Required to load test datasets
 ```
 
 We'll also want some test data containing missings to work with:
@@ -120,3 +138,7 @@ julia> Impute.interp(df) |> Impute.locf() |> Impute.nocb()
   In the future, it may be possible to detect whether in-place operations are permitted on an array or table using traits:
     - https://github.com/JuliaData/Tables.jl/issues/116
     - https://github.com/JuliaDiffEq/ArrayInterface.jl/issues/22
+
+## Changelog
+
+Notable changes are tracked in `CHANGELOG.md`.
