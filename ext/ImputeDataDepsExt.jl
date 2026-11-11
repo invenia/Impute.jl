@@ -22,7 +22,7 @@ function Impute.register_datadep()
         DataDeps.DataDep(
             "impute-v1.0.0",
             "Datasets for testing and demonstrating Impute.jl",
-            "https://www.dropbox.com/scl/fi/bgtfqea9qqoug42gcnnsl/datasets.tar.gz?rlkey=11xsae0wi32m8gcfxhbqgo030&dl=0",
+            "https://www.dropbox.com/scl/fi/bgtfqea9qqoug42gcnnsl/datasets.tar.gz?rlkey=11xsae0wi32m8gcfxhbqgo030&raw=1",
             "cf1fff2e7f3ce28eb4264060bc7b9ee561bccfce2c5915c4cf758ec48477ddfe",
             fetch_method=Impute.fetch_without_logs,
             post_fetch_method=DataDeps.unpack,
